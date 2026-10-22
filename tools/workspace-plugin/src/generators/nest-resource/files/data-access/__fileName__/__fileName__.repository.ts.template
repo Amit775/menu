@@ -1,0 +1,28 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@menu/api/shared/db';
+import { type Create<%= className %>, type <%= className %> } from '@menu/shared/contracts';
+
+interface <%= className %>Row {
+  id: string;
+  createdAt: Date;
+}
+
+/** Maps between Prisma rows and the shared contract. The only code that touches `prisma.<%= propertyName %>`. */
+@Injectable()
+export class <%= className %>Repository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAll(): Promise<<%= className %>[]> {
+    const rows = await this.prisma.<%= propertyName %>.findMany({ orderBy: { createdAt: 'desc' } });
+    return rows.map(toContract);
+  }
+
+  async create(input: Create<%= className %>): Promise<<%= className %>> {
+    const row = await this.prisma.<%= propertyName %>.create({ data: { ...input } });
+    return toContract(row);
+  }
+}
+
+function toContract(row: <%= className %>Row): <%= className %> {
+  return { id: row.id, createdAt: row.createdAt.toISOString() };
+}

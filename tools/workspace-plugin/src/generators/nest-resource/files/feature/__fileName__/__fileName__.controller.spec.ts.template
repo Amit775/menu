@@ -1,0 +1,17 @@
+import { Test } from '@nestjs/testing';
+import { <%= className %>Controller } from './<%= fileName %>.controller';
+import { <%= className %>Service } from './<%= fileName %>.service';
+
+describe('<%= className %>Controller', () => {
+  const item = { id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', createdAt: '2026-01-01T00:00:00.000Z' };
+
+  it('lists through the service', async () => {
+    const service = { list: vi.fn().mockResolvedValue([item]) };
+    const moduleRef = await Test.createTestingModule({
+      controllers: [<%= className %>Controller],
+      providers: [{ provide: <%= className %>Service, useValue: service }],
+    }).compile();
+
+    await expect(moduleRef.get(<%= className %>Controller).list()).resolves.toEqual([item]);
+  });
+});

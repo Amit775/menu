@@ -1,0 +1,17 @@
+import { Test } from '@nestjs/testing';
+import { <%= className %>Repository } from '@menu/api/<%= domain %>/data-access';
+import { <%= className %>Service } from './<%= fileName %>.service';
+
+describe('<%= className %>Service', () => {
+  const item = { id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', createdAt: '2026-01-01T00:00:00.000Z' };
+
+  it('creates through the repository', async () => {
+    const repository = { create: vi.fn().mockResolvedValue(item) };
+    const moduleRef = await Test.createTestingModule({
+      providers: [<%= className %>Service, { provide: <%= className %>Repository, useValue: repository }],
+    }).compile();
+
+    await expect(moduleRef.get(<%= className %>Service).create({})).resolves.toEqual(item);
+    expect(repository.create).toHaveBeenCalledWith({});
+  });
+});

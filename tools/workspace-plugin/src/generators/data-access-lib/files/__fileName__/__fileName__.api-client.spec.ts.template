@@ -1,0 +1,32 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { <%= className %>ApiClient } from './<%= fileName %>.api-client';
+
+describe('<%= className %>ApiClient', () => {
+  let client: <%= className %>ApiClient;
+  let http: HttpTestingController;
+  const item = { id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', createdAt: '2026-01-01T00:00:00.000Z' };
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    client = TestBed.inject(<%= className %>ApiClient);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    http.verify();
+  });
+
+  it('lists and validates items', async () => {
+    const result = client.list();
+    http.expectOne('/api/<%= fileName %>').flush([item]);
+    await expect(result).resolves.toEqual([item]);
+  });
+
+  it('rejects a response that breaks the contract', async () => {
+    const result = client.list();
+    http.expectOne('/api/<%= fileName %>').flush([{ id: 'not-a-uuid' }]);
+    await expect(result).rejects.toThrow();
+  });
+});

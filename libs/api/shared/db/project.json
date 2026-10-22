@@ -1,0 +1,41 @@
+{
+  "name": "api-shared-db",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/shared/db/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:shared", "type:data-access"],
+  "targets": {
+    "prisma-generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["{projectRoot}/prisma/schema.prisma", "{projectRoot}/prisma.config.ts"],
+      "outputs": ["{projectRoot}/src/generated"],
+      "options": {
+        "command": "prisma generate",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "prisma-migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prisma migrate dev",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "prisma-deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prisma migrate deploy",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "prisma-studio": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "prisma studio",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

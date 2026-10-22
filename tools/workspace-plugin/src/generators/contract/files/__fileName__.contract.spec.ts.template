@@ -1,0 +1,17 @@
+import { Create<%= className %>Schema, <%= className %>Schema } from './<%= fileName %>.contract';
+
+describe('<%= className %> contract', () => {
+  const valid = { id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', createdAt: '2026-01-01T00:00:00.000Z' };
+
+  it('accepts a valid <%= fileName %>', () => {
+    expect(<%= className %>Schema.parse(valid)).toEqual(valid);
+  });
+
+  it('rejects an invalid id', () => {
+    expect(<%= className %>Schema.safeParse({ ...valid, id: 'nope' }).success).toBe(false);
+  });
+
+  it('does not require server-owned fields on create', () => {
+    expect(Create<%= className %>Schema.safeParse({}).success).toBe(true);
+  });
+});

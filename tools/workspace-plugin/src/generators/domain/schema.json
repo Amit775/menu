@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Domain",
+  "title": "Register a domain (scope tag) and optionally scaffold its first resource end to end",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Domain name in kebab-case, e.g. reviews. Becomes the scope:<name> tag.",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "What is the domain name?"
+    },
+    "resource": {
+      "type": "string",
+      "description": "Optional first resource, e.g. review. Creates contract, API resource, data-access store, feature page and ui lib."
+    }
+  },
+  "required": ["name"]
+}

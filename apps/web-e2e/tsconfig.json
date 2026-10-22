@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "module": "esnext",
+    "types": ["node"]
+  },
+  "include": ["playwright.config.mts", "src/**/*.ts"]
+}

@@ -1,0 +1,12 @@
+import { TestBed } from '@angular/core/testing';
+import { <%= className %>Page } from './<%= fileName %>-page';
+
+describe('<%= className %>Page', () => {
+  it('renders its title', async () => {
+    await TestBed.configureTestingModule({ imports: [<%= className %>Page] }).compileComponents();
+    const fixture = TestBed.createComponent(<%= className %>Page);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('h2')?.textContent).toContain('<%= title %>');
+  });
+});

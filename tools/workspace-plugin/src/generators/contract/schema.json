@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Contract",
+  "title": "Add a Zod contract to @menu/shared/contracts",
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Registered domain (see tools/eslint/module-boundaries.json), e.g. reviews.",
+      "x-prompt": "Which domain does this contract belong to?"
+    },
+    "name": {
+      "type": "string",
+      "description": "Resource name in kebab-case, e.g. review. Also the REST base path.",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "What is the resource name?"
+    }
+  },
+  "required": ["domain", "name"]
+}
