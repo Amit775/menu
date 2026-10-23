@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { type EntryWithItem } from '@menu/shared/contracts';
@@ -74,6 +75,16 @@ describe('EntriesDiaryPage', () => {
     const element = await render(vi.fn().mockResolvedValue([]));
     expect(element.querySelector('.state')?.textContent).toContain('היומן עוד ריק');
     expect(element.querySelector('.state a')?.getAttribute('href')).toBe('/');
+  });
+
+  it('reads a venue link that is not one as an empty venue, with the whole diary a tap away', async () => {
+    const element = await render(
+      vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 400 })),
+      'not-a-venue',
+    );
+    expect(element.querySelector('.state')?.textContent).toContain('אין רשומות מהמקום הזה');
+    expect(element.querySelector('a.all')?.getAttribute('href')).toBe('/diary');
+    expect(element.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('offers to try again when loading fails', async () => {

@@ -44,6 +44,10 @@
       </ul>
     }
   }
+  @case ('not-found') {
+    <a class="all" mat-button routerLink="/diary">{{ t().all }}</a>
+    <div class="state">{{ t().noVenue }}</div>
+  }
   @default {
     <div class="state" role="alert">
       {{ t().loadFailed }}
