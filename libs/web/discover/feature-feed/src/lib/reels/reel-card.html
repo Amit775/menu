@@ -30,15 +30,23 @@
   ></button>
 
   <div class="side">
-    <span class="side-item">
+    <a
+      class="side-item"
+      [routerLink]="['/items', current.id, 'entries']"
+      [attr.aria-label]="t().whatPeopleSay(current.ratingCount)"
+    >
       <span class="side-count">{{ current.ratingCount }}</span>
       <span class="side-label">{{ t().entriesWord }}</span>
-    </span>
+    </a>
     <button type="button" class="side-item" (click)="share()">
       <mat-icon aria-hidden="true">share</mat-icon>
       <span class="side-label">{{ t().share }}</span>
     </button>
     <span class="side-label copied" role="status">{{ copied() ? t().copied : '' }}</span>
+    <a class="side-item log" [routerLink]="['/log', current.id]">
+      <span class="log-icon"><mat-icon aria-hidden="true">add</mat-icon></span>
+      <span class="side-label">{{ t().logIt }}</span>
+    </a>
   </div>
 
   <div class="info">
