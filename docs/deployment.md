@@ -30,7 +30,7 @@ firebase login
 firebase use --add              # pick the project; or edit .firebaserc by hand
 ```
 
-Put the real project id in `.firebaserc` in place of `your-firebase-project-id` and commit it (a project id is not a secret).
+The project id (`menu-b29eb`) is already in `.firebaserc`; a project id is not a secret.
 
 Try it locally: `pnpm nx build web && firebase emulators:start --only hosting`, then open http://localhost:5002.
 
