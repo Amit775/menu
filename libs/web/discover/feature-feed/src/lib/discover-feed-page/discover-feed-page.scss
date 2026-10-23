@@ -1,0 +1,124 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--mat-sys-surface);
+
+  mat-button-toggle-group {
+    margin-inline-start: auto;
+  }
+}
+
+.filter.active {
+  border-color: var(--mat-sys-primary);
+  color: var(--mat-sys-primary);
+}
+
+// In reels the bar floats over the dark card.
+.reels header {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: 1;
+  background: transparent;
+  --mat-button-outlined-label-text-color: var(--mat-sys-inverse-on-surface);
+  --mat-button-outlined-outline-color: color-mix(
+    in srgb,
+    var(--mat-sys-inverse-on-surface) 50%,
+    transparent
+  );
+  --mat-icon-button-icon-color: var(--mat-sys-inverse-on-surface);
+  --mat-button-toggle-text-color: var(--mat-sys-inverse-on-surface);
+  --mat-button-toggle-background-color: transparent;
+  --mat-button-toggle-selected-state-background-color: color-mix(
+    in srgb,
+    var(--mat-sys-inverse-on-surface) 25%,
+    transparent
+  );
+  --mat-button-toggle-selected-state-text-color: var(--mat-sys-inverse-on-surface);
+}
+
+.reel-track {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  menu-reel-card {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.summary {
+  margin: 4px 16px 8px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.divider {
+  margin: 16px;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.more {
+  display: block;
+  margin: 16px auto;
+}
+
+.state {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+.reels .state {
+  background: var(--mat-sys-inverse-surface);
+  color: var(--mat-sys-inverse-on-surface);
+}
+
+mat-progress-bar {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: 2;
+}
+
+.reel-error {
+  position: absolute;
+  inset-inline: 16px;
+  inset-block-start: 64px;
+  z-index: 2;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface);
+  text-align: center;
+}

@@ -1,0 +1,78 @@
+@let current = shown();
+<article
+  [attr.aria-label]="current.name | localize"
+  (pointerdown)="pointerDown($event)"
+  (pointerup)="pointerUp($event)"
+  (pointercancel)="pointerCancel()"
+>
+  @if (siblings().length > 1) {
+    <div class="dots" aria-hidden="true">
+      @for (sibling of siblings(); track sibling.id; let index = $index) {
+        <span class="dot" [class.active]="index === position()"></span>
+      }
+    </div>
+    <p class="visually-hidden" aria-live="polite">
+      {{ t().position(position() + 1, siblings().length, current.venue.name | localize) }}
+    </p>
+  }
+
+  <button
+    type="button"
+    class="edge start"
+    [attr.aria-label]="t().previousAtVenue"
+    (click)="step(-1)"
+  ></button>
+  <button
+    type="button"
+    class="edge end"
+    [attr.aria-label]="t().nextAtVenue"
+    (click)="step(1)"
+  ></button>
+
+  <div class="side">
+    <span class="side-item">
+      <span class="side-count">{{ current.ratingCount }}</span>
+      <span class="side-label">{{ t().entriesWord }}</span>
+    </span>
+    <button type="button" class="side-item" (click)="share()">
+      <mat-icon aria-hidden="true">share</mat-icon>
+      <span class="side-label">{{ t().share }}</span>
+    </button>
+    <span class="side-label copied" role="status">{{ copied() ? t().copied : '' }}</span>
+  </div>
+
+  <div class="info">
+    @if (current.writtenByMe) {
+      <span class="flag">{{ t().writtenByMe }}</span>
+    }
+    <h2>
+      <a [routerLink]="['/items', current.id]">{{ current.name | localize }}</a>
+    </h2>
+    <a class="venue" [routerLink]="['/venues', current.venue.id]">
+      {{ current.venue.name | localize }}
+      @if (current.distanceMeters !== null) {
+        · {{ current.distanceMeters | distance }}
+      }
+    </a>
+    <div class="numbers">
+      @if (current.score !== null) {
+        <menu-score-badge [score]="current.score" [showCount]="false" tone="light" />
+        <span>
+          {{ t().entries(current.ratingCount) }}
+          @if (current.wouldOrderAgainPercent !== null) {
+            · {{ t().wouldOrderAgain(current.wouldOrderAgainPercent) }}
+          }
+        </span>
+      } @else {
+        <span>{{ t().noScoreYet }}</span>
+      }
+      @if (current.latestPrice !== null) {
+        <span class="price">{{ current.latestPrice | shekels }}</span>
+      }
+    </div>
+    <a class="hint" [routerLink]="['/venues', current.venue.id]">
+      <mat-icon aria-hidden="true">keyboard_arrow_up</mat-icon>
+      {{ t().swipeUp }}
+    </a>
+  </div>
+</article>
