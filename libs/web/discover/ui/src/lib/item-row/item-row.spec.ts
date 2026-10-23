@@ -36,7 +36,7 @@ describe('ItemRow', () => {
     expect(element.querySelector('.name')?.textContent).toContain('המבורגר הבית');
     expect(element.querySelector('.meta')?.textContent).toBe('מוזס350 מ׳₪68');
     expect(element.querySelector('.ratio')?.textContent).toBe('92% יזמינו שוב');
-    expect(element.querySelector('.flag')?.getAttribute('aria-label')).toBe('יש לך רשומה');
+    expect(element.querySelector('.name .visually-hidden')?.textContent).toBe('יש לך רשומה');
   });
 
   it('invites the first entry on an item nobody rated, without the venue on its own page', async () => {
