@@ -1,4 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { MenuSectionRepository, VenueRepository } from '@menu/api/menus/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
 import { type LocalizedText, type MenuSection } from '@menu/shared/contracts';
