@@ -4,7 +4,6 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  Optional,
 } from '@nestjs/common';
 import {
   type ItemRecord,
@@ -42,9 +41,7 @@ export class ItemService {
     private readonly venues: VenueRepository,
     private readonly sections: MenuSectionRepository,
     private readonly tags: TagRepository,
-    @Optional()
-    @Inject(ITEM_MERGE_LISTENER)
-    private readonly mergeListener: ItemMergeListener | null = null,
+    @Inject(ITEM_MERGE_LISTENER) private readonly mergeListener: ItemMergeListener,
   ) {}
 
   /** The menu: approved items, plus pending ones for approvers, plus the caller's own submissions. */
@@ -119,14 +116,14 @@ export class ItemService {
       item.record.mergedIntoId === intoItemId &&
       item.canBeEditedBy(principal)
     ) {
-      await this.mergeListener?.onItemMerged(id, intoItemId);
+      await this.mergeListener.onItemMerged(id, intoItemId);
       return item.toContract(principal);
     }
     const from = item.assertDecision(principal, 'merge');
     const target = await this.findVisible(principal, intoItemId);
     item.assertCanMergeInto(target);
     const record = await this.transition(id, from, 'merged', intoItemId);
-    await this.mergeListener?.onItemMerged(id, intoItemId);
+    await this.mergeListener.onItemMerged(id, intoItemId);
     return new MenuItem(record).toContract(principal);
   }
 
