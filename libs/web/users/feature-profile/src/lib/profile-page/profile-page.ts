@@ -27,7 +27,11 @@ import { profileMessages } from '../profile.messages';
 
 /** The profile tab: sign-in prompt, or the account's name, language and sign-out. The diary joins later. */
 
-const required: ValidatorFn = (control) => Validators.required(control);
+/** Required, and more than spaces: the API trims the name. */
+const required: ValidatorFn = (control) =>
+  typeof control.value === 'string' && control.value.trim() === ''
+    ? { required: true }
+    : Validators.required(control);
 @Component({
   selector: 'menu-profile-page',
   imports: [

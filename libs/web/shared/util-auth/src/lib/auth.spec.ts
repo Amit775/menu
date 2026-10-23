@@ -24,6 +24,23 @@ describe('Auth', () => {
     await expect(auth.idToken()).resolves.toBe('test-token');
   });
 
+  it('waits for the session to be restored before giving a token', async () => {
+    const backend = new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null });
+    let restore: () => void = () => undefined;
+    const watchUser = backend.watchUser.bind(backend);
+    backend.watchUser = (callback) =>
+      new Promise((resolve) => {
+        restore = () => {
+          void watchUser(callback).then(resolve);
+        };
+      });
+    const auth = setup(backend);
+    expect(auth.status()).toBe('loading');
+    const token = auth.idToken();
+    restore();
+    await expect(token).resolves.toBe('test-token');
+  });
+
   it('carries on signed out when sign-in cannot load', async () => {
     const broken = new FakeAuthBackend();
     broken.watchUser = () => Promise.reject(new Error('no config'));
