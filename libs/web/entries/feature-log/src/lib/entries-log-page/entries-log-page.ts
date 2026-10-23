@@ -5,6 +5,7 @@ import {
   Component,
   computed,
   effect,
+  ElementRef,
   inject,
   input,
   signal,
@@ -71,6 +72,7 @@ export class EntriesLogPage {
   private readonly lastVisibility = inject(LastVisibility);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly t = injectMessages(logMessages);
 
   /** The `:itemId` route parameter. */
@@ -108,6 +110,8 @@ export class EntriesLogPage {
   protected readonly saveError = signal<SaveError | null>(null);
   protected readonly confirmingDelete = signal(false);
   private filled = false;
+  /** The price the form opened with, in agorot: sent as is unless the user changes it. */
+  private prefilled: number | null = null;
 
   /** The entry being edited, once the sheet is here; undefined for a new one. */
   protected readonly editing = computed<Entry | null | undefined>(() => {
@@ -124,7 +128,10 @@ export class EntriesLogPage {
   constructor() {
     effect(() => {
       const itemId = this.itemId();
-      untracked(() => void this.store.load(itemId));
+      untracked(() => {
+        this.reset();
+        void this.store.load(itemId);
+      });
     });
     // Fill the form once, when the item (and the entry being edited) is here.
     effect(() => {
@@ -138,8 +145,7 @@ export class EntriesLogPage {
         if (editing) {
           this.fill(editing);
         } else {
-          const price = this.store.lastPaid() ?? sheet.item.listPrice;
-          this.price.setValue(price === null ? null : Math.round(price / 100));
+          this.prefill(this.store.lastPaid() ?? sheet.item.listPrice);
         }
       });
     });
@@ -162,8 +168,15 @@ export class EntriesLogPage {
   }
 
   protected async save(): Promise<void> {
-    if (this.form.invalid || this.saving()) {
+    if (this.saving()) {
+      return;
+    }
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
+      const first = Object.entries(this.form.controls).find(([, control]) => control.invalid);
+      this.host.nativeElement
+        .querySelector<HTMLElement>(`[formcontrolname="${first?.[0] ?? ''}"]`)
+        ?.focus();
       return;
     }
     this.saving.set(true);
@@ -171,7 +184,11 @@ export class EntriesLogPage {
     const input: UpdateEntry = {
       rating: this.rating(),
       wouldOrderAgain: this.wouldOrderAgain(),
-      pricePaid: this.price.value === null ? null : this.price.value * 100,
+      pricePaid: this.price.dirty
+        ? this.price.value === null
+          ? null
+          : this.price.value * 100
+        : this.prefilled,
       text: this.text.value.trim(),
       visibility: this.visibility.value,
     };
@@ -222,10 +239,31 @@ export class EntriesLogPage {
     this.rating.set(entry.rating);
     this.wouldOrderAgain.set(entry.wouldOrderAgain);
     this.form.reset({
-      price: entry.pricePaid === null ? null : Math.round(entry.pricePaid / 100),
       eatenAt: toLocalInput(new Date(entry.eatenAt)),
       text: entry.text,
       visibility: entry.visibility,
+    });
+    this.prefill(entry.pricePaid);
+  }
+
+  /** Shows a price in whole shekels while keeping its agorot for an untouched save. */
+  private prefill(agorot: number | null): void {
+    this.prefilled = agorot;
+    this.price.reset(agorot === null ? null : Math.round(agorot / 100));
+  }
+
+  /** A fresh form, for the first item and for another one in the same page. */
+  private reset(): void {
+    this.filled = false;
+    this.rating.set(null);
+    this.wouldOrderAgain.set(null);
+    this.saveError.set(null);
+    this.confirmingDelete.set(false);
+    this.form.reset({
+      price: null,
+      eatenAt: toLocalInput(new Date()),
+      text: '',
+      visibility: this.lastVisibility.get(),
     });
   }
 }
