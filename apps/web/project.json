@@ -21,7 +21,14 @@
             "input": "apps/web/public"
           }
         ],
-        "styles": ["apps/web/src/styles.scss"]
+        "styles": [
+          "apps/web/src/styles.scss",
+          {
+            "input": "node_modules/leaflet/dist/leaflet.css",
+            "bundleName": "leaflet-1.9.4",
+            "inject": false
+          }
+        ]
       },
       "configurations": {
         "production": {
