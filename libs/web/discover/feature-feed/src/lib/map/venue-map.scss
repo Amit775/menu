@@ -1,0 +1,87 @@
+menu-venue-map {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+.menu-venue-map {
+  position: relative;
+  height: 100%;
+
+  .canvas {
+    height: 100%;
+    // Keep Leaflet's panes (z-index 400+) below the filter and search sheets.
+    isolation: isolate;
+  }
+
+  // At the bottom, clear of Leaflet's zoom buttons at the top.
+  .empty {
+    position: absolute;
+    inset-inline: 16px;
+    inset-block-end: 32px;
+    z-index: 1;
+    margin: 0;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--mat-sys-surface);
+    box-shadow: var(--mat-sys-level2);
+    text-align: center;
+  }
+
+  .card {
+    position: absolute;
+    inset-inline: 12px;
+    inset-block-end: 16px;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-block: 12px;
+    padding-inline: 16px 12px;
+    border-radius: 16px;
+    background: var(--mat-sys-surface);
+    box-shadow: var(--mat-sys-level3);
+
+    .text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    h2 {
+      margin: 0;
+      outline: none;
+      font: var(--mat-sys-title-medium);
+      font-weight: 700;
+    }
+
+    p {
+      margin: 2px 0 0;
+      font: var(--mat-sys-body-medium);
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+
+  // Leaflet draws these inside its own panes.
+  .menu-map-pin {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--mat-sys-inverse-surface);
+    color: var(--mat-sys-inverse-on-surface);
+    font: var(--mat-sys-label-large);
+    font-weight: 700;
+    box-shadow: var(--mat-sys-level2);
+
+    &.mine {
+      outline: 3px solid var(--mat-sys-primary);
+    }
+  }
+
+  .menu-map-me {
+    fill: var(--mat-sys-primary);
+    fill-opacity: 1;
+    stroke: var(--mat-sys-surface);
+    stroke-width: 3;
+  }
+}

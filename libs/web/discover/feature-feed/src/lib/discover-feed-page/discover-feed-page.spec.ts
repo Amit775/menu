@@ -4,6 +4,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { type DiscoverApiClient, FeedStore } from '@menu/web/discover/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
+import { LeafletLoader } from '../map/leaflet-loader';
 import { boundaries, sampleItem } from '../testing/feed-fixtures';
 import { DiscoverFeedPage } from './discover-feed-page';
 
@@ -11,7 +12,12 @@ describe('DiscoverFeedPage', () => {
   async function render(api: Partial<DiscoverApiClient>) {
     TestBed.configureTestingModule({
       imports: [DiscoverFeedPage],
-      providers: [provideRouter([]), ...boundaries(api)],
+      providers: [
+        provideRouter([]),
+        ...boundaries(api),
+        // Leaflet needs a real browser; the map component has its own spec.
+        { provide: LeafletLoader, useValue: { load: () => new Promise(() => undefined) } },
+      ],
     });
     TestBed.inject(I18n).setLanguage('he');
     const fixture = TestBed.createComponent(DiscoverFeedPage);
@@ -118,5 +124,18 @@ describe('DiscoverFeedPage', () => {
       expect(element.querySelectorAll('menu-reel-card')).toHaveLength(3);
     });
     expect(TestBed.inject(FeedStore).reelIndex()).toBe(1);
+  });
+
+  it('shows venues on a map', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [sampleItem(1)], nextOffset: null });
+    const map = vi.fn().mockResolvedValue([]);
+    const { fixture, element } = await render({ feed, venue, map });
+    [...element.querySelectorAll('mat-button-toggle button')][2]?.dispatchEvent(new Event('click'));
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(element.querySelector('menu-venue-map')).not.toBeNull();
+    });
+    expect(map).toHaveBeenCalled();
+    expect(element.querySelector('menu-reel-card')).toBeNull();
   });
 });

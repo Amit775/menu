@@ -1,5 +1,5 @@
 import { computed, effect, inject, untracked } from '@angular/core';
-import { type DiscoverItem, type Tag } from '@menu/shared/contracts';
+import { type DiscoverItem, type GeoPoint, type MapPin, type Tag } from '@menu/shared/contracts';
 import { Auth } from '@menu/web/shared/util-auth';
 import {
   patchState,
@@ -12,7 +12,7 @@ import {
 import { DiscoverApiClient } from '../api/discover.api-client';
 import { DeviceLocation } from '../location/device-location';
 
-export type FeedView = 'reels' | 'list';
+export type FeedView = 'reels' | 'list' | 'map';
 export type FeedSort = 'score' | 'distance' | 'price';
 
 export interface FeedFilters {
@@ -43,6 +43,10 @@ interface FeedState {
   venueItems: Record<string, DiscoverItem[]>;
   /** The reels card on screen, restored when the user comes back to the feed. */
   reelIndex: number;
+  /** The map view: one pin per venue with matching items. */
+  pins: MapPin[];
+  /** Where the user is, when they shared it; the map centres on it. */
+  near: GeoPoint | null;
 }
 
 const initialState: FeedState = {
@@ -54,6 +58,8 @@ const initialState: FeedState = {
   tags: [],
   venueItems: {},
   reelIndex: 0,
+  pins: [],
+  near: null,
 };
 
 /**
@@ -87,7 +93,15 @@ export const FeedStore = signalStore(
       patchState(store, { status: 'loading' });
       try {
         const near = await location.locate();
-        const { filters, view } = { filters: store.filters(), view: store.view() };
+        const filters = store.filters();
+        const view = store.view();
+        if (view === 'map') {
+          const pins = await api.map({ near, radiusKm: filters.radiusKm, tagIds: filters.tagIds });
+          if (current === request) {
+            patchState(store, { pins, near, status: 'loaded' });
+          }
+          return;
+        }
         const page = await api.feed({
           near,
           ...filters,
@@ -102,6 +116,7 @@ export const FeedStore = signalStore(
           ...(offset === 0 ? { reelIndex: 0 } : {}),
           items: offset === 0 ? page.items : [...store.items(), ...page.items],
           nextOffset: page.nextOffset,
+          near,
           status: 'loaded',
         });
       } catch {
@@ -123,7 +138,7 @@ export const FeedStore = signalStore(
       },
       async loadMore(): Promise<void> {
         const next = store.nextOffset();
-        if (next !== null && store.status() !== 'loading') {
+        if (next !== null && store.view() !== 'map' && store.status() !== 'loading') {
           await fetchPage(next);
         }
       },
@@ -135,7 +150,7 @@ export const FeedStore = signalStore(
         patchState(store, { filters: DEFAULT_FILTERS });
         await fetchPage(0);
       },
-      /** Reels interleave unranked items; the list puts them last, so the order differs. */
+      /** Reels interleave unranked items, the list puts them last, the map groups by venue. */
       async setView(view: FeedView): Promise<void> {
         if (view !== store.view()) {
           patchState(store, { view });

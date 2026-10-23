@@ -50,6 +50,14 @@ describe('DiscoverApiClient', () => {
     await expect(feed).rejects.toThrow();
   });
 
+  it('asks for map pins and validates them', async () => {
+    const pins = client.map({ near: null, radiusKm: 10, tagIds: ['a'] });
+    const request = http.expectOne((r) => r.url === '/api/discover/map');
+    expect(request.request.params.toString()).toBe('radiusKm=10&tagIds=a');
+    request.flush([{ venue: item.venue, location: { lat: 99, lng: 0 } }]);
+    await expect(pins).rejects.toThrow();
+  });
+
   it('loads an item page', async () => {
     const page = client.item(ITEM_ID, null);
     http.expectOne(`/api/discover/items/${ITEM_ID}`).flush({
