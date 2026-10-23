@@ -1,0 +1,9 @@
+{
+  "name": "api-entries-feature",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/entries/feature/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:entries", "type:feature"],
+  "// targets": "to see all targets run: nx show project api-entries-feature --web",
+  "targets": {}
+}
