@@ -3,6 +3,7 @@ import {
   DiaryQuerySchema,
   EntrySchema,
   EntryWithItemSchema,
+  ItemEntriesSchema,
   SharedEntryViewSchema,
   UpdateEntrySchema,
 } from './entry.contract';
@@ -69,6 +70,7 @@ describe('Entry contract', () => {
   const item = {
     id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
     name: { he: 'המבורגר' },
+    listPrice: null,
     venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס' } },
   };
 
@@ -92,5 +94,11 @@ describe('Entry contract', () => {
     };
     expect(SharedEntryViewSchema.parse({ status: 'visible', entry, item }).status).toBe('visible');
     expect(SharedEntryViewSchema.safeParse({ status: 'visible', entry }).success).toBe(false);
+  });
+
+  it('names the item above its entries sheet', () => {
+    const sheet = { item, mine: [valid], others: [] };
+    expect(ItemEntriesSchema.parse(sheet).item.name.he).toBe('המבורגר');
+    expect(ItemEntriesSchema.safeParse({ mine: [], others: [] }).success).toBe(false);
   });
 });

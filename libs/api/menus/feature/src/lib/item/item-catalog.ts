@@ -44,6 +44,7 @@ export class MenusItemCatalog implements ItemCatalog {
         refs.set(item.id, {
           id: item.id,
           name: item.name,
+          listPrice: item.listPrice,
           venue: { id: item.venueId, name: venueName },
         });
       }

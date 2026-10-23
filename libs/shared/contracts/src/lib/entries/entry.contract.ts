@@ -96,8 +96,12 @@ export const PublicEntrySchema = EntryFieldsSchema.omit({ visibility: true }).ex
 
 export type PublicEntry = z.infer<typeof PublicEntrySchema>;
 
-/** `GET /api/items/:itemId/entries`: the caller's own entries on top, then public ones, newest first. */
+/**
+ * `GET /api/items/:itemId/entries`: the item, then the caller's own entries on
+ * top and public ones below, newest first.
+ */
 export const ItemEntriesSchema = z.object({
+  item: ItemRefSchema,
   mine: z.array(EntrySchema),
   others: z.array(PublicEntrySchema),
 });

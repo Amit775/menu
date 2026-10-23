@@ -97,11 +97,12 @@ describe('MenusItemCatalog', () => {
   });
 
   it('names items with their venue, in any state', async () => {
-    const pending = { ...base, state: 'pending' as const };
+    const pending = { ...base, state: 'pending' as const, listPrice: 4200 };
     const refs = await catalog(pending, 'hidden').refsFor(['i1', 'i1']);
     expect(refs.get('i1')).toEqual({
       id: 'i1',
       name: { he: 'פיצה' },
+      listPrice: 4200,
       venue: { id: venueId, name: { he: 'מוזס' } },
     });
   });
