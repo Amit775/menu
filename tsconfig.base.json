@@ -48,7 +48,8 @@
       "@menu/web/discover/feature-venue": ["./libs/web/discover/feature-venue/src/index.ts"],
       "@menu/web/shared/util-events": ["./libs/web/shared/util-events/src/index.ts"],
       "@menu/web/entries/data-access": ["./libs/web/entries/data-access/src/index.ts"],
-      "@menu/web/entries/ui": ["./libs/web/entries/ui/src/index.ts"]
+      "@menu/web/entries/ui": ["./libs/web/entries/ui/src/index.ts"],
+      "@menu/web/entries/feature-log": ["./libs/web/entries/feature-log/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
