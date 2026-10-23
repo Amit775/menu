@@ -1,6 +1,6 @@
 # Menu
 
-An app to review, share and give feedback on items at restaurants and bars. Nx monorepo: Angular 22 web app (`apps/web`), NestJS 11 API (`apps/api`), shared Zod contracts. Domains are not defined yet: ask before inventing any.
+An app to review, share and give feedback on items at restaurants and bars. Nx monorepo: Angular 22 web app (`apps/web`), NestJS 11 API (`apps/api`), shared Zod contracts. Domains: `users`, `menus`, `entries`, `discover` (ADR 0004); ask before inventing another.
 
 ## Commands
 

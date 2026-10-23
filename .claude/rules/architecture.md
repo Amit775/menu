@@ -1,6 +1,6 @@
 # Architecture
 
-Menu is an app to review, share and give feedback on items at restaurants and bars. Domains are not defined yet; do not invent them. Ask the user, then register them with the `domain` generator.
+Menu is an app to review, share and give feedback on items at restaurants and bars. Its domains are `users`, `menus`, `entries` and `discover` (ADR 0004, which also fixes the one-way dependency direction between them). Do not invent new ones: ask the user, then register them with the `domain` generator.
 
 ## Layout
 
