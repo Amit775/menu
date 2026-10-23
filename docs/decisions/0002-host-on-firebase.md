@@ -12,7 +12,7 @@ The web app needs a home with HTTPS, a CDN, SPA fallback routing and per-PR prev
 - Serve `apps/web` from **Firebase Hosting**. `firebase.json` at the repo root points at `dist/apps/web/browser`, rewrites every path to `index.html`, caches hashed assets for a year and never caches `index.html`.
 - Deploy from GitHub Actions only (`.github/workflows/deploy-web.yml`) with `FirebaseExtended/action-hosting-deploy`: a preview channel per pull request (expires after 7 days) and the live channel on `main`. The action brings its own Firebase CLI, so `firebase-tools` is **not** a workspace dependency.
 - The project id and service account are configuration, not code: repository variable `FIREBASE_PROJECT_ID`, repository secret `FIREBASE_SERVICE_ACCOUNT`. `.firebaserc` holds the id only for local CLI use. The workflow is skipped while the variable is unset.
-- Agents never run `firebase deploy` or change Firebase project settings; they change `firebase.json` and let CI deploy.
+- Agents never run `firebase deploy` or change Firebase project settings; they change `firebase.json` and let CI deploy. Procedure in the `firebase-hosting` skill.
 
 ## API and database
 

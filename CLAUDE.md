@@ -41,7 +41,8 @@ Run tasks through `pnpm nx`, never the underlying tool. `typecheck` uses `ngc` f
 ## Where things are
 
 - Conventions: `.claude/rules/` (architecture, angular, nest, testing). App specifics: `apps/web/CLAUDE.md`, `apps/api/CLAUDE.md`.
-- Procedures: skills `new-feature` and `api-endpoint` in `.claude/skills/`.
+- Procedures: skills `new-feature`, `api-endpoint` and `firebase-hosting` in `.claude/skills/`.
+- Hosting: the web app deploys to Firebase Hosting from CI only (`firebase.json`, ADR 0002, `docs/deployment.md`). Never run `firebase deploy`.
 - Review: run the `reviewer` subagent on your diff before committing.
 - Decisions: `docs/decisions/` (read before proposing architecture changes; add with the `adr` generator). Plans for multi-session work: `docs/plans/`.
 

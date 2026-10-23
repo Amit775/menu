@@ -9,12 +9,12 @@ What runs where, and the one-time steps a human does in web consoles. Agents can
 | Postgres                 | Cloud SQL for PostgreSQL (ADR 0002) | Follow-up PR                         |
 | CI cache and e2e sharing | Nx Cloud                            | `.github/workflows/ci.yml` (nx.json) |
 
-## 1. Connect Nx Cloud
+## 1. Connect Nx Cloud (done 2026-10-23)
 
 1. Sign in at https://cloud.nx.app with GitHub and choose **Connect a repository**, then pick `Amit775/menu`. It opens a PR that adds `nxCloudId` to `nx.json`. Merge it. (Alternative from your machine: `pnpm nx connect`, then commit the `nx.json` change.)
 2. In the Nx Cloud workspace settings, keep the GitHub integration on so PRs get the Nx Cloud run summary comment.
 3. If Nx Cloud shows a CI access token for this workspace, add it as the repository secret `NX_CLOUD_ACCESS_TOKEN` (GitHub repo, **Settings > Secrets and variables > Actions**). Without one, runs still read from the cache.
-4. Tell Claude it is connected. The follow-up switches the CI `E2E` step back to the atomized `e2e-ci` target, which splits Playwright files into parallel, separately cached tasks.
+4. Tell Claude it is connected. CI then uses the atomized `e2e-ci` target, which splits Playwright files into parallel, separately cached tasks.
 
 ## 2. Create the Firebase project
 
