@@ -28,6 +28,7 @@
     "@prisma/client": "7.10.1",
     "firebase": "13.1.0",
     "firebase-admin": "14.5.0",
+    "leaflet": "1.9.4",
     "reflect-metadata": "^0.2.0",
     "rxjs": "~7.8.0",
     "zod": "4.6.7"
@@ -68,6 +69,7 @@
     "@swc/cli": "~0.8.1",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
+    "@types/leaflet": "1.9.22",
     "@types/node": "^22.0.0",
     "@typescript-eslint/rule-tester": "^8.58.0",
     "@typescript-eslint/utils": "^8.58.0",
