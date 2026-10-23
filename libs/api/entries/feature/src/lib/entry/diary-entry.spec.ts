@@ -4,7 +4,11 @@ import { type Principal } from '@menu/api/shared/util-auth';
 import { DiaryEntry } from './diary-entry';
 
 describe('DiaryEntry', () => {
-  const itemRef = { id: 'i1', name: { he: 'המבורגר' }, venue: { id: 'v1', name: { he: 'מוזס' } } };
+  const itemRef = {
+    id: 'i1',
+    name: { he: 'המבורגר' },
+    listPrice: 6800,
+    venue: { id: 'v1', name: { he: 'מוזס' } } };
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const admin: Principal = { ...author, accountId: 'x', isAdmin: true };
   const record: EntryRecord = {

@@ -41,12 +41,18 @@ export class EntryService {
   /** The entries sheet: the caller's own entries, then other people's public ones. */
   async listForItem(principal: Principal | null, itemId: string): Promise<ItemEntries> {
     const item = await this.findItem(principal, itemId);
-    const [mine, others] = await Promise.all([
+    const [refs, mine, others] = await Promise.all([
+      this.catalog.refsFor([itemId]),
       principal ? this.repository.listByAuthor(principal.accountId, { itemId }) : [],
       item.isPublic ? this.repository.listPublicByItem(itemId, principal?.accountId ?? null) : [],
     ]);
+    const ref = refs.get(itemId);
+    if (!ref) {
+      throw new NotFoundException('Item not found.');
+    }
     const names = await this.authors.displayNames(others.map((entry) => entry.authorId));
     return {
+      item: ref,
       mine: mine.map((record) => new DiaryEntry(record).toContract()),
       others: others.map((record) =>
         new DiaryEntry(record).toPublic(names.get(record.authorId) ?? ''),

@@ -9,7 +9,12 @@ describe('EntryService', () => {
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const other: Principal = { ...author, accountId: 'a2' };
   const item: EntryTarget = { id: 'i1', venueId: 'v1', isPublic: true, acceptsEntry: true };
-  const itemRef = { id: 'i1', name: { he: 'המבורגר' }, venue: { id: 'v1', name: { he: 'מוזס' } } };
+  const itemRef = {
+    id: 'i1',
+    name: { he: 'המבורגר' },
+    listPrice: 6800,
+    venue: { id: 'v1', name: { he: 'מוזס' } },
+  };
   const input = {
     rating: 4,
     wouldOrderAgain: true,
@@ -41,6 +46,7 @@ describe('EntryService', () => {
   async function setup(
     repository: Partial<Record<keyof EntryRepository, unknown>>,
     target: EntryTarget | null = item,
+    refs = new Map([['i1', itemRef]]),
   ): Promise<EntryService> {
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -50,7 +56,7 @@ describe('EntryService', () => {
           provide: ITEM_CATALOG,
           useValue: {
             findForEntries: vi.fn().mockResolvedValue(target),
-            refsFor: vi.fn().mockResolvedValue(new Map([['i1', itemRef]])),
+            refsFor: vi.fn().mockResolvedValue(refs),
           },
         },
         {
@@ -105,6 +111,7 @@ describe('EntryService', () => {
       const sheet = await (
         await setup({ listByAuthor, listPublicByItem })
       ).listForItem(author, 'i1');
+      expect(sheet.item).toEqual(itemRef);
       expect(sheet.mine.map((entry) => entry.id)).toEqual(['e1']);
       expect(sheet.others).toEqual([expect.objectContaining({ id: 'e2', authorName: 'דנה' })]);
       expect(listPublicByItem).toHaveBeenCalledWith('i1', 'a1');
@@ -120,13 +127,27 @@ describe('EntryService', () => {
       expect(listPublicByItem).not.toHaveBeenCalled();
     });
 
+    it('reads as not found when the item cannot be named', async () => {
+      const empty = vi.fn().mockResolvedValue([]);
+      const service = await setup(
+        { listByAuthor: empty, listPublicByItem: empty },
+        item,
+        new Map(),
+      );
+      await expect(service.listForItem(author, 'i1')).rejects.toThrow(NotFoundException);
+    });
+
     it('shows visitors public entries only', async () => {
       const listByAuthor = vi.fn();
       const service = await setup({
         listByAuthor,
         listPublicByItem: vi.fn().mockResolvedValue([]),
       });
-      await expect(service.listForItem(null, 'i1')).resolves.toEqual({ mine: [], others: [] });
+      await expect(service.listForItem(null, 'i1')).resolves.toEqual({
+        item: itemRef,
+        mine: [],
+        others: [],
+      });
       expect(listByAuthor).not.toHaveBeenCalled();
     });
   });

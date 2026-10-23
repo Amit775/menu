@@ -89,10 +89,14 @@ export const MergeTagSchema = z.object({ intoTagId: z.uuid() });
 
 export type MergeTag = z.infer<typeof MergeTagSchema>;
 
-/** An item named with its venue, for lists that show it away from its menu (a diary, a shared link). */
+/**
+ * An item named with its venue, for places that show it away from its menu (a
+ * diary, a shared link, the form that logs an entry).
+ */
 export const ItemRefSchema = z.object({
   id: z.uuid(),
   name: LocalizedTextSchema,
+  listPrice: AgorotSchema.nullable(),
   venue: z.object({ id: z.uuid(), name: LocalizedTextSchema }),
 });
 
