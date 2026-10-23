@@ -51,7 +51,9 @@
       "@menu/web/entries/ui": ["./libs/web/entries/ui/src/index.ts"],
       "@menu/web/entries/feature-log": ["./libs/web/entries/feature-log/src/index.ts"],
       "@menu/web/shared/util-device": ["./libs/web/shared/util-device/src/index.ts"],
-      "@menu/web/entries/feature-sheet": ["./libs/web/entries/feature-sheet/src/index.ts"]
+      "@menu/web/entries/feature-sheet": ["./libs/web/entries/feature-sheet/src/index.ts"],
+      "@menu/web/entries/feature-diary": ["./libs/web/entries/feature-diary/src/index.ts"],
+      "@menu/web/entries/feature-shared": ["./libs/web/entries/feature-shared/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
