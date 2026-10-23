@@ -70,6 +70,7 @@ model Venue {
 
   sections   MenuSection[]
   ownerships Ownership[]
+  items      Item[]
 
   @@index([lat, lng])
   @@map("venue")
@@ -83,7 +84,8 @@ model MenuSection {
   nameEn   String? @map("name_en")
   position Int
 
-  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  venue Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  items Item[]
 
   @@index([venueId, position])
   @@map("menu_section")
@@ -104,5 +106,53 @@ model Tag {
   kind      TagKind
   createdAt DateTime @default(now()) @map("created_at")
 
+  items ItemTag[]
+
   @@map("tag")
+}
+
+enum ItemState {
+  pending
+  approved
+  rejected
+  merged
+  archived
+}
+
+/// One dish or drink at one venue. `submitted_by_id` is set for user submissions
+/// and never leaves the API.
+model Item {
+  id            String    @id @default(uuid()) @db.Uuid
+  venueId       String    @map("venue_id") @db.Uuid
+  sectionId     String    @map("section_id") @db.Uuid
+  nameHe        String    @map("name_he")
+  nameEn        String?   @map("name_en")
+  listPrice     Int?      @map("list_price")
+  state         ItemState @default(approved)
+  submittedById String?   @map("submitted_by_id") @db.Uuid
+  mergedIntoId  String?   @map("merged_into_id") @db.Uuid
+  position      Int
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  venue   Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  section MenuSection @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  tags    ItemTag[]
+
+  @@index([venueId, state])
+  @@index([submittedById])
+  @@map("item")
+}
+
+/// A tag applied to an item. `position` 0 is the item's primary tag.
+model ItemTag {
+  itemId   String @map("item_id") @db.Uuid
+  tagId    String @map("tag_id") @db.Uuid
+  position Int
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, tagId])
+  @@index([tagId])
+  @@map("item_tag")
 }
