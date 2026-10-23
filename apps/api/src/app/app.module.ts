@@ -5,12 +5,15 @@ import { ApiExceptionFilter } from '@menu/api/shared/util';
 import { AuthModule, RejectingTokenVerifier } from '@menu/api/shared/util-auth';
 import { ItemModule, MenuSectionModule, TagModule, VenueModule } from '@menu/api/menus/feature';
 import { AccountModule, AccountService, OwnershipModule } from '@menu/api/users/feature';
+import { EntryModule } from '@menu/api/entries/feature';
 import { HealthController } from './health/health.controller';
+import { PortsModule } from './ports.module';
 
 // Feature modules from libs/api/<domain>/feature are registered here by the
 // nest-resource generator. Keep this file to wiring only.
 @Module({
   imports: [
+    EntryModule,
     ItemModule,
     TagModule,
     MenuSectionModule,
@@ -18,6 +21,7 @@ import { HealthController } from './health/health.controller';
     OwnershipModule,
     AccountModule,
     DbModule,
+    PortsModule,
     // Sign-in: the users domain resolves who is calling; the verifier checks tokens.
     AuthModule.forRoot({
       resolverModule: AccountModule,
