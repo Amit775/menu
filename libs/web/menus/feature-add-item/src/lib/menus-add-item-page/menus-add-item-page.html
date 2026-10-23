@@ -1,0 +1,74 @@
+<header>
+  <button mat-button type="button" (click)="cancel()">{{ t().cancel }}</button>
+  <h1>{{ t().title }}</h1>
+</header>
+
+@switch (store.status()) {
+  @case ('loading') {
+    <div class="state" role="status">
+      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+    </div>
+  }
+  @case ('not-found') {
+    <div class="state" role="status">
+      {{ t().notFound }}
+      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="state" role="alert">
+      {{ t().loadFailed }}
+      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+    </div>
+  }
+  @default {
+    @if (store.venue(); as venue) {
+      <p class="intro">{{ t().intro(venue.name | localize) }}</p>
+      @if (store.sections().length === 0) {
+        <p class="state" role="status">{{ t().noSections }}</p>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ t().name }}</mat-label>
+            <input matInput maxlength="200" formControlName="name" />
+            @if (name.invalid) {
+              <mat-error>{{ t().nameRequired }}</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ t().section }}</mat-label>
+            <mat-select formControlName="section">
+              @for (section of store.sections(); track section.id) {
+                <mat-option [value]="section.id">{{ section.name | localize }}</mat-option>
+              }
+            </mat-select>
+            @if (section.invalid) {
+              <mat-error>{{ t().sectionRequired }}</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ t().price }}</mat-label>
+            <input
+              matInput
+              type="number"
+              inputmode="numeric"
+              min="0"
+              step="1"
+              formControlName="price"
+            />
+            <span matTextPrefix>₪&nbsp;</span>
+            @if (price.invalid) {
+              <mat-error>{{ t().priceInvalid }}</mat-error>
+            }
+          </mat-form-field>
+          @if (failed()) {
+            <p class="error" role="alert">{{ t().saveFailed }}</p>
+          }
+          <button mat-flat-button class="save" type="submit" [disabled]="saving()">
+            {{ saving() ? t().saving : t().save }}
+          </button>
+        </form>
+      }
+    }
+  }
+}

@@ -53,7 +53,9 @@
       "@menu/web/shared/util-device": ["./libs/web/shared/util-device/src/index.ts"],
       "@menu/web/entries/feature-sheet": ["./libs/web/entries/feature-sheet/src/index.ts"],
       "@menu/web/entries/feature-diary": ["./libs/web/entries/feature-diary/src/index.ts"],
-      "@menu/web/entries/feature-shared": ["./libs/web/entries/feature-shared/src/index.ts"]
+      "@menu/web/entries/feature-shared": ["./libs/web/entries/feature-shared/src/index.ts"],
+      "@menu/web/menus/data-access": ["./libs/web/menus/data-access/src/index.ts"],
+      "@menu/web/menus/feature-add-item": ["./libs/web/menus/feature-add-item/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
