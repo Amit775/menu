@@ -48,9 +48,9 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium webkit
 
-      # Atomized: one cached task per Playwright file (needs Nx Cloud).
+      # The atomized e2e-ci target only runs on Nx Agents (distributed CI); switch once those are enabled.
       - name: E2E
-        run: pnpm nx affected -t e2e-ci --outputStyle=static
+        run: pnpm nx affected -t e2e --outputStyle=static
 
       - uses: actions/upload-artifact@v4
         if: failure()
