@@ -1,0 +1,142 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "analytics": false,
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.mjs",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/src/test-setup.[jt]s",
+      "!{projectRoot}/test-setup.[jt]s"
+    ],
+    "sharedGlobals": [
+      "{workspaceRoot}/tools/eslint/**/*",
+      "{workspaceRoot}/tools/eslint-rules/**/*.ts",
+      "{workspaceRoot}/tsconfig.base.json"
+    ]
+  },
+  "targetDefaults": {
+    "@angular/build:application": {
+      "cache": true,
+      "dependsOn": [
+        "^build",
+        {
+          "target": "prisma-generate",
+          "projects": ["api-shared-db"]
+        }
+      ],
+      "inputs": ["production", "^production"]
+    },
+    "@angular/build:unit-test": {
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "dependsOn": [
+        {
+          "target": "prisma-generate",
+          "projects": ["api-shared-db"]
+        }
+      ]
+    },
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": [
+        "^build",
+        {
+          "target": "prisma-generate",
+          "projects": ["api-shared-db"]
+        }
+      ],
+      "inputs": ["production", "^production"]
+    },
+    "lint": {
+      "dependsOn": [
+        {
+          "target": "prisma-generate",
+          "projects": ["api-shared-db"]
+        }
+      ],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": [
+        {
+          "target": "prisma-generate",
+          "projects": ["api-shared-db"]
+        }
+      ],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": [
+        {
+          "target": "prisma-generate",
+          "projects": ["api-shared-db"]
+        }
+      ],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": [
+        {
+          "target": "prisma-generate",
+          "projects": ["api-shared-db"]
+        }
+      ]
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "e2e"
+      }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps",
+        "serveStaticTargetName": "serve-static"
+      }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test",
+        "ciTargetName": "test-ci",
+        "testMode": "watch"
+      }
+    },
+    "@menu/workspace-plugin"
+  ],
+  "generators": {
+    "@nx/angular:application": {
+      "e2eTestRunner": "playwright",
+      "linter": "eslint",
+      "style": "scss",
+      "unitTestRunner": "vitest"
+    },
+    "@nx/angular:library": {
+      "linter": "eslint",
+      "unitTestRunner": "vitest-analog"
+    },
+    "@nx/angular:component": {
+      "style": "scss",
+      "changeDetection": "OnPush",
+      "type": "component"
+    }
+  },
+  "defaultBase": "main"
+}

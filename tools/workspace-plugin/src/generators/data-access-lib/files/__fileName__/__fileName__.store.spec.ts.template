@@ -1,0 +1,28 @@
+import { TestBed } from '@angular/core/testing';
+import { <%= className %>ApiClient } from './<%= fileName %>.api-client';
+import { <%= className %>Store } from './<%= fileName %>.store';
+
+describe('<%= className %>Store', () => {
+  const item = { id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', createdAt: '2026-01-01T00:00:00.000Z' };
+
+  function setup(api: Partial<<%= className %>ApiClient>): InstanceType<typeof <%= className %>Store> {
+    TestBed.configureTestingModule({
+      providers: [<%= className %>Store, { provide: <%= className %>ApiClient, useValue: api }],
+    });
+    return TestBed.inject(<%= className %>Store);
+  }
+
+  it('loads items', async () => {
+    const store = setup({ list: () => Promise.resolve([item]) });
+    await store.load();
+    expect(store.items()).toEqual([item]);
+    expect(store.count()).toBe(1);
+    expect(store.loading()).toBe(false);
+  });
+
+  it('records an error when loading fails', async () => {
+    const store = setup({ list: () => Promise.reject(new Error('offline')) });
+    await store.load();
+    expect(store.error()).toBe('Could not load <%= fileName %>.');
+  });
+});

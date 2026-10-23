@@ -1,0 +1,15 @@
+import { type PrismaService } from '@menu/api/shared/db';
+import { <%= className %>Repository } from './<%= fileName %>.repository';
+
+describe('<%= className %>Repository', () => {
+  const row = { id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', createdAt: new Date('2026-01-01T00:00:00.000Z') };
+
+  it('maps rows to the shared contract', async () => {
+    const prisma = { <%= propertyName %>: { findMany: vi.fn().mockResolvedValue([row]) } };
+    const repository = new <%= className %>Repository(prisma as unknown as PrismaService);
+
+    await expect(repository.findAll()).resolves.toEqual([
+      { id: row.id, createdAt: '2026-01-01T00:00:00.000Z' },
+    ]);
+  });
+});

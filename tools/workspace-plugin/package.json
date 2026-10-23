@@ -1,0 +1,15 @@
+{
+  "name": "@menu/workspace-plugin",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@nx/angular": "24.0.0",
+    "@nx/devkit": "24.0.0",
+    "@nx/nest": "24.0.0",
+    "tslib": "^2.3.0"
+  },
+  "generators": "./generators.json"
+}

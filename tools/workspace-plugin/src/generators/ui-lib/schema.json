@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "UiLib",
+  "title": "Create a presentational Angular library (libs/web/<domain>/ui)",
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Registered domain, or shared for libs/web/shared/ui.",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "Which domain (or shared)?"
+    }
+  },
+  "required": ["domain"]
+}

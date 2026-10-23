@@ -1,0 +1,32 @@
+{
+  "$comment": "Source of truth for @nx/enforce-module-boundaries. Domains are added by `nx g @menu/workspace-plugin:domain`, never by hand.",
+  "domains": [],
+  "platforms": {
+    "platform:web": {
+      "allow": ["platform:web", "platform:shared"],
+      "bannedExternalImports": ["@nestjs/*", "@prisma/*", "express", "pg"]
+    },
+    "platform:api": {
+      "allow": ["platform:api", "platform:shared"],
+      "bannedExternalImports": ["@angular/*", "@ngrx/*"]
+    },
+    "platform:shared": {
+      "allow": ["platform:shared"],
+      "bannedExternalImports": ["@angular/*", "@ngrx/*", "@nestjs/*", "@prisma/*", "express", "pg"]
+    },
+    "platform:tooling": {
+      "allow": ["platform:tooling", "platform:shared"],
+      "bannedExternalImports": []
+    }
+  },
+  "types": {
+    "type:app": ["type:feature", "type:data-access", "type:ui", "type:util", "type:contracts"],
+    "type:e2e": ["type:util", "type:contracts"],
+    "type:feature": ["type:data-access", "type:ui", "type:util", "type:contracts"],
+    "type:data-access": ["type:data-access", "type:util", "type:contracts"],
+    "type:ui": ["type:ui", "type:util", "type:contracts"],
+    "type:contracts": ["type:contracts", "type:util"],
+    "type:util": ["type:util", "type:contracts"],
+    "type:plugin": ["type:plugin", "type:util"]
+  }
+}

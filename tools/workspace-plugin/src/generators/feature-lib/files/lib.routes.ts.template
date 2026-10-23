@@ -1,0 +1,4 @@
+import { type Route } from '@angular/router';
+import { <%= className %>Page } from './<%= fileName %>-page/<%= fileName %>-page';
+
+export const <%= routesName %>: Route[] = [{ path: '', component: <%= className %>Page }];

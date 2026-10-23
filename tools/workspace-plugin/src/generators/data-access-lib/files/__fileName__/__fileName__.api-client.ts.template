@@ -1,0 +1,27 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import {
+  type Create<%= className %>,
+  <%= propertyName %>Path,
+  type <%= className %>,
+  <%= className %>Schema,
+} from '@menu/shared/contracts';
+import { firstValueFrom } from 'rxjs';
+import { z } from 'zod';
+
+/** HTTP access to `/api/<%= fileName %>`. Every response is validated against the shared contract. */
+@Injectable({ providedIn: 'root' })
+export class <%= className %>ApiClient {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `/api/${<%= propertyName %>Path}`;
+
+  async list(): Promise<<%= className %>[]> {
+    const body = await firstValueFrom(this.http.get<unknown>(this.baseUrl));
+    return z.array(<%= className %>Schema).parse(body);
+  }
+
+  async create(input: Create<%= className %>): Promise<<%= className %>> {
+    const body = await firstValueFrom(this.http.post<unknown>(this.baseUrl, input));
+    return <%= className %>Schema.parse(body);
+  }
+}

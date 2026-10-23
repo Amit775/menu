@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "FeatureLib",
+  "title": "Create a routed Angular feature library",
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Registered domain, e.g. reviews.",
+      "x-prompt": "Which domain?"
+    },
+    "name": {
+      "type": "string",
+      "description": "Feature name in kebab-case, e.g. browse. Creates libs/web/<domain>/feature-<name>.",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "What is the feature name?"
+    },
+    "path": {
+      "type": "string",
+      "description": "URL path of the lazy route. Defaults to <domain>/<name>."
+    }
+  },
+  "required": ["domain", "name"]
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NestResource",
+  "title": "Add a REST resource to the API: Nest module, controller, service, Prisma repository, model and specs",
+  "type": "object",
+  "properties": {
+    "domain": {
+      "type": "string",
+      "description": "Registered domain, e.g. reviews.",
+      "x-prompt": "Which domain?"
+    },
+    "name": {
+      "type": "string",
+      "description": "Resource name; its contract must exist in @menu/shared/contracts.",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "Which resource (contract name)?"
+    }
+  },
+  "required": ["domain", "name"]
+}

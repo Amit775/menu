@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Adr",
+  "title": "Create an architecture decision record in docs/decisions",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Short decision title, e.g. \"Use Capacitor for mobile\".",
+      "$default": { "$source": "argv", "index": 0 },
+      "x-prompt": "What was decided?"
+    }
+  },
+  "required": ["title"]
+}

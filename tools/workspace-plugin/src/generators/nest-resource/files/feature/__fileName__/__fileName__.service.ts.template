@@ -1,0 +1,17 @@
+import { Injectable } from '@nestjs/common';
+import { <%= className %>Repository } from '@menu/api/<%= domain %>/data-access';
+import { type Create<%= className %>, type <%= className %> } from '@menu/shared/contracts';
+
+/** Business rules for <%= fileName %>. Persistence goes through the repository only. */
+@Injectable()
+export class <%= className %>Service {
+  constructor(private readonly repository: <%= className %>Repository) {}
+
+  list(): Promise<<%= className %>[]> {
+    return this.repository.findAll();
+  }
+
+  create(input: Create<%= className %>): Promise<<%= className %>> {
+    return this.repository.create(input);
+  }
+}

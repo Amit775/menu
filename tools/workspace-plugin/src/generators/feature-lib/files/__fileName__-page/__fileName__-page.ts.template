@@ -1,0 +1,13 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+
+/** Routed page for <%= domain %>/<%= name %>. Inject stores from data-access; render with ui components. */
+@Component({
+  selector: 'menu-<%= fileName %>-page',
+  imports: [],
+  templateUrl: './<%= fileName %>-page.html',
+  styleUrl: './<%= fileName %>-page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class <%= className %>Page {
+  protected readonly title = '<%= title %>';
+}

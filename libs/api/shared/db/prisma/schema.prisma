@@ -1,0 +1,12 @@
+// Prisma schema for the menu API. Models are added per domain.
+// After editing: pnpm nx run api-shared-db:prisma-migrate (dev) and commit the migration.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}

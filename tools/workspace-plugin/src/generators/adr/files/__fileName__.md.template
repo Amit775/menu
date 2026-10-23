@@ -1,0 +1,16 @@
+# <%= number %>. <%= title %>
+
+- Status: proposed
+- Date: <%= date %>
+
+## Context
+
+What problem or force makes this decision necessary?
+
+## Decision
+
+What we will do, stated as an imperative.
+
+## Consequences
+
+What becomes easier, what becomes harder, and what we will watch for.

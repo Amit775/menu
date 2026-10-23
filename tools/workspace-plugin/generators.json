@@ -1,0 +1,39 @@
+{
+  "generators": {
+    "contract": {
+      "factory": "./src/generators/contract/generator",
+      "schema": "./src/generators/contract/schema.json",
+      "description": "Add a Zod schema + inferred types for a resource to @menu/shared/contracts."
+    },
+    "feature-lib": {
+      "factory": "./src/generators/feature-lib/generator",
+      "schema": "./src/generators/feature-lib/schema.json",
+      "description": "Create a routed Angular feature lib (libs/web/<domain>/feature-<name>) and register its lazy route."
+    },
+    "data-access-lib": {
+      "factory": "./src/generators/data-access-lib/generator",
+      "schema": "./src/generators/data-access-lib/schema.json",
+      "description": "Add a Signal Store + validated API client for a resource to libs/web/<domain>/data-access."
+    },
+    "ui-lib": {
+      "factory": "./src/generators/ui-lib/generator",
+      "schema": "./src/generators/ui-lib/schema.json",
+      "description": "Create a presentational Angular lib (libs/web/<domain>/ui)."
+    },
+    "nest-resource": {
+      "factory": "./src/generators/nest-resource/generator",
+      "schema": "./src/generators/nest-resource/schema.json",
+      "description": "Add a Nest module/controller/service, Prisma repository + model, and specs for a resource."
+    },
+    "domain": {
+      "factory": "./src/generators/domain/generator",
+      "schema": "./src/generators/domain/schema.json",
+      "description": "Register a domain scope tag, optionally scaffolding its first resource end to end."
+    },
+    "adr": {
+      "factory": "./src/generators/adr/generator",
+      "schema": "./src/generators/adr/schema.json",
+      "description": "Create a numbered architecture decision record in docs/decisions."
+    }
+  }
+}
