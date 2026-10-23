@@ -17,7 +17,7 @@ export class AccountService implements PrincipalResolver {
   ) {}
 
   async resolve(identity: VerifiedIdentity): Promise<Principal> {
-    const account = await this.repository.upsertByFirebaseUid({
+    const account = await this.repository.findOrCreateByFirebaseUid({
       firebaseUid: identity.uid,
       displayName: identity.name?.trim().slice(0, 60) ?? '',
       isAdmin: this.config.bootstrapAdminUids.includes(identity.uid),
@@ -38,15 +38,23 @@ export class AccountService implements PrincipalResolver {
     return account;
   }
 
-  update(id: string, input: UpdateAccount): Promise<Account> {
-    return this.repository.update(id, input);
+  async update(id: string, input: UpdateAccount): Promise<Account> {
+    const account = await this.repository.update(id, input);
+    if (!account) {
+      throw new NotFoundException('Account not found.');
+    }
+    return account;
   }
 
   list(): Promise<AccountSummary[]> {
     return this.repository.list();
   }
 
-  /** Admins make other accounts Admins. An Admin cannot drop their own role, so one always remains. */
+  /**
+   * Admins make other accounts Admins. An Admin cannot drop their own role, so
+   * removing Admins one by one always leaves one. (Two Admins demoting each other
+   * at the same moment could still leave none; that needs a database fix.)
+   */
   async setAdmin(principal: Principal, id: string, isAdmin: boolean): Promise<AccountSummary> {
     if (id === principal.accountId && !isAdmin) {
       throw new BadRequestException('You cannot remove your own Admin role.');

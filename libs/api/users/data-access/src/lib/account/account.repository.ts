@@ -27,12 +27,21 @@ export interface NewAccount {
 export class AccountRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** The account for this sign-in, created on first sight. `isAdmin: true` promotes an existing account too. */
-  async upsertByFirebaseUid(input: NewAccount): Promise<Account> {
+  /**
+   * The account for this sign-in, created on first sight. Reads first so a
+   * signed-in request does not write; `input` only applies to a new account.
+   */
+  async findOrCreateByFirebaseUid(input: NewAccount): Promise<Account> {
+    const existing = await this.prisma.account.findUnique({
+      where: { firebaseUid: input.firebaseUid },
+    });
+    if (existing) {
+      return toAccount(existing);
+    }
     const row = await this.prisma.account.upsert({
       where: { firebaseUid: input.firebaseUid },
       create: input,
-      update: input.isAdmin ? { isAdmin: true } : {},
+      update: {},
     });
     return toAccount(row);
   }
@@ -42,9 +51,12 @@ export class AccountRepository {
     return row ? toAccount(row) : null;
   }
 
-  async update(id: string, input: UpdateAccount): Promise<Account> {
-    const row = await this.prisma.account.update({ where: { id }, data: withoutUndefined(input) });
-    return toAccount(row);
+  async update(id: string, input: UpdateAccount): Promise<Account | null> {
+    const { count } = await this.prisma.account.updateMany({
+      where: { id },
+      data: withoutUndefined(input),
+    });
+    return count === 0 ? null : this.findById(id);
   }
 
   async list(): Promise<AccountSummary[]> {

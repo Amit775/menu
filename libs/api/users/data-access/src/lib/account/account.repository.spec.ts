@@ -25,9 +25,13 @@ describe('AccountRepository', () => {
 
   it('creates the account on first sign-in and maps it to the contract', async () => {
     const upsert = vi.fn().mockResolvedValue(row);
-    const repository = repositoryWith({ upsert });
+    const repository = repositoryWith({ findUnique: vi.fn().mockResolvedValue(null), upsert });
     await expect(
-      repository.upsertByFirebaseUid({ firebaseUid: 'uid-1', displayName: 'נועה', isAdmin: false }),
+      repository.findOrCreateByFirebaseUid({
+        firebaseUid: 'uid-1',
+        displayName: 'נועה',
+        isAdmin: false,
+      }),
     ).resolves.toEqual(account);
     expect(upsert).toHaveBeenCalledWith({
       where: { firebaseUid: 'uid-1' },
@@ -36,14 +40,34 @@ describe('AccountRepository', () => {
     });
   });
 
-  it('promotes an existing bootstrap Admin', async () => {
-    const upsert = vi.fn().mockResolvedValue({ ...row, isAdmin: true });
-    await repositoryWith({ upsert }).upsertByFirebaseUid({
-      firebaseUid: 'uid-1',
-      displayName: '',
-      isAdmin: true,
+  it('returns an existing account without writing or changing its role', async () => {
+    const upsert = vi.fn();
+    const repository = repositoryWith({ findUnique: vi.fn().mockResolvedValue(row), upsert });
+    await expect(
+      repository.findOrCreateByFirebaseUid({
+        firebaseUid: 'uid-1',
+        displayName: '',
+        isAdmin: true,
+      }),
+    ).resolves.toEqual(account);
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it('updates an account and returns it', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const repository = repositoryWith({
+      updateMany,
+      findUnique: vi.fn().mockResolvedValue({ ...row, language: 'en' }),
     });
-    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({ update: { isAdmin: true } }));
+    await expect(
+      repository.update(row.id, { language: 'en', displayName: undefined }),
+    ).resolves.toEqual({ ...account, language: 'en' });
+    expect(updateMany).toHaveBeenCalledWith({ where: { id: row.id }, data: { language: 'en' } });
+  });
+
+  it('returns null when updating an unknown account', async () => {
+    const repository = repositoryWith({ updateMany: vi.fn().mockResolvedValue({ count: 0 }) });
+    await expect(repository.update(row.id, { language: 'en' })).resolves.toBeNull();
   });
 
   it('returns null for an unknown account', async () => {

@@ -1,6 +1,10 @@
 /** Configuration for the users domain. Read from the environment in this one place. */
 export interface UsersConfig {
-  /** Firebase uids that become Admin on sign-in, so the first Admin needs no database access. */
+  /**
+   * Firebase uids whose account is created as an Admin on first sign-in, so the
+   * first Admin needs no database access. Only applies to new accounts: removing
+   * an Admin through the API sticks, and removing a uid here changes nothing.
+   */
   bootstrapAdminUids: readonly string[];
 }
 
