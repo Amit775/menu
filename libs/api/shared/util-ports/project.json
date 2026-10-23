@@ -1,0 +1,9 @@
+{
+  "name": "api-shared-util-ports",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/shared/util-ports/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:shared", "type:util"],
+  "// targets": "to see all targets run: nx show project api-shared-util-ports --web",
+  "targets": {}
+}
