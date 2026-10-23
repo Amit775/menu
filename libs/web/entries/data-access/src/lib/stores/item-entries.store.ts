@@ -1,5 +1,10 @@
 import { computed, inject } from '@angular/core';
-import { type Entry, type ItemEntries, type UpdateEntry } from '@menu/shared/contracts';
+import {
+  type CreateEntryInput,
+  type Entry,
+  type ItemEntries,
+  type UpdateEntry,
+} from '@menu/shared/contracts';
 import { DataChanges } from '@menu/web/shared/util-events';
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { EntryApiClient } from '../entry/entry.api-client';
@@ -58,7 +63,7 @@ export const ItemEntriesStore = signalStore(
           }
         },
         /** Rejects when the API refuses; the caller shows why. */
-        async create(itemId: string, input: UpdateEntry): Promise<Entry> {
+        async create(itemId: string, input: CreateEntryInput): Promise<Entry> {
           const created = await api.create(itemId, input);
           if (input.visibility) {
             lastVisibility.set(input.visibility);
