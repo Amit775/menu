@@ -1,0 +1,10 @@
+{
+  "name": "web-entries-ui",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/entries/ui/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:entries", "type:ui"],
+  "// targets": "to see all targets run: nx show project web-entries-ui --web",
+  "targets": {}
+}
