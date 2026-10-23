@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TagRepository } from '@menu/api/menus/data-access';
 import { type CreateTag, type Tag, type UpdateTag } from '@menu/shared/contracts';
 
@@ -25,5 +30,15 @@ export class TagService {
       throw new NotFoundException('Tag not found.');
     }
     return tag;
+  }
+
+  /** Folds a duplicate tag into another: its items get the target tag, then it is deleted. */
+  async merge(id: string, intoTagId: string): Promise<void> {
+    if (id === intoTagId) {
+      throw new BadRequestException('A tag cannot be merged into itself.');
+    }
+    if (!(await this.repository.merge(id, intoTagId))) {
+      throw new NotFoundException('Tag not found.');
+    }
   }
 }

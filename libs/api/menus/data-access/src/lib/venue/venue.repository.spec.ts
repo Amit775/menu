@@ -40,7 +40,9 @@ describe('VenueRepository', () => {
   it('filters by ids', async () => {
     const findMany = vi.fn().mockResolvedValue([]);
     await repositoryWith({ findMany }).list({ ids: ['a'], includeHidden: true });
-    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: { in: ['a'] } } }));
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: { in: ['a'] } } }),
+    );
   });
 
   it('creates a venue with its sections in order', async () => {

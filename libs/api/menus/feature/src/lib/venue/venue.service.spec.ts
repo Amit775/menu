@@ -11,7 +11,9 @@ describe('VenueService', () => {
   const admin: Principal = { ...user, isAdmin: true };
   const hidden = { id: venueId, status: 'hidden' };
 
-  async function setup(repository: Partial<Record<keyof VenueRepository, unknown>>): Promise<VenueService> {
+  async function setup(
+    repository: Partial<Record<keyof VenueRepository, unknown>>,
+  ): Promise<VenueService> {
     const moduleRef = await Test.createTestingModule({
       providers: [VenueService, { provide: VenueRepository, useValue: repository }],
     }).compile();

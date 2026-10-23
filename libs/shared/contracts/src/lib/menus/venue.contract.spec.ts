@@ -1,4 +1,9 @@
-import { CreateVenueSchema, UpdateVenueSchema, VenueListQuerySchema, VenueSchema } from './venue.contract';
+import {
+  CreateVenueSchema,
+  UpdateVenueSchema,
+  VenueListQuerySchema,
+  VenueSchema,
+} from './venue.contract';
 
 describe('Venue contract', () => {
   const valid = {
@@ -24,7 +29,11 @@ describe('Venue contract', () => {
 
   it('defaults optional fields on create', () => {
     expect(
-      CreateVenueSchema.parse({ name: valid.name, address: valid.address, location: valid.location }),
+      CreateVenueSchema.parse({
+        name: valid.name,
+        address: valid.address,
+        location: valid.location,
+      }),
     ).toEqual({
       name: valid.name,
       address: valid.address,

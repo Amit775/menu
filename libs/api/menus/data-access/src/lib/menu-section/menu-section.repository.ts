@@ -23,6 +23,10 @@ export class MenuSectionRepository {
     return rows.map(toContract);
   }
 
+  async belongsTo(sectionId: string, venueId: string): Promise<boolean> {
+    return (await this.prisma.menuSection.count({ where: { id: sectionId, venueId } })) > 0;
+  }
+
   /** Appends a section at the end of the venue's menu. */
   async create(venueId: string, name: LocalizedText): Promise<MenuSection> {
     const row = await this.prisma.$transaction(async (tx) => {
