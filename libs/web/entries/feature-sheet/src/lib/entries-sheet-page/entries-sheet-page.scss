@@ -93,6 +93,16 @@ ul {
   color: var(--mat-sys-on-surface-variant);
 }
 
+.confirm {
+  margin: 4px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+
+  &:empty {
+    display: none;
+  }
+}
+
 .notice.error {
   color: var(--mat-sys-error);
 }

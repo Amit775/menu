@@ -60,12 +60,17 @@
                       [disabled]="busy() === entry.id"
                       (click)="makePublic(entry)"
                     >
-                      {{ t().makePublic }}
+                      {{ confirmingPublic() === entry.id ? t().confirmPublic : t().makePublic }}
                     </button>
-                  } @else if (entry.shareToken) {
+                  } @else if (entry.shareToken && !entry.hidden) {
                     <button mat-button type="button" (click)="share(entry)">{{ t().share }}</button>
                   }
                 </menu-entry-card>
+                <p class="confirm" role="status">
+                  @if (confirmingPublic() === entry.id) {
+                    {{ t().publicHint }}
+                  }
+                </p>
               </li>
             }
           </ul>
