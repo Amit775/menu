@@ -30,6 +30,7 @@ const sheet: ItemEntries = {
     listPrice: 6800,
     venue: { id: entry.venueId, name: { he: 'בורגר 24' } },
   },
+  itemIsPublic: true,
   mine: [entry],
   others: [],
 };
@@ -140,6 +141,77 @@ describe('EntriesLogPage', () => {
     expect(field('mat-error').textContent).toContain('מחיר בשקלים שלמים');
   });
 
+  it('keeps agorot of a price the user did not touch', async () => {
+    const create = vi.fn().mockResolvedValue(entry);
+    const { harness, field } = await open(`/log/${ITEM_ID}`, {
+      forItem: vi
+        .fn()
+        .mockResolvedValue({ ...sheet, item: { ...sheet.item, listPrice: 4250 }, mine: [] }),
+      create,
+    });
+    expect((field('input[formcontrolname="price"]') as HTMLInputElement).value).toBe('43');
+    (field('button.save') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+    expect(create).toHaveBeenCalledWith(ITEM_ID, expect.objectContaining({ pricePaid: 4250 }));
+  });
+
+  it('tells the submitter of a new item that it waits for approval', async () => {
+    const { element } = await open(`/log/${ITEM_ID}`, {
+      forItem: vi.fn().mockResolvedValue({ ...sheet, itemIsPublic: false, mine: [] }),
+    });
+    expect(element.querySelector('.pending')?.textContent).toContain('ממתין לאישור');
+  });
+
+  it('keeps the pending note away from public items', async () => {
+    const { element } = await open(`/log/${ITEM_ID}`, {});
+    expect(element.querySelector('.pending')).toBeNull();
+  });
+
+  it('asks for a date when the field is empty, and refuses one in the future', async () => {
+    const { harness, field } = await open(`/log/${ITEM_ID}`, {});
+    const when = field('input[formcontrolname="eatenAt"]') as HTMLInputElement;
+    when.value = '';
+    when.dispatchEvent(new Event('input'));
+    (field('button.save') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+    expect(field('mat-error').textContent).toContain('מתי אכלת');
+    when.value = '2999-01-01T12:00';
+    when.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+    expect(field('mat-error').textContent).toContain('לא בעתיד');
+  });
+
+  it('moves focus to the first field to fix', async () => {
+    const { harness, field } = await open(`/log/${ITEM_ID}`, {});
+    const price = field('input[formcontrolname="price"]') as HTMLInputElement;
+    price.value = '-3';
+    price.dispatchEvent(new Event('input'));
+    (field('button.save') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+    expect(price.ownerDocument.activeElement).toBe(price);
+  });
+
+  it('fills again for another item when the page is reused', async () => {
+    const other = '8b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    const forItem = vi.fn((id: string) =>
+      Promise.resolve(
+        id === other
+          ? { ...sheet, item: { ...sheet.item, id: other, listPrice: 3000 }, mine: [] }
+          : sheet,
+      ),
+    );
+    const { harness } = await open(`/log/${ITEM_ID}`, { forItem });
+    await harness.navigateByUrl(`/log/${other}`, EntriesLogPage);
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(
+        harness.routeNativeElement?.querySelector<HTMLInputElement>(
+          'input[formcontrolname="price"]',
+        )?.value,
+      ).toBe('30');
+    });
+  });
+
   it('says so when the item no longer takes entries', async () => {
     const create = vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 403 }));
     const { harness, field } = await open(`/log/${ITEM_ID}`, { create });
@@ -163,6 +235,18 @@ describe('EntriesLogPage', () => {
     expect(update.mock.calls[0]?.[1]).not.toHaveProperty('eatenAt');
   });
 
+  it('leaves an edited entry’s agorot alone unless the price changed', async () => {
+    const exact = { ...entry, pricePaid: 6250 };
+    const update = vi.fn().mockResolvedValue(exact);
+    const { harness, field } = await open(`/log/${ITEM_ID}/${entry.id}`, {
+      forItem: vi.fn().mockResolvedValue({ ...sheet, mine: [exact] }),
+      update,
+    });
+    (field('button.save') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+    expect(update).toHaveBeenCalledWith(entry.id, expect.objectContaining({ pricePaid: 6250 }));
+  });
+
   it('deletes an entry after a second tap', async () => {
     const remove = vi.fn().mockResolvedValue(undefined);
     const { harness, field } = await open(`/log/${ITEM_ID}/${entry.id}`, { remove });
@@ -170,6 +254,7 @@ describe('EntriesLogPage', () => {
     await harness.fixture.whenStable();
     expect(remove).not.toHaveBeenCalled();
     expect(field('button.delete').textContent).toContain('למחוק לתמיד?');
+    expect(field('.delete-hint').textContent).toContain('לחצו שוב');
     (field('button.delete') as HTMLButtonElement).click();
     await harness.fixture.whenStable();
     expect(remove).toHaveBeenCalledWith(entry.id);

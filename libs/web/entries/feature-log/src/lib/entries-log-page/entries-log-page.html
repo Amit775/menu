@@ -36,6 +36,10 @@
         <a mat-button [routerLink]="['/venues', sheet.item.venue.id]">{{ t().change }}</a>
       </div>
 
+      @if (!store.sheet()?.itemIsPublic) {
+        <p class="pending" role="note">{{ t().pending }}</p>
+      }
+
       <form [formGroup]="form" (ngSubmit)="save()">
         <menu-rating-input [(value)]="rating" [disabled]="saving()" />
 
@@ -81,8 +85,10 @@
           <mat-form-field appearance="outline">
             <mat-label>{{ t().eatenAt }}</mat-label>
             <input matInput type="datetime-local" [max]="maxDate" formControlName="eatenAt" />
-            @if (eatenAt.invalid) {
-              <mat-error>{{ t().eatenAtInvalid }}</mat-error>
+            @if (eatenAt.hasError('future')) {
+              <mat-error>{{ t().eatenAtFuture }}</mat-error>
+            } @else if (eatenAt.invalid) {
+              <mat-error>{{ t().eatenAtMissing }}</mat-error>
             }
           </mat-form-field>
         </div>
@@ -131,6 +137,11 @@
           <button mat-button class="delete" type="button" [disabled]="saving()" (click)="remove()">
             {{ confirmingDelete() ? t().confirmDelete : t().delete }}
           </button>
+          <p class="delete-hint" role="status">
+            @if (confirmingDelete()) {
+              {{ t().confirmDeleteHint }}
+            }
+          </p>
         }
       </form>
     }
