@@ -1,28 +1,17 @@
-import { type EntryFact } from '@menu/api/discover/data-access';
+import { type EntryFact } from '@menu/api/entries/data-access';
+import { type ItemEntryStats } from '@menu/api/shared/util-ports';
 import { type PricePoint, SCORE_FLOOR } from '@menu/shared/contracts';
 
-/** Everything discovery shows about one item's entries, before ranking. */
-export interface ItemStats {
-  /** Authors with a rating; each counts once, with their latest rating. */
-  ratingCount: number;
-  ratingSum: number;
-  /** Null under the floor. */
-  wouldOrderAgainPercent: number | null;
-  publicEntryCount: number;
-  otherEntryCount: number;
-  latestPublicPrice: number | null;
-  priceHistory: PricePoint[];
-}
+/** Price-history months follow the diners' calendar, not UTC. */
+const monthFormat = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Jerusalem',
+  year: 'numeric',
+  month: '2-digit',
+});
 
-export const EMPTY_STATS: ItemStats = {
-  ratingCount: 0,
-  ratingSum: 0,
-  wouldOrderAgainPercent: null,
-  publicEntryCount: 0,
-  otherEntryCount: 0,
-  latestPublicPrice: null,
-  priceHistory: [],
-};
+function monthOf(date: Date): string {
+  return monthFormat.format(date).slice(0, 7);
+}
 
 function newer(a: EntryFact, b: EntryFact): boolean {
   const byEaten = a.eatenAt.getTime() - b.eatenAt.getTime();
@@ -44,33 +33,46 @@ function latestPerAuthor(
   return [...latest.values()];
 }
 
+/**
+ * The privacy rule behind every number: entries that are not public join an
+ * aggregate only when at least `SCORE_FLOOR` of them are in it. With one or two,
+ * the aggregate uses public entries alone, so it cannot be differenced against
+ * the public entries everyone sees.
+ */
+export function countable(facts: readonly EntryFact[]): EntryFact[] {
+  const others = facts.filter((fact) => fact.visibility !== 'public').length;
+  return others >= SCORE_FLOOR ? [...facts] : facts.filter((fact) => fact.visibility === 'public');
+}
+
 function priceHistory(facts: readonly EntryFact[]): PricePoint[] {
-  const months = new Map<string, number[]>();
+  const months = new Map<string, EntryFact[]>();
   for (const fact of facts) {
     if (fact.pricePaid !== null) {
-      const month = fact.eatenAt.toISOString().slice(0, 7);
-      months.set(month, [...(months.get(month) ?? []), fact.pricePaid]);
+      const month = monthOf(fact.eatenAt);
+      months.set(month, [...(months.get(month) ?? []), fact]);
     }
   }
   return [...months.entries()]
-    .filter(([, prices]) => prices.length >= SCORE_FLOOR)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([month, prices]) => ({
+    .map(([month, monthFacts]) => ({
+      month,
+      prices: countable(monthFacts).map((fact) => fact.pricePaid ?? 0),
+    }))
+    .filter(({ prices }) => prices.length >= SCORE_FLOOR)
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .map(({ month, prices }) => ({
       month,
       averagePrice: Math.round(prices.reduce((sum, price) => sum + price, 0) / prices.length),
       count: prices.length,
     }));
 }
 
-/**
- * Sums one item's entries. Private and shared entries count toward the score,
- * the ratio and the price history anonymously; only public ones give a latest price.
- */
-export function summarizeEntries(facts: readonly EntryFact[]): ItemStats {
-  const rated = latestPerAuthor(facts, (fact) => fact.rating !== null);
-  const answered = latestPerAuthor(facts, (fact) => fact.wouldOrderAgain !== null);
+/** Sums one item's unhidden entries under the privacy rule (see `countable`). */
+export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {
+  const rated = countable(latestPerAuthor(facts, (fact) => fact.rating !== null));
+  const answered = countable(latestPerAuthor(facts, (fact) => fact.wouldOrderAgain !== null));
   const yes = answered.filter((fact) => fact.wouldOrderAgain === true).length;
   const publicFacts = facts.filter((fact) => fact.visibility === 'public');
+  const others = facts.length - publicFacts.length;
   const latestPriced = publicFacts
     .filter((fact) => fact.pricePaid !== null)
     .reduce<EntryFact | null>((best, fact) => (!best || newer(fact, best) ? fact : best), null);
@@ -80,14 +82,14 @@ export function summarizeEntries(facts: readonly EntryFact[]): ItemStats {
     wouldOrderAgainPercent:
       answered.length >= SCORE_FLOOR ? Math.round((100 * yes) / answered.length) : null,
     publicEntryCount: publicFacts.length,
-    otherEntryCount: facts.length - publicFacts.length,
+    otherEntryCount: others >= SCORE_FLOOR ? others : null,
     latestPublicPrice: latestPriced?.pricePaid ?? null,
     priceHistory: priceHistory(facts),
   };
 }
 
 /** Groups facts by item and summarizes each. */
-export function summarizeByItem(facts: readonly EntryFact[]): Map<string, ItemStats> {
+export function summarizeByItem(facts: readonly EntryFact[]): Map<string, ItemEntryStats> {
   const byItem = new Map<string, EntryFact[]>();
   for (const fact of facts) {
     byItem.set(fact.itemId, [...(byItem.get(fact.itemId) ?? []), fact]);

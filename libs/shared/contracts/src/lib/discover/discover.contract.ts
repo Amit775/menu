@@ -71,8 +71,9 @@ export const VenueRefSchema = z.object({ id: z.uuid(), name: LocalizedTextSchema
 export type VenueRef = z.infer<typeof VenueRefSchema>;
 
 /**
- * One item as discovery shows it. `score` and `wouldOrderAgainPercent` are null
- * until `ratingCount` reaches the floor. `latestPrice` is the menu price, or the
+ * One item as discovery shows it. `score` is null until `ratingCount` reaches
+ * the floor, `wouldOrderAgainPercent` until 3 answers count. Entries that are
+ * not public join these numbers only once there are 3 of them. `latestPrice` is the menu price, or the
  * latest price in a public entry. `writtenByMe` is the flag on items the caller
  * has an entry on.
  */

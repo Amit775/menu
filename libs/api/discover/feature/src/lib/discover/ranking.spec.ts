@@ -1,4 +1,4 @@
-import { EMPTY_STATS, type ItemStats } from './item-stats';
+import { EMPTY_STATS, type ItemStats } from './ranking';
 import { ConfidenceWeightedRanking, peerMeans } from './ranking';
 
 describe('ConfidenceWeightedRanking', () => {

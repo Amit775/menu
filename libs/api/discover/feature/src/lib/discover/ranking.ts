@@ -1,5 +1,18 @@
 import { SCORE_FLOOR } from '@menu/shared/contracts';
-import { type ItemStats } from './item-stats';
+import { type ItemEntryStats as ItemStats } from '@menu/api/shared/util-ports';
+
+/** An item nobody has written about. */
+export const EMPTY_STATS: ItemStats = {
+  ratingCount: 0,
+  ratingSum: 0,
+  wouldOrderAgainPercent: null,
+  publicEntryCount: 0,
+  otherEntryCount: null,
+  latestPublicPrice: null,
+  priceHistory: [],
+};
+
+export { type ItemStats };
 
 /** How a score is computed. v1 below; author reliability (v2) and friends first (v3) plug in here. */
 export interface RankingStrategy {

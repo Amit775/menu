@@ -80,4 +80,17 @@ describe('EntryRepository', () => {
     await repositoryWith({ updateMany }).moveToItem('i1', 'i2');
     expect(updateMany).toHaveBeenCalledWith({ where: { itemId: 'i1' }, data: { itemId: 'i2' } });
   });
+
+  it('never reads hidden entries into aggregates', async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    await repositoryWith({ findMany }).listFacts();
+    expect(findMany.mock.calls[0]?.[0]).toMatchObject({ where: { hiddenAt: null } });
+  });
+
+  it('finds the items an author wrote about', async () => {
+    const findMany = vi.fn().mockResolvedValue([{ itemId: 'i1' }, { itemId: 'i2' }]);
+    await expect(repositoryWith({ findMany }).itemIdsWrittenBy('a1')).resolves.toEqual(
+      new Set(['i1', 'i2']),
+    );
+  });
 });

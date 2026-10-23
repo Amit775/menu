@@ -1,7 +1,12 @@
 import { Global, Module } from '@nestjs/common';
-import { EntryMergeListener, EntryModule } from '@menu/api/entries/feature';
+import { EntryMergeListener, EntryModule, EntryStats } from '@menu/api/entries/feature';
 import { ItemModule, MenusItemCatalog } from '@menu/api/menus/feature';
-import { AUTHOR_DIRECTORY, ITEM_CATALOG, ITEM_MERGE_LISTENER } from '@menu/api/shared/util-ports';
+import {
+  AUTHOR_DIRECTORY,
+  ENTRY_STATS,
+  ITEM_CATALOG,
+  ITEM_MERGE_LISTENER,
+} from '@menu/api/shared/util-ports';
 import { AccountDirectory, AccountModule } from '@menu/api/users/feature';
 
 /**
@@ -15,7 +20,8 @@ import { AccountDirectory, AccountModule } from '@menu/api/users/feature';
     { provide: AUTHOR_DIRECTORY, useExisting: AccountDirectory },
     { provide: ITEM_CATALOG, useExisting: MenusItemCatalog },
     { provide: ITEM_MERGE_LISTENER, useExisting: EntryMergeListener },
+    { provide: ENTRY_STATS, useExisting: EntryStats },
   ],
-  exports: [AUTHOR_DIRECTORY, ITEM_CATALOG, ITEM_MERGE_LISTENER],
+  exports: [AUTHOR_DIRECTORY, ITEM_CATALOG, ITEM_MERGE_LISTENER, ENTRY_STATS],
 })
 export class PortsModule {}

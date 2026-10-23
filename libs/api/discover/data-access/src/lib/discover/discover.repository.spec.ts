@@ -34,21 +34,6 @@ describe('DiscoverRepository', () => {
     });
   });
 
-  it('never reads hidden entries into scores', async () => {
-    const findMany = vi.fn().mockResolvedValue([]);
-    await repositoryWith({ entry: { findMany } }).loadEntryFacts(['i1']);
-    expect(findMany.mock.calls[0]?.[0]).toMatchObject({
-      where: { itemId: { in: ['i1'] }, hiddenAt: null },
-    });
-  });
-
-  it('finds the items an author wrote about', async () => {
-    const findMany = vi.fn().mockResolvedValue([{ itemId: 'i1' }, { itemId: 'i2' }]);
-    await expect(repositoryWith({ entry: { findMany } }).itemIdsWrittenBy('a1')).resolves.toEqual(
-      new Set(['i1', 'i2']),
-    );
-  });
-
   it('treats a hidden venue as missing', async () => {
     const findFirst = vi.fn().mockResolvedValue(null);
     await expect(

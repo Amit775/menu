@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService, toLocalized } from '@menu/api/shared/db';
 import {
-  type EntryVisibility,
   type GeoPoint,
   type LocalizedText,
   type MenuSection,
@@ -24,20 +23,9 @@ export interface CatalogItem {
   createdAt: Date;
 }
 
-/** One unhidden entry, reduced to what scores and counts need. Never leaves the API. */
-export interface EntryFact {
-  itemId: string;
-  authorId: string;
-  rating: number | null;
-  wouldOrderAgain: boolean | null;
-  pricePaid: number | null;
-  visibility: EntryVisibility;
-  eatenAt: Date;
-  createdAt: Date;
-}
-
 /**
- * The discover read model: reads the menus and entries tables and never writes.
+ * The discover read model over the menus tables; it never writes. Entries reach
+ * discover only as aggregates through the `ENTRY_STATS` port (ADR 0004).
  * Loads the whole catalog per request, which is fine at friends scale; a stored
  * score table can replace it behind the same service.
  */
@@ -66,36 +54,6 @@ export class DiscoverRepository {
       listPrice: row.listPrice,
       createdAt: row.createdAt,
     }));
-  }
-
-  async loadEntryFacts(itemIds: readonly string[]): Promise<EntryFact[]> {
-    return this.prisma.entry.findMany({
-      where: { itemId: { in: [...itemIds] }, hiddenAt: null },
-      select: {
-        itemId: true,
-        authorId: true,
-        rating: true,
-        wouldOrderAgain: true,
-        pricePaid: true,
-        visibility: true,
-        eatenAt: true,
-        createdAt: true,
-      },
-    });
-  }
-
-  /** The items this author has written about, for the flag. Hidden entries count: they are still the author's. */
-  async itemIdsWrittenBy(authorId: string): Promise<Set<string>> {
-    const rows = await this.prisma.entry.findMany({
-      where: { authorId },
-      select: { itemId: true },
-      distinct: ['itemId'],
-    });
-    return new Set(rows.map((row) => row.itemId));
-  }
-
-  countEntriesAt(authorId: string, venueId: string): Promise<number> {
-    return this.prisma.entry.count({ where: { authorId, venueId } });
   }
 
   /** An active venue; hidden ones are not part of discovery. */

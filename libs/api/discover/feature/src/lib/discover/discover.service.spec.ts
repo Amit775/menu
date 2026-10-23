@@ -1,14 +1,11 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import {
-  type CatalogItem,
-  DiscoverRepository,
-  type EntryFact,
-} from '@menu/api/discover/data-access';
+import { type CatalogItem, DiscoverRepository } from '@menu/api/discover/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
+import { ENTRY_STATS } from '@menu/api/shared/util-ports';
 import { FeedQuerySchema, MapQuerySchema } from '@menu/shared/contracts';
 import { DiscoverService, RANKING_STRATEGY } from './discover.service';
-import { ConfidenceWeightedRanking } from './ranking';
+import { ConfidenceWeightedRanking, EMPTY_STATS, type ItemStats } from './ranking';
 
 describe('DiscoverService', () => {
   const venueId = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
@@ -35,45 +32,32 @@ describe('DiscoverService', () => {
     };
   }
 
-  function rating(
-    itemId: string,
-    authorId: string,
-    value: number,
-    visibility: EntryFact['visibility'] = 'private',
-  ): EntryFact {
-    return {
-      itemId,
-      authorId,
-      rating: value,
-      wouldOrderAgain: true,
-      pricePaid: 6000,
-      visibility,
-      eatenAt: new Date('2026-10-10T00:00:00.000Z'),
-      createdAt: new Date('2026-10-10T00:00:00.000Z'),
-    };
-  }
-
   const catalog = [
     item('ranked'),
     item('archived', { state: 'archived' }),
     item('far', { venueId: farVenueId, venueLocation: { lat: 32.79, lng: 34.99 } }),
     item('new', { position: 1, listPrice: 4200 }),
   ];
-  const facts = [
-    rating('ranked', 'a', 5),
-    rating('ranked', 'b', 4),
-    rating('ranked', 'c', 5, 'public'),
-    rating('new', 'a', 3),
-  ];
+  const stats = new Map<string, ItemStats>([
+    [
+      'ranked',
+      {
+        ...EMPTY_STATS,
+        ratingCount: 3,
+        ratingSum: 14,
+        wouldOrderAgainPercent: 100,
+        publicEntryCount: 1,
+        otherEntryCount: null,
+      },
+    ],
+    ['new', { ...EMPTY_STATS, ratingCount: 1, ratingSum: 3, publicEntryCount: 1 }],
+  ]);
 
   async function setup(
     overrides: Partial<Record<keyof DiscoverRepository, unknown>> = {},
   ): Promise<DiscoverService> {
     const repository = {
       loadCatalog: vi.fn().mockResolvedValue(catalog),
-      loadEntryFacts: vi.fn().mockResolvedValue(facts),
-      itemIdsWrittenBy: vi.fn().mockResolvedValue(new Set(['new'])),
-      countEntriesAt: vi.fn().mockResolvedValue(2),
       findActiveVenue: vi.fn().mockResolvedValue({ id: venueId, location: here }),
       listActiveVenues: vi.fn().mockResolvedValue([{ id: venueId, name: { he: 'הבורגר של משה' } }]),
       listSections: vi
@@ -91,6 +75,14 @@ describe('DiscoverService', () => {
         DiscoverService,
         { provide: DiscoverRepository, useValue: repository },
         { provide: RANKING_STRATEGY, useValue: new ConfidenceWeightedRanking() },
+        {
+          provide: ENTRY_STATS,
+          useValue: {
+            statsByItem: vi.fn().mockResolvedValue(stats),
+            itemIdsWrittenBy: vi.fn().mockResolvedValue(new Set(['new'])),
+            countEntriesAt: vi.fn().mockResolvedValue(2),
+          },
+        },
       ],
     }).compile();
     return moduleRef.get(DiscoverService);
@@ -167,6 +159,14 @@ describe('DiscoverService', () => {
     });
   });
 
+  it('finds nothing for a query that folds to nothing', async () => {
+    await expect((await setup()).search(null, '״')).resolves.toEqual({
+      items: [],
+      venues: [],
+      tags: [],
+    });
+  });
+
   it('finds items, venues and tags by folded Hebrew', async () => {
     const results = await (await setup()).search(null, 'בורגר');
     expect(results.venues).toHaveLength(1);
@@ -174,7 +174,7 @@ describe('DiscoverService', () => {
   });
 
   describe('Owner insights', () => {
-    it('counts entries that are not public only from the floor up', async () => {
+    it('passes on counts of entries that are not public as entries gives them', async () => {
       const insights = await (await setup()).insights(owner, venueId);
       expect(insights.items.find((i) => i.itemId === 'ranked')).toMatchObject({
         publicEntryCount: 1,
