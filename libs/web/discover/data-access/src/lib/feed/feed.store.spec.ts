@@ -1,0 +1,107 @@
+import { TestBed } from '@angular/core/testing';
+import { item, VENUE_ID } from '../testing/fixtures';
+import { DiscoverApiClient } from '../api/discover.api-client';
+import { DeviceLocation } from '../location/device-location';
+import { FeedStore } from './feed.store';
+
+describe('FeedStore', () => {
+  const near = { lat: 32.08, lng: 34.78 };
+  const unranked = { ...item, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', score: null };
+
+  function setup(api: Partial<DiscoverApiClient>) {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: DiscoverApiClient, useValue: api },
+        {
+          provide: DeviceLocation,
+          useValue: { locate: () => Promise.resolve(near), position: () => near },
+        },
+      ],
+    });
+    return TestBed.inject(FeedStore);
+  }
+
+  it('loads the first page near the user and splits ranked from unranked', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item, unranked], nextOffset: 20 });
+    const store = setup({ feed });
+    await store.load();
+    expect(feed).toHaveBeenCalledWith(expect.objectContaining({ near, mode: 'reels', offset: 0 }));
+    expect(store.ranked()).toEqual([item]);
+    expect(store.unranked()).toEqual([unranked]);
+    expect(store.status()).toBe('loaded');
+  });
+
+  it('appends the next page', async () => {
+    const feed = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [item], nextOffset: 1 })
+      .mockResolvedValueOnce({ items: [unranked], nextOffset: null });
+    const store = setup({ feed });
+    await store.load();
+    await store.loadMore();
+    expect(store.items()).toEqual([item, unranked]);
+    await store.loadMore();
+    expect(feed).toHaveBeenCalledTimes(2);
+  });
+
+  it('reloads from the start when a filter changes', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item], nextOffset: null });
+    const store = setup({ feed });
+    await store.load();
+    await store.setFilters({ tagIds: ['t1'], maxPrice: 8000 });
+    expect(feed).toHaveBeenLastCalledWith(
+      expect.objectContaining({ tagIds: ['t1'], maxPrice: 8000, offset: 0 }),
+    );
+    expect(store.filterCount()).toBe(2);
+  });
+
+  it('asks for the list order when switching to the list', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item], nextOffset: null });
+    const store = setup({ feed });
+    await store.setView('list');
+    expect(feed).toHaveBeenLastCalledWith(expect.objectContaining({ mode: 'list' }));
+  });
+
+  it('records a failed load and tries again on the next load', async () => {
+    const feed = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce({ items: [item], nextOffset: null });
+    const store = setup({ feed });
+    await store.load();
+    expect(store.status()).toBe('error');
+    await store.load();
+    expect(store.items()).toEqual([item]);
+  });
+
+  it('keeps only the latest answer when filters change quickly', async () => {
+    let slow: (value: unknown) => void = () => undefined;
+    const feed = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise((resolve) => (slow = resolve)))
+      .mockResolvedValueOnce({ items: [unranked], nextOffset: null });
+    const store = setup({ feed });
+    const first = store.setFilters({ radiusKm: 10 });
+    await store.setFilters({ radiusKm: 2 });
+    slow({ items: [item], nextOffset: null });
+    await first;
+    expect(store.items()).toEqual([unranked]);
+  });
+
+  it('loads a venue’s other items once', async () => {
+    const venue = vi
+      .fn()
+      .mockResolvedValue({ sections: [{ items: [item] }, { items: [unranked] }] });
+    const store = setup({ venue });
+    await store.loadVenueItems(VENUE_ID);
+    await store.loadVenueItems(VENUE_ID);
+    expect(store.venueItems()[VENUE_ID]).toEqual([item, unranked]);
+    expect(venue).toHaveBeenCalledTimes(1);
+  });
+
+  it('carries on without tags when they fail to load', async () => {
+    const store = setup({ tags: vi.fn().mockRejectedValue(new Error('offline')) });
+    await store.loadTags();
+    expect(store.tags()).toEqual([]);
+  });
+});
