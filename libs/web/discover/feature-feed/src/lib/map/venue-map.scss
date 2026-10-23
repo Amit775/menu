@@ -14,10 +14,11 @@ menu-venue-map {
     isolation: isolate;
   }
 
+  // At the bottom, clear of Leaflet's zoom buttons at the top.
   .empty {
     position: absolute;
     inset-inline: 16px;
-    inset-block-start: 16px;
+    inset-block-end: 32px;
     z-index: 1;
     margin: 0;
     padding: 12px;
@@ -35,7 +36,8 @@ menu-venue-map {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 12px 12px 16px;
+    padding-block: 12px;
+    padding-inline: 16px 12px;
     border-radius: 16px;
     background: var(--mat-sys-surface);
     box-shadow: var(--mat-sys-level3);
@@ -47,6 +49,7 @@ menu-venue-map {
 
     h2 {
       margin: 0;
+      outline: none;
       font: var(--mat-sys-title-medium);
       font-weight: 700;
     }

@@ -82,7 +82,10 @@ export class DiscoverService {
     const pins = new Map<string, MapPin>();
     const locations = new Map(snapshot.catalog.map((item) => [item.venueId, item.venueLocation]));
     for (const item of this.filter(snapshot, query)) {
-      const location = locations.get(item.venue.id) ?? { lat: 0, lng: 0 };
+      const location = locations.get(item.venue.id);
+      if (!location) {
+        continue;
+      }
       const pin = pins.get(item.venue.id) ?? {
         venue: item.venue,
         location,

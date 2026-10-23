@@ -36,13 +36,12 @@
 
   @if (store.view() === 'map') {
     @if (store.status() === 'error') {
-      <div class="state" role="alert">
+      <p class="reel-error" role="alert">
         {{ t().loadFailed }}
         <button mat-button type="button" (click)="store.reload()">{{ t().retry }}</button>
-      </div>
-    } @else {
-      <menu-venue-map />
+      </p>
     }
+    <menu-venue-map />
   } @else if (store.status() === 'error' && store.items().length === 0) {
     <div class="state" role="alert">
       {{ t().loadFailed }}

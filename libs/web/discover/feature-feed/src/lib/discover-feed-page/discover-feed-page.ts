@@ -57,9 +57,11 @@ export class DiscoverFeedPage {
 
   /** By score the list splits off items without enough ratings; other orders are one list. */
   protected readonly splitByRanking = computed(() => this.store.filters().sort === 'score');
-  /** Items are on screen and a newer request is on its way. */
+  /** Items (or the map) are on screen and a newer request is on its way. */
   protected readonly refreshing = computed(
-    () => this.store.status() === 'loading' && this.store.items().length > 0,
+    () =>
+      this.store.status() === 'loading' &&
+      (this.store.view() === 'map' || this.store.items().length > 0),
   );
   protected readonly pageFailed = computed(
     () => this.store.status() === 'error' && this.store.items().length > 0,

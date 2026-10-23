@@ -84,6 +84,32 @@ describe('FeedStore', () => {
     expect(feed).toHaveBeenCalledTimes(1);
   });
 
+  it('records a failed map load, and ignores pins that arrive after leaving the map', async () => {
+    let late: (value: unknown) => void = () => undefined;
+    const map = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockImplementationOnce(() => new Promise((resolve) => (late = resolve)));
+    const feed = vi.fn().mockResolvedValue({ items: [item], nextOffset: null });
+    const store = setup({ map, feed });
+    await store.setView('map');
+    expect(store.status()).toBe('error');
+    const loading = store.reload();
+    await store.setView('list');
+    late([
+      {
+        venue: item.venue,
+        location: { lat: 1, lng: 1 },
+        itemCount: 1,
+        bestScore: null,
+        writtenByMe: false,
+      },
+    ]);
+    await loading;
+    expect(store.pins()).toEqual([]);
+    expect(store.status()).toBe('loaded');
+  });
+
   it('records a failed load and tries again on the next load', async () => {
     const feed = vi
       .fn()
