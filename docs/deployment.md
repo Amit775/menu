@@ -36,7 +36,7 @@ Try it locally: `pnpm nx build web && firebase emulators:start --only hosting`, 
 
 ## 4. Let GitHub Actions deploy
 
-1. In https://console.cloud.google.com/iam-admin/serviceaccounts (same project), **Create service account** named `github-deployer` with these roles: **Firebase Hosting Admin**, **Service Usage Consumer** (without it deploys fail with `USER_PROJECT_DENIED`), **Cloud Run Viewer** (needed once Hosting rewrites to Cloud Run), **API Keys Viewer**.
+1. In https://console.cloud.google.com/iam-admin/serviceaccounts?project=menu-b29eb (the Google Cloud project behind your Firebase project, same id; do not create a new Cloud project), **Create service account** named `github-deployer` with these roles: **Firebase Hosting Admin**, **Service Usage Consumer** (without it deploys fail with `USER_PROJECT_DENIED`), **Cloud Run Viewer** (needed once Hosting rewrites to Cloud Run), **API Keys Viewer**.
 2. Open the account, **Keys > Add key > Create new key > JSON**. A file downloads.
 3. In GitHub, **Settings > Secrets and variables > Actions**:
    - **Secrets** tab: `FIREBASE_SERVICE_ACCOUNT` = the whole JSON file contents.
