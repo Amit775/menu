@@ -137,6 +137,7 @@ model Item {
   venue   Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
   section MenuSection @relation(fields: [sectionId], references: [id], onDelete: Restrict)
   tags    ItemTag[]
+  entries Entry[]
 
   @@index([venueId, state])
   @@index([submittedById])
@@ -155,4 +156,36 @@ model ItemTag {
   @@id([itemId, tagId])
   @@index([tagId])
   @@map("item_tag")
+}
+
+enum EntryVisibility {
+  private
+  shared
+  public
+}
+
+/// One line in a user's diary about one item. `author_id` never leaves the
+/// entries domain; `venue_id` is copied from the item for history per venue.
+model Entry {
+  id              String          @id @default(uuid()) @db.Uuid
+  authorId        String          @map("author_id") @db.Uuid
+  itemId          String          @map("item_id") @db.Uuid
+  venueId         String          @map("venue_id") @db.Uuid
+  eatenAt         DateTime        @map("eaten_at")
+  rating          Int?
+  wouldOrderAgain Boolean?        @map("would_order_again")
+  pricePaid       Int?            @map("price_paid")
+  text            String          @default("")
+  visibility      EntryVisibility @default(private)
+  shareToken      String?         @unique @map("share_token")
+  hiddenAt        DateTime?       @map("hidden_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@index([authorId, eatenAt])
+  @@index([itemId, visibility])
+  @@index([venueId])
+  @@map("entry")
 }
