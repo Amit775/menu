@@ -1,0 +1,10 @@
+{
+  "name": "web-entries-feature-shared",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/entries/feature-shared/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:entries", "type:feature"],
+  "// targets": "to see all targets run: nx show project web-entries-feature-shared --web",
+  "targets": {}
+}
