@@ -18,3 +18,4 @@ The events carry no payload. A reader always refetches from the API, which stays
 - `entries` pages notify after every successful write; `FeedStore` invalidates and refetches on its next load, keeping the reel the user was on when the refreshed feed still reaches it.
 - A notify that no one reads costs nothing; a topic that grows a payload should become a port in a shared lib instead.
 - The util must stay small. Anything that starts to look like an app-wide event bus with handlers and payloads gets its own ADR.
+- The same slice moves `DeviceLocation` and `DeviceShare` from discover's data-access into `web-shared-util-device` (`platform:web`, `scope:shared`, `type:util`), because entries shares links and discover locates the user. It wraps device APIs only and holds no domain types, under the same rule: it stays small, and anything larger gets its own ADR.
