@@ -11,6 +11,10 @@
       <a mat-flat-button routerLink="/sign-in">{{ t().signIn }}</a>
     }
     @default {
+      <a mat-flat-button class="diary" routerLink="/diary">
+        <mat-icon aria-hidden="true">menu_book</mat-icon>
+        {{ t().diary }}
+      </a>
       @if (store.error() === 'load-failed') {
         <p class="error" role="alert">{{ t().loadFailed }}</p>
       }

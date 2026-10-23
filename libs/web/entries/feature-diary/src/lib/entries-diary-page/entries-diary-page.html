@@ -2,7 +2,12 @@
   <a mat-icon-button routerLink="/profile" [attr.aria-label]="t().back">
     <mat-icon aria-hidden="true">{{ backIcon() }}</mat-icon>
   </a>
-  <h1>{{ t().title }}</h1>
+  <h1>
+    {{ t().title }}
+    @if (venue(); as venue) {
+      <span class="at">{{ t().at(venue.name | localize) }}</span>
+    }
+  </h1>
   @if (store.status() === 'loaded' && store.entries().length > 0) {
     <span class="count">{{ t().count(store.entries().length) }}</span>
   }
@@ -15,6 +20,9 @@
     </div>
   }
   @case ('loaded') {
+    @if (venueId()) {
+      <a class="all" mat-button routerLink="/diary">{{ t().all }}</a>
+    }
     @if (store.entries().length === 0) {
       <div class="state">
         {{ t().empty }}
