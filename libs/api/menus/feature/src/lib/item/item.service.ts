@@ -1,13 +1,18 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
   Optional,
 } from '@nestjs/common';
-import { type ItemRecord, ItemRepository, VenueRepository } from '@menu/api/menus/data-access';
+import {
+  type ItemRecord,
+  ItemRepository,
+  MenuSectionRepository,
+  TagRepository,
+  VenueRepository,
+} from '@menu/api/menus/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
 import { ITEM_MERGE_LISTENER, type ItemMergeListener } from '@menu/api/shared/util-ports';
 import {
@@ -35,6 +40,8 @@ export class ItemService {
   constructor(
     private readonly repository: ItemRepository,
     private readonly venues: VenueRepository,
+    private readonly sections: MenuSectionRepository,
+    private readonly tags: TagRepository,
     @Optional()
     @Inject(ITEM_MERGE_LISTENER)
     private readonly mergeListener: ItemMergeListener | null = null,
@@ -81,9 +88,7 @@ export class ItemService {
 
   async update(principal: Principal, id: string, input: UpdateItem): Promise<Item> {
     const item = await this.findVisible(principal, id);
-    if (!item.canBeEditedBy(principal)) {
-      throw new ForbiddenException('Only the venue’s Owner or an Admin can edit its items.');
-    }
+    item.assertEditableBy(principal);
     await this.assertReferences(item.record.venueId, input.sectionId, input.tagIds);
     const record = await this.repository.update(id, input);
     if (!record) {
@@ -101,13 +106,22 @@ export class ItemService {
 
   /**
    * Marks a pending item as a duplicate of an approved one, then tells entries to
-   * follow it. If the listener fails, the merged item still points at its target.
+   * follow it. If the listener fails, the same request again re-runs it (the
+   * listener is idempotent), so a half-done merge can be completed.
    */
   async merge(principal: Principal, id: string, intoItemId: string): Promise<Item> {
     if (id === intoItemId) {
       throw new BadRequestException('An item cannot be merged into itself.');
     }
     const item = await this.findVisible(principal, id);
+    if (
+      item.state === 'merged' &&
+      item.record.mergedIntoId === intoItemId &&
+      item.canBeEditedBy(principal)
+    ) {
+      await this.mergeListener?.onItemMerged(id, intoItemId);
+      return item.toContract(principal);
+    }
     const from = item.assertDecision(principal, 'merge');
     const target = await this.findVisible(principal, intoItemId);
     item.assertCanMergeInto(target);
@@ -135,6 +149,7 @@ export class ItemService {
     if (!item?.isVisibleTo(principal)) {
       throw new NotFoundException('Item not found.');
     }
+    await this.assertVenueVisible(principal, item.record.venueId);
     return item;
   }
 
@@ -150,10 +165,10 @@ export class ItemService {
     sectionId: string | undefined,
     tagIds: readonly string[] | undefined,
   ): Promise<void> {
-    if (sectionId && !(await this.repository.sectionBelongsTo(sectionId, venueId))) {
+    if (sectionId && !(await this.sections.belongsTo(sectionId, venueId))) {
       throw new BadRequestException('The section is not on this venue’s menu.');
     }
-    if (tagIds?.length && !(await this.repository.tagsExist(tagIds))) {
+    if (tagIds?.length && !(await this.tags.allExist(tagIds))) {
       throw new BadRequestException('Unknown tag.');
     }
   }

@@ -5,7 +5,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { type ItemRecord, ItemRepository, VenueRepository } from '@menu/api/menus/data-access';
+import {
+  type ItemRecord,
+  ItemRepository,
+  MenuSectionRepository,
+  TagRepository,
+  VenueRepository,
+} from '@menu/api/menus/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { ITEM_MERGE_LISTENER } from '@menu/api/shared/util-ports';
 import { ItemService } from './item.service';
@@ -38,7 +44,7 @@ describe('ItemService', () => {
 
   async function setup(
     repository: Partial<Record<keyof ItemRepository, unknown>>,
-    options: { venue?: unknown; listener?: unknown } = {},
+    options: { venue?: unknown; listener?: unknown; section?: boolean; tags?: boolean } = {},
   ): Promise<ItemService> {
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -51,6 +57,14 @@ describe('ItemService', () => {
               .fn()
               .mockResolvedValue(options.venue === undefined ? venue : options.venue),
           },
+        },
+        {
+          provide: MenuSectionRepository,
+          useValue: { belongsTo: vi.fn().mockResolvedValue(options.section ?? true) },
+        },
+        {
+          provide: TagRepository,
+          useValue: { allExist: vi.fn().mockResolvedValue(options.tags ?? true) },
         },
         ...(options.listener ? [{ provide: ITEM_MERGE_LISTENER, useValue: options.listener }] : []),
       ],
@@ -93,6 +107,12 @@ describe('ItemService', () => {
   });
 
   describe('getting an item', () => {
+    it('fails with 404 for an item of a hidden venue', async () => {
+      const findById = vi.fn().mockResolvedValue(record());
+      const service = await setup({ findById }, { venue: { ...venue, status: 'hidden' } });
+      await expect(service.get(null, 'i1')).rejects.toThrow(NotFoundException);
+    });
+
     it('hides someone else’s pending submission', async () => {
       const findById = vi.fn().mockResolvedValue(record({ state: 'pending', submittedById: 'u' }));
       await expect((await setup({ findById })).get(other, 'i1')).rejects.toThrow(NotFoundException);
@@ -106,34 +126,27 @@ describe('ItemService', () => {
 
   describe('creating an item', () => {
     const input = { sectionId, name: { he: 'צ׳יפס' }, listPrice: null, tagIds: [] };
-    const references = {
-      sectionBelongsTo: vi.fn().mockResolvedValue(true),
-      tagsExist: vi.fn().mockResolvedValue(true),
-    };
 
     it('adds an Owner’s item to the menu at once', async () => {
       const create = vi.fn().mockResolvedValue(record());
-      await (await setup({ ...references, create })).create(owner, venueId, input);
+      await (await setup({ create })).create(owner, venueId, input);
       expect(create.mock.calls[0]?.[0]).toMatchObject({ state: 'approved', submittedById: null });
     });
 
     it('keeps a user’s submission pending and remembers who sent it', async () => {
       const create = vi.fn().mockResolvedValue(record({ state: 'pending', submittedById: 'u' }));
-      const item = await (await setup({ ...references, create })).create(user, venueId, input);
+      const item = await (await setup({ create })).create(user, venueId, input);
       expect(create.mock.calls[0]?.[0]).toMatchObject({ state: 'pending', submittedById: 'u' });
       expect(item).toMatchObject({ state: 'pending', submittedByMe: true });
     });
 
     it('rejects a section from another venue', async () => {
-      const service = await setup({
-        sectionBelongsTo: vi.fn().mockResolvedValue(false),
-        create: vi.fn(),
-      });
+      const service = await setup({ create: vi.fn() }, { section: false });
       await expect(service.create(owner, venueId, input)).rejects.toThrow(BadRequestException);
     });
 
     it('rejects an unknown tag', async () => {
-      const service = await setup({ ...references, tagsExist: vi.fn().mockResolvedValue(false) });
+      const service = await setup({ create: vi.fn() }, { tags: false });
       await expect(service.create(owner, venueId, { ...input, tagIds: ['t'] })).rejects.toThrow(
         BadRequestException,
       );
@@ -147,6 +160,26 @@ describe('ItemService', () => {
       await expect(service.update(owner, 'i1', { listPrice: 7200 })).resolves.toMatchObject({
         listPrice: 7200,
       });
+    });
+
+    it('fails with 404 when the item disappeared meanwhile', async () => {
+      const service = await setup({
+        findById: vi.fn().mockResolvedValue(record()),
+        update: vi.fn().mockResolvedValue(null),
+      });
+      await expect(service.update(owner, 'i1', { listPrice: 1 })).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('refuses to edit a rejected item', async () => {
+      const service = await setup({
+        findById: vi.fn().mockResolvedValue(record({ state: 'rejected', submittedById: 'u' })),
+        update: vi.fn(),
+      });
+      await expect(service.update(owner, 'i1', { listPrice: 1 })).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('forbids a user', async () => {
@@ -178,7 +211,7 @@ describe('ItemService', () => {
       expect(transition).toHaveBeenCalledWith('i1', 'approved', 'archived', null);
     });
 
-    it('forbids the submitter from approving their own item', async () => {
+    it('forbids a submitter who is not an approver from approving', async () => {
       const service = await setup({
         findById: vi.fn().mockResolvedValue(pending),
         transition: vi.fn(),
@@ -213,6 +246,22 @@ describe('ItemService', () => {
       await service.merge(owner, 'i1', 'i2');
       expect(transition).toHaveBeenCalledWith('i1', 'pending', 'merged', 'i2');
       expect(onItemMerged).toHaveBeenCalledWith('i1', 'i2');
+    });
+
+    it('reports a listener failure, and the same request again completes the merge', async () => {
+      const onItemMerged = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('db down'))
+        .mockResolvedValue(undefined);
+      const merged = { ...pending, state: 'merged' as const, mergedIntoId: 'i2' };
+      const lookup = vi.fn().mockResolvedValueOnce(pending).mockResolvedValueOnce(target);
+      const transition = vi.fn().mockResolvedValue(merged);
+      const service = await setup({ findById: lookup, transition }, { listener: { onItemMerged } });
+      await expect(service.merge(owner, 'i1', 'i2')).rejects.toThrow('db down');
+      lookup.mockResolvedValueOnce(merged);
+      await expect(service.merge(owner, 'i1', 'i2')).resolves.toMatchObject({ state: 'merged' });
+      expect(onItemMerged).toHaveBeenCalledTimes(2);
+      expect(transition).toHaveBeenCalledTimes(1);
     });
 
     it('works without a listener', async () => {

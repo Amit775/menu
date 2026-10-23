@@ -4,16 +4,13 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ItemRepository, TagRepository } from '@menu/api/menus/data-access';
+import { TagRepository } from '@menu/api/menus/data-access';
 import { type CreateTag, type Tag, type UpdateTag } from '@menu/shared/contracts';
 
 /** The Admin-curated tag vocabulary. Users never create tags. */
 @Injectable()
 export class TagService {
-  constructor(
-    private readonly repository: TagRepository,
-    private readonly items: ItemRepository,
-  ) {}
+  constructor(private readonly repository: TagRepository) {}
 
   list(): Promise<Tag[]> {
     return this.repository.list();
@@ -40,9 +37,8 @@ export class TagService {
     if (id === intoTagId) {
       throw new BadRequestException('A tag cannot be merged into itself.');
     }
-    if (!(await this.items.tagsExist([id, intoTagId]))) {
+    if (!(await this.repository.merge(id, intoTagId))) {
       throw new NotFoundException('Tag not found.');
     }
-    await this.items.mergeTag(id, intoTagId);
   }
 }

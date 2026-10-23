@@ -81,14 +81,6 @@ export class ItemRepository {
     return row ? toRecord(row) : null;
   }
 
-  async sectionBelongsTo(sectionId: string, venueId: string): Promise<boolean> {
-    return (await this.prisma.menuSection.count({ where: { id: sectionId, venueId } })) > 0;
-  }
-
-  async tagsExist(tagIds: readonly string[]): Promise<boolean> {
-    return (await this.prisma.tag.count({ where: { id: { in: [...tagIds] } } })) === tagIds.length;
-  }
-
   /** Adds the item at the end of its section. */
   async create(input: NewItem): Promise<ItemRecord> {
     const row = await this.prisma.$transaction(async (tx) => {
@@ -113,17 +105,29 @@ export class ItemRepository {
     return toRecord(row);
   }
 
-  /** Updates fields; a new `tagIds` replaces the item's tags in the given order. */
+  /**
+   * Updates fields; a new `tagIds` replaces the item's tags in the given order,
+   * and a new section puts the item at the end of that section.
+   */
   async update(id: string, input: UpdateItem): Promise<ItemRecord | null> {
     const { name, tagIds, ...rest } = input;
     const row = await this.prisma.$transaction(async (tx) => {
-      const { count } = await tx.item.updateMany({
-        where: { id },
-        data: withoutUndefined({ ...rest, ...(name ? fromLocalized(name) : {}) }),
-      });
-      if (count === 0) {
+      const current = await tx.item.findUnique({ where: { id }, select: { sectionId: true } });
+      if (!current) {
         return null;
       }
+      let position: number | undefined;
+      if (rest.sectionId !== undefined && rest.sectionId !== current.sectionId) {
+        const last = await tx.item.aggregate({
+          where: { sectionId: rest.sectionId },
+          _max: { position: true },
+        });
+        position = (last._max.position ?? -1) + 1;
+      }
+      await tx.item.update({
+        where: { id },
+        data: withoutUndefined({ ...rest, position, ...(name ? fromLocalized(name) : {}) }),
+      });
       if (tagIds) {
         await tx.itemTag.deleteMany({ where: { itemId: id } });
         await tx.itemTag.createMany({
@@ -147,24 +151,6 @@ export class ItemRepository {
       data: { state: to, mergedIntoId },
     });
     return count === 0 ? null : this.findById(id);
-  }
-
-  /** Re-points every item from one tag to another (keeping positions), then deletes the old tag. */
-  async mergeTag(fromTagId: string, intoTagId: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      const links = await tx.itemTag.findMany({ where: { tagId: fromTagId } });
-      for (const link of links) {
-        const hasTarget = await tx.itemTag.count({
-          where: { itemId: link.itemId, tagId: intoTagId },
-        });
-        if (hasTarget === 0) {
-          await tx.itemTag.create({
-            data: { itemId: link.itemId, tagId: intoTagId, position: link.position },
-          });
-        }
-      }
-      await tx.tag.delete({ where: { id: fromTagId } });
-    });
   }
 }
 

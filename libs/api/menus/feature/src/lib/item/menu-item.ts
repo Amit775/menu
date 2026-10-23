@@ -47,6 +47,16 @@ export class MenuItem {
     return (this.state === 'pending' || this.state === 'rejected') && this.isSubmittedBy(principal);
   }
 
+  /** Approvers edit pending and approved items; rejected and merged ones are history. */
+  assertEditableBy(principal: Principal): void {
+    if (!this.canBeEditedBy(principal)) {
+      throw new ForbiddenException('Only the venue’s Owner or an Admin can edit its items.');
+    }
+    if (this.state !== 'pending' && this.state !== 'approved') {
+      throw new ConflictException(`A ${this.state} item cannot be edited.`);
+    }
+  }
+
   /** Checks a decision and returns the state it moves the item from. */
   assertDecision(
     principal: Principal,

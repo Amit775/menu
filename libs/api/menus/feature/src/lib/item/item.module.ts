@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
-import { ItemRepository, VenueRepository } from '@menu/api/menus/data-access';
+import {
+  ItemRepository,
+  MenuSectionRepository,
+  TagRepository,
+  VenueRepository,
+} from '@menu/api/menus/data-access';
 import { ItemController, VenueItemController } from './item.controller';
 import { ItemService } from './item.service';
 
 @Module({
   controllers: [VenueItemController, ItemController],
-  providers: [ItemService, ItemRepository, VenueRepository],
+  providers: [ItemService, ItemRepository, VenueRepository, MenuSectionRepository, TagRepository],
 })
 export class ItemModule {}
