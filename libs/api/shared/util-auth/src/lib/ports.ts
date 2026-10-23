@@ -1,6 +1,10 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { type Principal, type VerifiedIdentity } from './principal';
 
-/** Checks a bearer token with the sign-in provider. Throws when it is not valid. */
+/**
+ * Checks a bearer token with the sign-in provider. Throws `UnauthorizedException`
+ * when the token is not valid; other errors mean the provider could not be reached.
+ */
 export interface TokenVerifier {
   verify(token: string): Promise<VerifiedIdentity>;
 }
@@ -16,6 +20,6 @@ export const PRINCIPAL_RESOLVER = Symbol('PRINCIPAL_RESOLVER');
 /** Used until a real sign-in provider is wired: every token is refused. */
 export class RejectingTokenVerifier implements TokenVerifier {
   verify(): Promise<VerifiedIdentity> {
-    return Promise.reject(new Error('No sign-in provider is configured.'));
+    return Promise.reject(new UnauthorizedException('Sign-in is not configured yet.'));
   }
 }
