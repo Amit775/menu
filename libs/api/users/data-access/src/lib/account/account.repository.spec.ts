@@ -9,6 +9,7 @@ describe('AccountRepository', () => {
     language: 'he' as const,
     isAdmin: false,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    ownerships: [],
   };
   const account = {
     id: row.id,
@@ -37,6 +38,7 @@ describe('AccountRepository', () => {
       where: { firebaseUid: 'uid-1' },
       create: { firebaseUid: 'uid-1', displayName: 'נועה', isAdmin: false },
       update: {},
+      include: { ownerships: { select: { venueId: true } } },
     });
   });
 
@@ -68,6 +70,14 @@ describe('AccountRepository', () => {
   it('returns null when updating an unknown account', async () => {
     const repository = repositoryWith({ updateMany: vi.fn().mockResolvedValue({ count: 0 }) });
     await expect(repository.update(row.id, { language: 'en' })).resolves.toBeNull();
+  });
+
+  it('makes an account the Owner of the venues it was granted', async () => {
+    const venueId = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    const repository = repositoryWith({
+      findUnique: vi.fn().mockResolvedValue({ ...row, ownerships: [{ venueId }] }),
+    });
+    await expect(repository.findById(row.id)).resolves.toMatchObject({ ownedVenueIds: [venueId] });
   });
 
   it('returns null for an unknown account', async () => {
