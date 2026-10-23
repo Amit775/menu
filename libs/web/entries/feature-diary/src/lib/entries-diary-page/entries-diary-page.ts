@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  untracked,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -8,7 +16,10 @@ import { EntryCard } from '@menu/web/entries/ui';
 import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { diaryMessages } from '../diary.messages';
 
-/** The user's diary (`/diary`, from the profile): every entry, newest first, private ones included. */
+/**
+ * The user's diary (`/diary`, from the profile): every entry, newest first,
+ * private ones included. `/diary?venueId=` narrows it to one venue.
+ */
 @Component({
   selector: 'menu-entries-diary-page',
   imports: [
@@ -33,11 +44,26 @@ export class EntriesDiaryPage {
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );
 
+  /** The `venueId` query parameter: only the entries at that venue (from its page). */
+  readonly venueId = input<string>();
+
+  /** The venue's name when the diary is narrowed to one. */
+  protected readonly venue = computed(() =>
+    this.venueId() ? (this.store.entries()[0]?.item.venue ?? null) : null,
+  );
+
   constructor() {
-    void this.store.load();
+    effect(() => {
+      const venueId = this.venueId();
+      untracked(() => void this.load(venueId));
+    });
   }
 
   protected retry(): void {
-    void this.store.load();
+    void this.load(this.venueId());
+  }
+
+  private load(venueId: string | undefined): Promise<void> {
+    return this.store.load(venueId ? { venueId } : {});
   }
 }

@@ -28,12 +28,15 @@ const line: EntryWithItem = {
 };
 
 describe('EntriesDiaryPage', () => {
-  async function render(diary: EntryApiClient['diary']): Promise<HTMLElement> {
+  async function render(diary: EntryApiClient['diary'], venueId?: string): Promise<HTMLElement> {
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: EntryApiClient, useValue: { diary } }],
     });
     TestBed.inject(I18n).setLanguage('he');
     const fixture = TestBed.createComponent(EntriesDiaryPage);
+    if (venueId) {
+      fixture.componentRef.setInput('venueId', venueId);
+    }
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
   }
@@ -49,6 +52,22 @@ describe('EntriesDiaryPage', () => {
     expect(element.querySelector('menu-entry-card a')?.getAttribute('href')).toBe(
       `/log/${line.item.id}/${line.id}`,
     );
+  });
+
+  it('narrows to one venue from its page, with a way back to the whole diary', async () => {
+    const diary = vi.fn().mockResolvedValue([line]);
+    const element = await render(diary, line.venueId);
+    expect(diary).toHaveBeenCalledWith({ venueId: line.venueId });
+    expect(element.querySelector('h1 .at')?.textContent).toBe('· בבורגר 24');
+    expect(element.querySelector('a.all')?.getAttribute('href')).toBe('/diary');
+  });
+
+  it('reads the whole diary by default', async () => {
+    const diary = vi.fn().mockResolvedValue([line]);
+    const element = await render(diary);
+    expect(diary).toHaveBeenCalledWith({});
+    expect(element.querySelector('h1 .at')).toBeNull();
+    expect(element.querySelector('a.all')).toBeNull();
   });
 
   it('points an empty diary at discover', async () => {

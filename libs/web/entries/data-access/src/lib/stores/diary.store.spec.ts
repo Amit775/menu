@@ -18,6 +18,12 @@ describe('DiaryStore', () => {
     expect(store.entries()[0]?.item.name.he).toBe('המבורגר הקלאסי');
   });
 
+  it('narrows the diary to one venue', async () => {
+    const diary = vi.fn().mockResolvedValue([]);
+    await setup(diary).load({ venueId: entry.venueId });
+    expect(diary).toHaveBeenCalledWith({ venueId: entry.venueId });
+  });
+
   it('records a failed load', async () => {
     const store = setup(vi.fn().mockRejectedValue(new Error('offline')));
     await store.load();
