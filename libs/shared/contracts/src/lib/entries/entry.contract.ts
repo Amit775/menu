@@ -102,6 +102,8 @@ export type PublicEntry = z.infer<typeof PublicEntrySchema>;
  */
 export const ItemEntriesSchema = z.object({
   item: ItemRefSchema,
+  /** False while the item waits for approval: only its submitter sees it. */
+  itemIsPublic: z.boolean(),
   mine: z.array(EntrySchema),
   others: z.array(PublicEntrySchema),
 });

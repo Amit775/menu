@@ -97,8 +97,9 @@ describe('Entry contract', () => {
   });
 
   it('names the item above its entries sheet', () => {
-    const sheet = { item, mine: [valid], others: [] };
+    const sheet = { item, itemIsPublic: true, mine: [valid], others: [] };
     expect(ItemEntriesSchema.parse(sheet).item.name.he).toBe('המבורגר');
     expect(ItemEntriesSchema.safeParse({ mine: [], others: [] }).success).toBe(false);
+    expect(ItemEntriesSchema.safeParse({ item, mine: [], others: [] }).success).toBe(false);
   });
 });

@@ -53,6 +53,7 @@ export class EntryService {
     const names = await this.authors.displayNames(others.map((entry) => entry.authorId));
     return {
       item: ref,
+      itemIsPublic: item.isPublic,
       mine: mine.map((record) => new DiaryEntry(record).toContract()),
       others: others.map((record) =>
         new DiaryEntry(record).toPublic(names.get(record.authorId) ?? ''),

@@ -112,6 +112,7 @@ describe('EntryService', () => {
         await setup({ listByAuthor, listPublicByItem })
       ).listForItem(author, 'i1');
       expect(sheet.item).toEqual(itemRef);
+      expect(sheet.itemIsPublic).toBe(true);
       expect(sheet.mine.map((entry) => entry.id)).toEqual(['e1']);
       expect(sheet.others).toEqual([expect.objectContaining({ id: 'e2', authorName: 'דנה' })]);
       expect(listPublicByItem).toHaveBeenCalledWith('i1', 'a1');
@@ -123,8 +124,9 @@ describe('EntryService', () => {
         { listByAuthor: vi.fn().mockResolvedValue([]), listPublicByItem },
         { ...item, isPublic: false },
       );
-      await service.listForItem(author, 'i1');
+      const sheet = await service.listForItem(author, 'i1');
       expect(listPublicByItem).not.toHaveBeenCalled();
+      expect(sheet.itemIsPublic).toBe(false);
     });
 
     it('reads as not found when the item cannot be named', async () => {
@@ -145,6 +147,7 @@ describe('EntryService', () => {
       });
       await expect(service.listForItem(null, 'i1')).resolves.toEqual({
         item: itemRef,
+        itemIsPublic: true,
         mine: [],
         others: [],
       });
