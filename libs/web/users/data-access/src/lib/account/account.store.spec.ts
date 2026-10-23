@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
+import { AUTH_BACKEND, FakeAuthBackend, Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { AccountApiClient } from './account.api-client';
 import { AccountStore } from './account.store';
@@ -36,6 +36,7 @@ describe('AccountStore', () => {
     });
     expect(store.ownsVenues()).toBe(true);
     expect(setLanguage).toHaveBeenCalledWith('en');
+    expect(TestBed.inject(Roles).ownedVenueIds()).toEqual(account.ownedVenueIds);
   });
 
   it('records an error when loading fails', async () => {
@@ -43,6 +44,9 @@ describe('AccountStore', () => {
     backend.signIn();
     await store.load();
     expect(store.error()).toBe('load-failed');
+    const roles = TestBed.inject(Roles);
+    expect(roles.known()).toBe(true);
+    expect(roles.canManage()).toBe(false);
   });
 
   it('clears the account on sign-out', async () => {
@@ -53,6 +57,7 @@ describe('AccountStore', () => {
     void backend.signOut();
     TestBed.tick();
     expect(store.account()).toBeNull();
+    expect(TestBed.inject(Roles).known()).toBe(false);
   });
 
   it('drops an account that arrives after sign-out', async () => {
