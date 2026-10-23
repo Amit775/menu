@@ -39,6 +39,23 @@ describe('AddItemStore', () => {
     expect(failed.status()).toBe('error');
   });
 
+  it('keeps the venue asked for last when answers arrive out of order', async () => {
+    const other = { ...venue, id: '1c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10' };
+    let answerFirst: (value: typeof venue) => void = () => undefined;
+    const store = setup({
+      venue: vi
+        .fn()
+        .mockReturnValueOnce(new Promise((resolve) => (answerFirst = resolve)))
+        .mockResolvedValueOnce(other),
+      sections: vi.fn().mockResolvedValue([section]),
+    });
+    const first = store.load(VENUE_ID);
+    await store.load(other.id);
+    answerFirst(venue);
+    await first;
+    expect(store.venue()).toEqual(other);
+  });
+
   it('adds the item at the loaded venue', async () => {
     const addItem = vi.fn().mockResolvedValue(item);
     const store = setup({
