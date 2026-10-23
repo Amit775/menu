@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
+  type CreateEntryInput,
   type DiaryQuery,
   type Entry,
   entryPath,
@@ -50,8 +51,8 @@ export class EntryApiClient {
     return ItemEntriesSchema.parse(body);
   }
 
-  /** Any of the entry's fields; the API fills in the rest (`CreateEntrySchema`). */
-  async create(itemId: string, input: UpdateEntry): Promise<Entry> {
+  /** Any of the entry's fields; the API fills in the rest. */
+  async create(itemId: string, input: CreateEntryInput): Promise<Entry> {
     const body = await firstValueFrom(
       this.http.post<unknown>(`/api/${itemEntriesPath(itemId)}`, input),
     );
