@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ITEM_ID, item, VENUE_ID } from '../testing/fixtures';
 import { DiscoverApiClient } from '../api/discover.api-client';
-import { DeviceLocation } from '../location/device-location';
+import { DeviceLocation } from '@menu/web/shared/util-device';
 import { ItemPageStore, VenuePageStore } from './page.stores';
 
 describe('page stores', () => {

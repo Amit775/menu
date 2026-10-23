@@ -1,6 +1,7 @@
 import { type Provider } from '@angular/core';
 import { type DiscoverItem } from '@menu/shared/contracts';
-import { DeviceLocation, DeviceShare, DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DeviceLocation, DeviceShare } from '@menu/web/shared/util-device';
 import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 
 /** Sample data and boundary fakes for this lib's specs. */

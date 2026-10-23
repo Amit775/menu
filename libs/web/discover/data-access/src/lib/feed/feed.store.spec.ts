@@ -3,7 +3,7 @@ import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 import { DataChanges } from '@menu/web/shared/util-events';
 import { item, VENUE_ID } from '../testing/fixtures';
 import { DiscoverApiClient } from '../api/discover.api-client';
-import { DeviceLocation } from '../location/device-location';
+import { DeviceLocation } from '@menu/web/shared/util-device';
 import { FeedStore } from './feed.store';
 
 describe('FeedStore', () => {
