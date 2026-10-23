@@ -8,3 +8,4 @@ export * from './lib/users/ownership.contract';
 export * from './lib/menus/venue.contract';
 export * from './lib/menus/menu-section.contract';
 export * from './lib/menus/tag.contract';
+export * from './lib/menus/item.contract';
