@@ -1,0 +1,9 @@
+{
+  "name": "api-menus-data-access",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/menus/data-access/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:menus", "type:data-access"],
+  "// targets": "to see all targets run: nx show project api-menus-data-access --web",
+  "targets": {}
+}
