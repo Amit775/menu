@@ -1,0 +1,45 @@
+figure {
+  margin: 0;
+}
+
+figcaption {
+  margin-bottom: 8px;
+  font: var(--mat-sys-title-small);
+}
+
+ol {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 120px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+}
+
+.bar {
+  width: 100%;
+  max-width: 32px;
+  border-radius: 6px 6px 0 0;
+  background: var(--mat-sys-surface-container-high);
+}
+
+.latest .bar {
+  background: var(--mat-sys-primary);
+}
+
+.price,
+.month {
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+}

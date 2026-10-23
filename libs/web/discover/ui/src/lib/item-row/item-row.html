@@ -1,0 +1,29 @@
+@let t = messages | messages;
+@let current = item();
+<a [routerLink]="['/items', current.id]">
+  <span class="text">
+    <span class="name">
+      {{ current.name | localize }}
+      @if (current.writtenByMe) {
+        <span class="flag" [attr.aria-label]="t.writtenByMe" [title]="t.writtenByMe"></span>
+      }
+    </span>
+    <span class="meta">
+      @if (showVenue()) {
+        <span>{{ current.venue.name | localize }}</span>
+      }
+      @if (current.distanceMeters !== null) {
+        <span>{{ current.distanceMeters | distance }}</span>
+      }
+      @if (current.latestPrice !== null) {
+        <span>{{ current.latestPrice | shekels }}</span>
+      }
+    </span>
+    @if (current.wouldOrderAgainPercent !== null) {
+      <span class="ratio">{{ t.wouldOrderAgain(current.wouldOrderAgainPercent) }}</span>
+    } @else if (current.score === null && current.ratingCount === 0) {
+      <span class="ratio">{{ t.beFirst }}</span>
+    }
+  </span>
+  <menu-score-badge [score]="current.score" [count]="current.ratingCount" />
+</a>
