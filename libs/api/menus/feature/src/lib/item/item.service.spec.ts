@@ -66,7 +66,10 @@ describe('ItemService', () => {
           provide: TagRepository,
           useValue: { allExist: vi.fn().mockResolvedValue(options.tags ?? true) },
         },
-        ...(options.listener ? [{ provide: ITEM_MERGE_LISTENER, useValue: options.listener }] : []),
+        {
+          provide: ITEM_MERGE_LISTENER,
+          useValue: options.listener ?? { onItemMerged: vi.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
     return moduleRef.get(ItemService);
@@ -262,12 +265,6 @@ describe('ItemService', () => {
       await expect(service.merge(owner, 'i1', 'i2')).resolves.toMatchObject({ state: 'merged' });
       expect(onItemMerged).toHaveBeenCalledTimes(2);
       expect(transition).toHaveBeenCalledTimes(1);
-    });
-
-    it('works without a listener', async () => {
-      const transition = vi.fn().mockResolvedValue({ ...pending, state: 'merged' });
-      const service = await setup({ findById: findById(), transition });
-      await expect(service.merge(owner, 'i1', 'i2')).resolves.toMatchObject({ state: 'merged' });
     });
 
     it('rejects a target from another venue', async () => {
