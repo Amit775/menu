@@ -51,6 +51,13 @@ export const feedMessages = defineMessages({
     venues: 'מקומות',
     noResults: 'לא מצאנו כלום.',
     searchFailed: 'החיפוש לא הצליח.',
+    // Map
+    mapLabel: 'מפת המקומות',
+    youAreHere: 'את/ה כאן',
+    pinSummary: (count: number, best: number | null) =>
+      `${count === 1 ? 'פריט אחד' : `${String(count)} פריטים`}${best === null ? '' : ` · הכי טוב ${best.toFixed(1)}`}`,
+    toVenue: 'לעמוד המקום',
+    noPins: 'אין מקומות באזור הזה עם הסינון הזה.',
   },
   en: {
     filter: 'Filter',
@@ -99,5 +106,11 @@ export const feedMessages = defineMessages({
     venues: 'Places',
     noResults: 'Nothing found.',
     searchFailed: 'Search did not work.',
+    mapLabel: 'Map of places',
+    youAreHere: 'You are here',
+    pinSummary: (count: number, best: number | null) =>
+      `${count === 1 ? '1 item' : `${String(count)} items`}${best === null ? '' : ` · best ${best.toFixed(1)}`}`,
+    toVenue: 'Open the venue',
+    noPins: 'No places here with these filters.',
   },
 });

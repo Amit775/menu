@@ -1,0 +1,23 @@
+<div class="menu-venue-map">
+  <div #map class="canvas" dir="ltr" role="region" [attr.aria-label]="t().mapLabel"></div>
+  @if (store.status() === 'loaded' && store.pins().length === 0) {
+    <p class="empty" role="status">{{ t().noPins }}</p>
+  }
+  @if (selected(); as pin) {
+    <aside class="card" aria-live="polite">
+      <div class="text">
+        <h2>{{ pin.venue.name | localize }}</h2>
+        <p>{{ t().pinSummary(pin.itemCount, pin.bestScore) }}</p>
+      </div>
+      <a mat-flat-button [routerLink]="['/venues', pin.venue.id]">{{ t().toVenue }}</a>
+      <button
+        mat-icon-button
+        type="button"
+        [attr.aria-label]="t().close"
+        (click)="selected.set(null)"
+      >
+        <mat-icon aria-hidden="true">close</mat-icon>
+      </button>
+    </aside>
+  }
+</div>

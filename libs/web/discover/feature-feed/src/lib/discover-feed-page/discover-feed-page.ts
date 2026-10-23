@@ -19,6 +19,7 @@ import { ItemRow } from '@menu/web/discover/ui';
 import { I18n, injectMessages } from '@menu/web/shared/util-i18n';
 import { feedMessages } from '../feed.messages';
 import { FilterSheet } from '../filters/filter-sheet';
+import { VenueMap } from '../map/venue-map';
 import { ReelCard } from '../reels/reel-card';
 import { SearchPanel } from '../search/search-panel';
 
@@ -27,7 +28,7 @@ const PREFETCH = 3;
 
 /**
  * The discover home: a full-screen reels feed (swipe sideways for the next item)
- * or a ranked list, with filters and search on top. The map view comes next.
+ * a ranked list, or a map of venues, with filters and search on top.
  */
 @Component({
   selector: 'menu-discover-feed-page',
@@ -39,6 +40,7 @@ const PREFETCH = 3;
     MatProgressSpinnerModule,
     ItemRow,
     ReelCard,
+    VenueMap,
   ],
   templateUrl: './discover-feed-page.html',
   styleUrl: './discover-feed-page.scss',
