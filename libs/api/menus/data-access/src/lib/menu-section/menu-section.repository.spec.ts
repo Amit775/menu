@@ -36,4 +36,13 @@ describe('MenuSectionRepository', () => {
     } as unknown as PrismaService);
     await expect(repository.rename(venueId, 's1', { he: 'x' })).resolves.toBeNull();
   });
+
+  it('tells whether a section is on a venue’s menu', async () => {
+    const count = vi.fn().mockResolvedValue(0);
+    const repository = new MenuSectionRepository({
+      menuSection: { count },
+    } as unknown as PrismaService);
+    await expect(repository.belongsTo('s1', 'v1')).resolves.toBe(false);
+    expect(count).toHaveBeenCalledWith({ where: { id: 's1', venueId: 'v1' } });
+  });
 });

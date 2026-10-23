@@ -66,10 +66,15 @@ describe('MenuItem', () => {
   });
 
   it('merges only into an approved item of the same venue', () => {
-    expect(() => { pending.assertCanMergeInto(approved); }).not.toThrow();
-    expect(() => { pending.assertCanMergeInto(pending); }).toThrow(BadRequestException);
-    expect(() => { pending.assertCanMergeInto(new MenuItem({ ...record, state: 'approved', venueId: 'other' })); },
-    ).toThrow(BadRequestException);
+    expect(() => {
+      pending.assertCanMergeInto(approved);
+    }).not.toThrow();
+    expect(() => {
+      pending.assertCanMergeInto(pending);
+    }).toThrow(BadRequestException);
+    expect(() => {
+      pending.assertCanMergeInto(new MenuItem({ ...record, state: 'approved', venueId: 'other' }));
+    }).toThrow(BadRequestException);
   });
 
   it('never exposes the submitter, only whether the caller is them', () => {
