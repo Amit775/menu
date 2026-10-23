@@ -78,6 +78,8 @@ export const CreateEntrySchema = EntryFieldsSchema.extend({
 });
 
 export type CreateEntry = z.infer<typeof CreateEntrySchema>;
+/** What a client sends: every field may be left out for its default. */
+export type CreateEntryInput = z.input<typeof CreateEntrySchema>;
 
 /** `PATCH /api/entries/:id` (author only). */
 export const UpdateEntrySchema = EntryFieldsSchema.partial();
