@@ -33,7 +33,7 @@ export const AccountStore = signalStore(
     isAdmin: computed(() => account()?.isAdmin ?? false),
     ownsVenues: computed(() => (account()?.ownedVenueIds.length ?? 0) > 0),
   })),
-  withMethods((store, api = inject(AccountApiClient), i18n = inject(I18n)) => {
+  withMethods((store, api = inject(AccountApiClient), i18n = inject(I18n), auth = inject(Auth)) => {
     function apply(account: Account): void {
       patchState(store, { account, loading: false, error: null });
       i18n.setLanguage(account.language);
@@ -42,7 +42,11 @@ export const AccountStore = signalStore(
       async load(): Promise<void> {
         patchState(store, { loading: true, error: null });
         try {
-          apply(await api.me());
+          const account = await api.me();
+          // Signed out (or someone else signed in) while this was loading: drop it.
+          if (auth.signedIn()) {
+            apply(account);
+          }
         } catch {
           patchState(store, { loading: false, error: 'load-failed' });
         }

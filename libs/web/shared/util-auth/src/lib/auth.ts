@@ -38,9 +38,13 @@ export class Auth {
       });
   }
 
-  /** A fresh ID token for the API, or null when signed out. */
-  idToken(): Promise<string | null> {
-    return this.signedIn() ? this.backend.idToken() : Promise.resolve(null);
+  /**
+   * A fresh ID token for the API, or null when signed out. Waits for the session
+   * to be restored, so calls made at startup carry the token too.
+   */
+  async idToken(): Promise<string | null> {
+    await this.ready;
+    return this.signedIn() ? this.backend.idToken() : null;
   }
 
   signInWithGoogle(): Promise<void> {

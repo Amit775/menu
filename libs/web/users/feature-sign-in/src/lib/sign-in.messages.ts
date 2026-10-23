@@ -14,6 +14,7 @@ export const signInMessages = defineMessages({
     changePhone: 'מספר אחר',
     errorInvalidPhone: 'המספר לא נראה תקין.',
     errorInvalidCode: 'הקוד לא נכון. אפשר לנסות שוב.',
+    errorTooMany: 'יותר מדי ניסיונות. אפשר לנסות שוב בעוד כמה דקות.',
     errorFailed: 'הכניסה לא הצליחה. אפשר לנסות שוב.',
   },
   en: {
@@ -29,6 +30,7 @@ export const signInMessages = defineMessages({
     changePhone: 'Another number',
     errorInvalidPhone: 'That number does not look right.',
     errorInvalidCode: 'That code is wrong. Try again.',
+    errorTooMany: 'Too many tries. Try again in a few minutes.',
     errorFailed: 'Sign-in did not work. Try again.',
   },
 });

@@ -2,10 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   type ElementRef,
   inject,
   input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import {
@@ -24,7 +26,22 @@ import { injectMessages } from '@menu/web/shared/util-i18n';
 import { safeReturnUrl, toE164 } from '../phone-number';
 import { signInMessages } from '../sign-in.messages';
 
-type SignInError = 'invalid-phone' | 'invalid-code' | 'failed';
+type SignInError = 'invalid-phone' | 'invalid-code' | 'too-many' | 'failed';
+
+/** Firebase's answer, when it names the problem; otherwise the step's own error. */
+function signInError(error: unknown, fallback: SignInError): SignInError {
+  switch ((error as { code?: unknown } | null)?.code) {
+    case 'auth/invalid-phone-number':
+      return 'invalid-phone';
+    case 'auth/invalid-verification-code':
+      return 'invalid-code';
+    case 'auth/too-many-requests':
+    case 'auth/quota-exceeded':
+      return 'too-many';
+    default:
+      return fallback;
+  }
+}
 
 /** Sign-in with Google or a phone number (Firebase Authentication). */
 
@@ -54,6 +71,8 @@ export class SignInPage {
         return messages.errorInvalidPhone;
       case 'invalid-code':
         return messages.errorInvalidCode;
+      case 'too-many':
+        return messages.errorTooMany;
       case 'failed':
         return messages.errorFailed;
       default:
@@ -73,6 +92,15 @@ export class SignInPage {
   protected readonly codeForm = new FormGroup({ code: this.code });
   private readonly recaptcha = viewChild.required<ElementRef<HTMLElement>>('recaptcha');
 
+  constructor() {
+    // Signed in, now or already on arrival: go back where the user came from.
+    effect(() => {
+      if (this.auth.signedIn()) {
+        untracked(() => void this.router.navigateByUrl(safeReturnUrl(this.returnUrl())));
+      }
+    });
+  }
+
   protected async google(): Promise<void> {
     await this.attempt('failed', () => this.auth.signInWithGoogle());
   }
@@ -83,7 +111,7 @@ export class SignInPage {
       this.error.set('invalid-phone');
       return;
     }
-    const sent = await this.attempt('invalid-phone', () =>
+    const sent = await this.attempt('failed', () =>
       this.auth.sendPhoneCode(phoneNumber, this.recaptcha().nativeElement),
     );
     if (sent) {
@@ -101,18 +129,15 @@ export class SignInPage {
     this.step.set('phone');
   }
 
-  /** Runs one sign-in step; on success after Google or the code, goes back where the user came from. */
+  /** Runs one sign-in step and reports how it failed. */
   private async attempt(onError: SignInError, action: () => Promise<void>): Promise<boolean> {
     this.busy.set(true);
     this.error.set(null);
     try {
       await action();
-      if (this.auth.signedIn()) {
-        await this.router.navigateByUrl(safeReturnUrl(this.returnUrl()));
-      }
       return true;
-    } catch {
-      this.error.set(onError);
+    } catch (error) {
+      this.error.set(signInError(error, onError));
       return false;
     } finally {
       this.busy.set(false);

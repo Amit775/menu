@@ -15,10 +15,13 @@ describe('ProfilePage', () => {
     createdAt: '2026-01-01T00:00:00.000Z',
   };
 
-  async function setup(backend: FakeAuthBackend) {
+  const signedIn = (): FakeAuthBackend =>
+    new FakeAuthBackend({ uid: 'u1', displayName: 'נועה', phoneNumber: null });
+
+  async function setup(backend: FakeAuthBackend, error: string | null = null) {
     const store = {
       account: signal(account),
-      error: signal(null),
+      error: signal(error),
       update: vi.fn().mockResolvedValue(true),
       setLanguage: vi.fn().mockResolvedValue(undefined),
     };
@@ -32,7 +35,7 @@ describe('ProfilePage', () => {
     }).compileComponents();
     const fixture = TestBed.createComponent(ProfilePage);
     await fixture.whenStable();
-    return { fixture, element: fixture.nativeElement as HTMLElement, store };
+    return { fixture, element: fixture.nativeElement as HTMLElement, store, backend };
   }
 
   it('invites a visitor to sign in', async () => {
@@ -61,5 +64,37 @@ describe('ProfilePage', () => {
     const { element, store } = await setup(new FakeAuthBackend());
     [...element.querySelectorAll('button')].find((b) => b.textContent.includes('English'))?.click();
     expect(store.setLanguage).toHaveBeenCalledWith('en');
+  });
+
+  it('does not save a name of only spaces', async () => {
+    const { fixture, element } = await setup(signedIn());
+    const input = element.querySelector<HTMLInputElement>('input');
+    if (input) {
+      input.value = '   ';
+      input.dispatchEvent(new Event('input'));
+    }
+    fixture.detectChanges();
+    const save = [...element.querySelectorAll('button')].find((b) =>
+      b.textContent.includes('שמירה'),
+    );
+    expect(save?.disabled).toBe(true);
+  });
+
+  it('shows when the account cannot load', async () => {
+    const { element } = await setup(signedIn(), 'load-failed');
+    expect(element.querySelector('[role=alert]')?.textContent).toContain('לא הצלחנו לטעון');
+  });
+
+  it('shows when saving fails', async () => {
+    const { element } = await setup(signedIn(), 'save-failed');
+    expect(element.querySelector('[role=alert]')?.textContent).toContain('השמירה לא הצליחה');
+  });
+
+  it('signs out', async () => {
+    const { fixture, element, backend } = await setup(signedIn());
+    [...element.querySelectorAll('button')].find((b) => b.textContent.includes('יציאה'))?.click();
+    await fixture.whenStable();
+    expect(backend.calls()).toContain('sign-out');
+    expect(element.querySelector('a[href="/sign-in"]')).not.toBeNull();
   });
 });

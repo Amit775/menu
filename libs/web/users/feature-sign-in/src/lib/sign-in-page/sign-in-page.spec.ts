@@ -4,17 +4,16 @@ import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 import { SignInPage } from './sign-in-page';
 
 describe('SignInPage', () => {
-  async function setup(returnUrl?: string) {
-    const backend = new FakeAuthBackend();
+  async function setup(returnUrl?: string, backend = new FakeAuthBackend()) {
     await TestBed.configureTestingModule({
       imports: [SignInPage],
       providers: [provideRouter([]), { provide: AUTH_BACKEND, useValue: backend }],
     }).compileComponents();
     const fixture = TestBed.createComponent(SignInPage);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     if (returnUrl) {
       fixture.componentRef.setInput('returnUrl', returnUrl);
     }
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
     const button = (text: string): HTMLButtonElement => {
@@ -66,5 +65,62 @@ describe('SignInPage', () => {
     await fixture.whenStable();
     expect(element.querySelector('[role=alert]')?.textContent).toContain('המספר לא נראה תקין');
     expect(backend.calls()).toEqual([]);
+  });
+
+  it('never follows a return address off the app', async () => {
+    const { fixture, navigate, button } = await setup('//evil.example');
+    button('כניסה עם Google').click();
+    await fixture.whenStable();
+    expect(navigate).toHaveBeenCalledWith('/profile');
+  });
+
+  it('sends a visitor who is already signed in on their way', async () => {
+    const { navigate } = await setup(
+      '/items/1',
+      new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null }),
+    );
+    expect(navigate).toHaveBeenCalledWith('/items/1');
+  });
+
+  it('says so when Google sign-in fails', async () => {
+    const backend = new FakeAuthBackend();
+    backend.signInWithGoogle = () => Promise.reject(new Error('popup closed'));
+    const { fixture, element, navigate, button } = await setup(undefined, backend);
+    button('כניסה עם Google').click();
+    await fixture.whenStable();
+    expect(element.querySelector('[role=alert]')?.textContent).toContain('הכניסה לא הצליחה');
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  async function sendCode(backend: FakeAuthBackend) {
+    const page = await setup(undefined, backend);
+    page.type('input[type=tel]', '0501234567');
+    page.fixture.detectChanges();
+    page.button('שליחת קוד').click();
+    await page.fixture.whenStable();
+    return page;
+  }
+
+  it('explains a wrong code and stays on the code step', async () => {
+    const backend = new FakeAuthBackend();
+    backend.confirmPhoneCode = () =>
+      Promise.reject(
+        Object.assign(new Error('firebase'), { code: 'auth/invalid-verification-code' }),
+      );
+    const { fixture, element, type } = await sendCode(backend);
+    type('input[inputmode=numeric]', '000000');
+    fixture.detectChanges();
+    element.querySelector('form')?.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    expect(element.querySelector('[role=alert]')?.textContent).toContain('הקוד לא נכון');
+    expect(element.querySelector('input[inputmode=numeric]')).not.toBeNull();
+  });
+
+  it('tells apart too many tries from a bad number', async () => {
+    const backend = new FakeAuthBackend();
+    backend.sendPhoneCode = () =>
+      Promise.reject(Object.assign(new Error('firebase'), { code: 'auth/too-many-requests' }));
+    const { element } = await sendCode(backend);
+    expect(element.querySelector('[role=alert]')?.textContent).toContain('יותר מדי ניסיונות');
   });
 });

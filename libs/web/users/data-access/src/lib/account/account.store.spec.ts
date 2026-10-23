@@ -39,22 +39,43 @@ describe('AccountStore', () => {
   });
 
   it('records an error when loading fails', async () => {
-    const { store } = setup({ me: vi.fn().mockRejectedValue(new Error('offline')) });
+    const { store, backend } = setup({ me: vi.fn().mockRejectedValue(new Error('offline')) });
+    backend.signIn();
     await store.load();
     expect(store.error()).toBe('load-failed');
   });
 
   it('clears the account on sign-out', async () => {
     const { store, backend } = setup({ me: vi.fn().mockResolvedValue(account) });
+    backend.signIn();
     await store.load();
+    expect(store.account()).toEqual(account);
     void backend.signOut();
     TestBed.tick();
     expect(store.account()).toBeNull();
   });
 
+  it('drops an account that arrives after sign-out', async () => {
+    let answer: (value: typeof account) => void = () => undefined;
+    const me = vi.fn(() => new Promise<typeof account>((resolve) => (answer = resolve)));
+    const { store, backend, setLanguage } = setup({ me });
+    backend.signIn();
+    const loading = store.load();
+    void backend.signOut();
+    TestBed.tick();
+    answer(account);
+    await loading;
+    expect(store.account()).toBeNull();
+    expect(setLanguage).not.toHaveBeenCalled();
+  });
+
   it('switches language at once and saves it when signed in', async () => {
     const updateMe = vi.fn().mockResolvedValue({ ...account, language: 'he' });
-    const { store, setLanguage } = setup({ me: vi.fn().mockResolvedValue(account), updateMe });
+    const { store, backend, setLanguage } = setup({
+      me: vi.fn().mockResolvedValue(account),
+      updateMe,
+    });
+    backend.signIn();
     await store.load();
     await store.setLanguage('he');
     expect(setLanguage).toHaveBeenLastCalledWith('he');
