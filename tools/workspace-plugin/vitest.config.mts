@@ -12,6 +12,9 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'jsdom',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    // Generator specs run the real Angular and Nest library generators, which
+    // take seconds each when other targets share the CPU.
+    testTimeout: 20_000,
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/tools/workspace-plugin',
