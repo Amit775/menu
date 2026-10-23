@@ -1,0 +1,63 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
+import { MenuApiClient } from '../menu/menu.api-client';
+import { item, section, venue, VENUE_ID } from '../testing/fixtures';
+import { AddItemStore } from './add-item.store';
+
+describe('AddItemStore', () => {
+  function setup(api: Partial<MenuApiClient>) {
+    TestBed.configureTestingModule({
+      providers: [AddItemStore, { provide: MenuApiClient, useValue: api }],
+    });
+    return TestBed.inject(AddItemStore);
+  }
+
+  it('loads the venue and its sections', async () => {
+    const store = setup({
+      venue: vi.fn().mockResolvedValue(venue),
+      sections: vi.fn().mockResolvedValue([section]),
+    });
+    await store.load(VENUE_ID);
+    expect(store.status()).toBe('loaded');
+    expect(store.venue()).toEqual(venue);
+    expect(store.sections()).toEqual([section]);
+  });
+
+  it('reads an unknown venue as not found, and other failures as errors', async () => {
+    const missing = setup({
+      venue: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 404 })),
+      sections: vi.fn().mockResolvedValue([]),
+    });
+    await missing.load(VENUE_ID);
+    expect(missing.status()).toBe('not-found');
+    TestBed.resetTestingModule();
+    const failed = setup({
+      venue: vi.fn().mockResolvedValue(venue),
+      sections: vi.fn().mockRejectedValue(new Error('offline')),
+    });
+    await failed.load(VENUE_ID);
+    expect(failed.status()).toBe('error');
+  });
+
+  it('adds the item at the loaded venue', async () => {
+    const addItem = vi.fn().mockResolvedValue(item);
+    const store = setup({
+      venue: vi.fn().mockResolvedValue(venue),
+      sections: vi.fn().mockResolvedValue([section]),
+      addItem,
+    });
+    await store.load(VENUE_ID);
+    const input = { sectionId: section.id, name: { he: 'שקשוקה' }, listPrice: null };
+    await expect(store.add(input)).resolves.toEqual(item);
+    expect(addItem).toHaveBeenCalledWith(VENUE_ID, input);
+  });
+
+  it('refuses to add before the venue is loaded', async () => {
+    const addItem = vi.fn();
+    const store = setup({ addItem });
+    await expect(
+      store.add({ sectionId: section.id, name: { he: 'שקשוקה' }, listPrice: null }),
+    ).rejects.toThrow('Load the venue first.');
+    expect(addItem).not.toHaveBeenCalled();
+  });
+});

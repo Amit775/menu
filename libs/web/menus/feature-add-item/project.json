@@ -1,0 +1,10 @@
+{
+  "name": "web-menus-feature-add-item",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/menus/feature-add-item/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:menus", "type:feature"],
+  "// targets": "to see all targets run: nx show project web-menus-feature-add-item --web",
+  "targets": {}
+}
