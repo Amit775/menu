@@ -32,7 +32,9 @@
       "@menu/api/shared/util-auth": ["./libs/api/shared/util-auth/src/index.ts"],
       "@menu/api/menus/feature": ["./libs/api/menus/feature/src/index.ts"],
       "@menu/api/menus/data-access": ["./libs/api/menus/data-access/src/index.ts"],
-      "@menu/api/shared/util-ports": ["./libs/api/shared/util-ports/src/index.ts"]
+      "@menu/api/shared/util-ports": ["./libs/api/shared/util-ports/src/index.ts"],
+      "@menu/api/entries/feature": ["./libs/api/entries/feature/src/index.ts"],
+      "@menu/api/entries/data-access": ["./libs/api/entries/data-access/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
