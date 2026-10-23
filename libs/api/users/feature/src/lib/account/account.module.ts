@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AccountRepository } from '@menu/api/users/data-access';
+import { AccountDirectory } from './account-directory';
 import { AccountController } from './account.controller';
 import { AccountService } from './account.service';
 import { USERS_CONFIG, usersConfigFromEnv } from './users.config';
@@ -9,8 +10,9 @@ import { USERS_CONFIG, usersConfigFromEnv } from './users.config';
   providers: [
     AccountService,
     AccountRepository,
+    AccountDirectory,
     { provide: USERS_CONFIG, useFactory: () => usersConfigFromEnv() },
   ],
-  exports: [AccountService],
+  exports: [AccountService, AccountDirectory],
 })
 export class AccountModule {}
