@@ -1,0 +1,9 @@
+{
+  "name": "api-discover-feature",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/discover/feature/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:discover", "type:feature"],
+  "// targets": "to see all targets run: nx show project api-discover-feature --web",
+  "targets": {}
+}
