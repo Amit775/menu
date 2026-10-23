@@ -53,6 +53,8 @@ export class EntriesSheetPage {
 
   protected readonly notice = signal<Notice | null>(null);
   protected readonly busy = signal<string | null>(null);
+  /** The entry whose "make public" waits for a second tap. */
+  protected readonly confirmingPublic = signal<string | null>(null);
 
   constructor() {
     effect(() => {
@@ -74,6 +76,11 @@ export class EntriesSheetPage {
   }
 
   protected async makePublic(entry: Entry): Promise<void> {
+    if (this.confirmingPublic() !== entry.id) {
+      this.confirmingPublic.set(entry.id);
+      return;
+    }
+    this.confirmingPublic.set(null);
     this.busy.set(entry.id);
     this.notice.set(null);
     try {
