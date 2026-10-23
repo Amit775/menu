@@ -65,6 +65,14 @@ describe('MenusItemCatalog', () => {
     await expect(catalog(pending).findForEntries(null, 'i1')).resolves.toBeNull();
   });
 
+  it('keeps a rejected item to its submitter, with no one else’s entries', async () => {
+    const rejected = { ...base, state: 'rejected' as const, submittedById: 'u' };
+    await expect(catalog(rejected).findForEntries(submitter, 'i1')).resolves.toMatchObject({
+      isPublic: false,
+      acceptsEntry: true,
+    });
+  });
+
   it('closes an archived item to new entries but keeps it public', async () => {
     const archived = { ...base, state: 'archived' as const };
     await expect(catalog(archived).findForEntries(submitter, 'i1')).resolves.toMatchObject({

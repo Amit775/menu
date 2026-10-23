@@ -26,13 +26,16 @@ export class DiaryEntry {
     return this.record.visibility !== 'private' && this.record.shareToken === null;
   }
 
-  /** What the share link shows. Hidden reads as removed; private, or on an item that is not public, as private. */
+  /**
+   * What the share link shows. Private (or on an item that is not public) reads
+   * as private, even when hidden; a hidden shared or public entry as removed.
+   */
   sharedView(authorName: string, itemIsPublic: boolean): SharedEntryView {
-    if (this.record.hidden) {
-      return { status: 'removed' };
-    }
     if (this.record.visibility === 'private' || !itemIsPublic) {
       return { status: 'private' };
+    }
+    if (this.record.hidden) {
+      return { status: 'removed' };
     }
     return { status: 'visible', entry: this.toPublic(authorName) };
   }

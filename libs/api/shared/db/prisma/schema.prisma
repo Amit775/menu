@@ -165,7 +165,9 @@ enum EntryVisibility {
 }
 
 /// One line in a user's diary about one item. `author_id` never leaves the
-/// entries domain; `venue_id` is copied from the item for history per venue.
+/// entries domain and has no foreign key (accounts belong to users, ADR 0004);
+/// `venue_id` is copied from the item for history per venue. Items are archived,
+/// never deleted, so the item reference restricts deletes.
 model Entry {
   id              String          @id @default(uuid()) @db.Uuid
   authorId        String          @map("author_id") @db.Uuid

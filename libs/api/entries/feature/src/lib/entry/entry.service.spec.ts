@@ -157,9 +157,10 @@ describe('EntryService', () => {
     await expect(service.remove(other, 'e1')).rejects.toThrow(NotFoundException);
   });
 
-  it('fails with 404 when hiding an unknown entry', async () => {
-    const service = await setup({ setHidden: vi.fn().mockResolvedValue(false) });
-    await expect(service.setHidden('e1', true)).rejects.toThrow(NotFoundException);
+  it('hides an entry without saying whether it exists', async () => {
+    const setHidden = vi.fn().mockResolvedValue(undefined);
+    await expect((await setup({ setHidden })).setHidden('e1', true)).resolves.toBeUndefined();
+    expect(setHidden).toHaveBeenCalledWith('e1', true);
   });
 
   describe('a share link', () => {

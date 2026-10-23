@@ -24,8 +24,12 @@ describe('DiaryEntry', () => {
   };
 
   it('hides its existence from anyone but the author, Admins included', () => {
-    expect(() => { new DiaryEntry(record).assertAuthor(admin); }).toThrow(NotFoundException);
-    expect(() => { new DiaryEntry(record).assertAuthor(author); }).not.toThrow();
+    expect(() => {
+      new DiaryEntry(record).assertAuthor(admin);
+    }).toThrow(NotFoundException);
+    expect(() => {
+      new DiaryEntry(record).assertAuthor(author);
+    }).not.toThrow();
   });
 
   it('never exposes the author’s id', () => {
@@ -58,6 +62,11 @@ describe('DiaryEntry', () => {
 
     it('treats an entry on an item that is not public as private', () => {
       expect(new DiaryEntry(record).sharedView('נועה', false)).toEqual({ status: 'private' });
+    });
+
+    it('reads as private when it is private, hidden or not', () => {
+      const hiddenPrivate = { ...record, visibility: 'private' as const, hidden: true };
+      expect(new DiaryEntry(hiddenPrivate).sharedView('נועה', true)).toEqual({ status: 'private' });
     });
 
     it('reads as removed once an Admin hid it', () => {
