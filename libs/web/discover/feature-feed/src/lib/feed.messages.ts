@@ -30,6 +30,7 @@ export const feedMessages = defineMessages({
     wouldOrderAgain: (percent: number) => `${String(percent)}% יזמינו שוב`,
     noScoreYet: 'עדיין אין ציון. היו הראשונים לדרג.',
     writtenByMe: 'יש לך רשומה',
+    entriesWord: 'רשומות',
     // Filters
     filters: 'סינון',
     tags: 'סוג',
@@ -79,6 +80,7 @@ export const feedMessages = defineMessages({
     wouldOrderAgain: (percent: number) => `${String(percent)}% would order again`,
     noScoreYet: 'No score yet. Be the first to rate it.',
     writtenByMe: 'You wrote about this',
+    entriesWord: 'entries',
     filters: 'Filters',
     tags: 'Type',
     radius: 'Distance',

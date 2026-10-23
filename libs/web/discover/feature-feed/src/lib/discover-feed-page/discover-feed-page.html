@@ -19,13 +19,13 @@
       [value]="store.view()"
       (change)="setView($event.value)"
     >
-      <mat-button-toggle value="reels" [attr.aria-label]="t().reels">
+      <mat-button-toggle value="reels" [aria-label]="t().reels">
         <mat-icon aria-hidden="true">view_carousel</mat-icon>
       </mat-button-toggle>
-      <mat-button-toggle value="list" [attr.aria-label]="t().list">
+      <mat-button-toggle value="list" [aria-label]="t().list">
         <mat-icon aria-hidden="true">view_list</mat-icon>
       </mat-button-toggle>
-      <mat-button-toggle value="map" disabled [attr.aria-label]="t().map">
+      <mat-button-toggle value="map" disabled [aria-label]="t().map">
         <mat-icon aria-hidden="true">map</mat-icon>
       </mat-button-toggle>
     </mat-button-toggle-group>
