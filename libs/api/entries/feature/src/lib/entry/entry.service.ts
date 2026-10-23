@@ -97,11 +97,12 @@ export class EntryService {
     }
   }
 
-  /** Admin only (enforced by the controller). Never returns the entry: an Admin may not read it. */
-  async setHidden(id: string, hidden: boolean): Promise<void> {
-    if (!(await this.repository.setHidden(id, hidden))) {
-      throw new NotFoundException('Entry not found.');
-    }
+  /**
+   * Admin only (enforced by the controller). Always succeeds and returns nothing,
+   * so an Admin learns nothing about a private or missing entry.
+   */
+  setHidden(id: string, hidden: boolean): Promise<void> {
+    return this.repository.setHidden(id, hidden);
   }
 
   /** What a share link shows to anyone holding it. An unknown token reads as removed. */

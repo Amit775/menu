@@ -111,13 +111,15 @@ export class EntryRepository {
     return count > 0;
   }
 
-  /** False when the entry does not exist. */
-  async setHidden(id: string, hidden: boolean): Promise<boolean> {
-    const { count } = await this.prisma.entry.updateMany({
-      where: { id },
+  /**
+   * Hides or shows an entry others can read. A private entry is left alone and
+   * nothing is returned, so the caller cannot learn whether it exists.
+   */
+  async setHidden(id: string, hidden: boolean): Promise<void> {
+    await this.prisma.entry.updateMany({
+      where: { id, visibility: { not: 'private' } },
       data: { hiddenAt: hidden ? new Date() : null },
     });
-    return count > 0;
   }
 
   /** Re-points every entry from one item to another. Safe to run twice. */

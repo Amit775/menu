@@ -1,7 +1,13 @@
 import { Test } from '@nestjs/testing';
-import { type Principal } from '@menu/api/shared/util-auth';
+import { AUTH_REQUIREMENT, type Principal } from '@menu/api/shared/util-auth';
 import { EntryController, ItemEntriesController, SharedEntryController } from './entry.controller';
 import { EntryService } from './entry.service';
+
+/** The `@Authenticated()` / `@AdminOnly()` requirement on a route handler, if any. */
+function requirementOf(controller: { prototype: object }, method: string): unknown {
+  const handler = Object.getOwnPropertyDescriptor(controller.prototype, method)?.value as object;
+  return Reflect.getMetadata(AUTH_REQUIREMENT, handler);
+}
 
 describe('Entry controllers', () => {
   const principal: Principal = {
@@ -52,5 +58,21 @@ describe('Entry controllers', () => {
     const shared = vi.fn().mockResolvedValue({ status: 'removed' });
     await (await setup({ shared })).shared.get('abcdefghijklmnopqrstuv');
     expect(shared).toHaveBeenCalledWith('abcdefghijklmnopqrstuv');
+  });
+
+  it.each([
+    ['diary', 'signed-in'],
+    ['get', 'signed-in'],
+    ['update', 'signed-in'],
+    ['remove', 'signed-in'],
+    ['setHidden', 'admin'],
+  ] as const)('guards %s as %s', (method, requirement) => {
+    expect(requirementOf(EntryController, method)).toBe(requirement);
+  });
+
+  it('lets anyone read an item’s public entries and open a share link', () => {
+    expect(requirementOf(ItemEntriesController, 'list')).toBeUndefined();
+    expect(requirementOf(SharedEntryController, 'get')).toBeUndefined();
+    expect(requirementOf(ItemEntriesController, 'create')).toBe('signed-in');
   });
 });

@@ -67,9 +67,12 @@ describe('EntryRepository', () => {
     expect(deleteMany).toHaveBeenCalledWith({ where: { id: 'e1', authorId: 'a1' } });
   });
 
-  it('reports a missing entry when hiding', async () => {
+  it('never hides a private entry', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 0 });
-    await expect(repositoryWith({ updateMany }).setHidden('e1', true)).resolves.toBe(false);
+    await repositoryWith({ updateMany }).setHidden('e1', true);
+    expect(updateMany.mock.calls[0]?.[0]).toMatchObject({
+      where: { id: 'e1', visibility: { not: 'private' } },
+    });
   });
 
   it('moves entries to the item a duplicate was merged into', async () => {
