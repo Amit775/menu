@@ -6,7 +6,7 @@ let nextId = 0;
 
 /**
  * One to five stars, optional: native radios, so arrow keys and screen readers
- * work, and choosing the selected star again clears the rating.
+ * work. Choosing the selected star again, or the clear button, clears the rating.
  */
 @Component({
   selector: 'menu-rating-input',

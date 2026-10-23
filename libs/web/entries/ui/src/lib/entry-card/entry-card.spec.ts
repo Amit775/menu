@@ -60,7 +60,11 @@ describe('EntryCard', () => {
     expect(element.querySelector('.who')?.textContent.trim()).toBe('הרשומה שלך · פרטית');
     expect(element.querySelector('.facts')?.textContent).toContain('★ 5');
     expect(element.querySelector('.facts')?.textContent).toContain('יזמין שוב');
-    expect(element.querySelector('[aria-label="שולם ₪68"]')).not.toBeNull();
+    const spoken = [...element.querySelectorAll('.facts .visually-hidden')].map(
+      (span) => span.textContent,
+    );
+    expect(spoken).toEqual(['דירוג 5 מתוך 5', 'שולם ₪68']);
+    expect(element.querySelector('.facts [aria-label]')).toBeNull();
     expect(element.querySelector('time')?.textContent).toBe('אתמול');
     expect(element.querySelector('.text')?.textContent).toBe('מדיום מושלם');
     expect(element.querySelector('.actions button')?.textContent).toBe('עריכה');

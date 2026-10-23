@@ -35,6 +35,16 @@ describe('RatingInput', () => {
     expect(fixture.componentInstance.value()).toBeNull();
   });
 
+  it('offers a button to clear the rating, for keyboards too', async () => {
+    const { fixture, element } = await render(4);
+    const clear = element.querySelector<HTMLButtonElement>('button.clear');
+    expect(clear?.textContent.trim()).toBe('ניקוי הדירוג');
+    clear?.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.value()).toBeNull();
+    expect(element.querySelector('button.clear')).toBeNull();
+  });
+
   it('keeps the rating when the keyboard selects it', async () => {
     const { fixture, radios } = await render(4);
     radios[3]?.dispatchEvent(new MouseEvent('click', { detail: 0 }));
