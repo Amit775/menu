@@ -27,3 +27,6 @@ export const GeoPointSchema = z.object({
 });
 
 export type GeoPoint = z.infer<typeof GeoPointSchema>;
+
+/** A resource id in a route parameter: `@Param('id', new ZodValidationPipe(IdSchema))`. */
+export const IdSchema = z.uuid();

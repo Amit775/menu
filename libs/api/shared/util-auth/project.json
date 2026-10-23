@@ -1,0 +1,9 @@
+{
+  "name": "api-shared-util-auth",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/shared/util-auth/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:shared", "type:util"],
+  "// targets": "to see all targets run: nx show project api-shared-util-auth --web",
+  "targets": {}
+}

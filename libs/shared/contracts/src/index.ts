@@ -3,3 +3,4 @@
 export * from './lib/common/api-error.contract';
 export * from './lib/common/values.contract';
 export * from './lib/health/health.contract';
+export * from './lib/users/account.contract';
