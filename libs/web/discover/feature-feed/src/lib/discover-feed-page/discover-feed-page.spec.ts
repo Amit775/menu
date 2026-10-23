@@ -4,7 +4,7 @@ import { OverlayContainer } from '@angular/cdk/overlay';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { type DiscoverApiClient, FeedStore } from '@menu/web/discover/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
-import { LeafletLoader } from '../map/leaflet-loader';
+import { LeafletLoader } from '@menu/web/shared/util-map';
 import { boundaries, sampleItem } from '../testing/feed-fixtures';
 import { DiscoverFeedPage } from './discover-feed-page';
 
