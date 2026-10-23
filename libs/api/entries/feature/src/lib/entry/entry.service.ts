@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EntryRepository } from '@menu/api/entries/data-access';
 import { withoutUndefined } from '@menu/api/shared/util';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -32,6 +32,8 @@ function newShareToken(): string {
  */
 @Injectable()
 export class EntryService {
+  private readonly logger = new Logger(EntryService.name);
+
   constructor(
     private readonly repository: EntryRepository,
     @Inject(ITEM_CATALOG) private readonly catalog: ItemCatalog,
@@ -83,7 +85,12 @@ export class EntryService {
     const refs = await this.catalog.refsFor(records.map((record) => record.itemId));
     return records.flatMap((record) => {
       const item = refs.get(record.itemId);
-      return item ? [{ ...new DiaryEntry(record).toContract(), item }] : [];
+      if (!item) {
+        // Items and venues are archived, never deleted, so this is a data bug to look at.
+        this.logger.warn(`Diary entry ${record.id} names item ${record.itemId}, which is gone.`);
+        return [];
+      }
+      return [{ ...new DiaryEntry(record).toContract(), item }];
     });
   }
 
