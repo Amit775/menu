@@ -6,8 +6,8 @@ import { FeedStore } from '@menu/web/discover/data-access';
 import { DeviceLocation } from '@menu/web/shared/util-device';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { boundaries, VENUE_ID } from '../testing/feed-fixtures';
-import { LeafletLoader } from './leaflet-loader';
-import { TEL_AVIV, VenueMap } from './venue-map';
+import { LeafletLoader, TEL_AVIV } from '@menu/web/shared/util-map';
+import { VenueMap } from './venue-map';
 
 interface FakeMarker {
   location: unknown;
