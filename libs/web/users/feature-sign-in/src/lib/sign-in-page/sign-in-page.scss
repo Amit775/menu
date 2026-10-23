@@ -1,0 +1,35 @@
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+}
+
+.intro {
+  margin: 0 0 12px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.or {
+  margin: 4px 0;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error {
+  margin: 0;
+  color: var(--mat-sys-error);
+}

@@ -1,0 +1,34 @@
+import { defineMessages } from '@menu/web/shared/util-i18n';
+
+export const signInMessages = defineMessages({
+  he: {
+    title: 'כניסה',
+    intro: 'כדי לשמור מה אכלת, איפה וכמה זה עלה.',
+    google: 'כניסה עם Google',
+    or: 'או',
+    phone: 'מספר טלפון',
+    phoneHint: 'נשלח אליך קוד ב-SMS',
+    sendCode: 'שליחת קוד',
+    code: 'הקוד שקיבלת',
+    confirm: 'כניסה',
+    changePhone: 'מספר אחר',
+    errorInvalidPhone: 'המספר לא נראה תקין.',
+    errorInvalidCode: 'הקוד לא נכון. אפשר לנסות שוב.',
+    errorFailed: 'הכניסה לא הצליחה. אפשר לנסות שוב.',
+  },
+  en: {
+    title: 'Sign in',
+    intro: 'To keep what you ate, where, and what it cost.',
+    google: 'Continue with Google',
+    or: 'or',
+    phone: 'Phone number',
+    phoneHint: 'We will text you a code',
+    sendCode: 'Send code',
+    code: 'The code you got',
+    confirm: 'Sign in',
+    changePhone: 'Another number',
+    errorInvalidPhone: 'That number does not look right.',
+    errorInvalidCode: 'That code is wrong. Try again.',
+    errorFailed: 'Sign-in did not work. Try again.',
+  },
+});
