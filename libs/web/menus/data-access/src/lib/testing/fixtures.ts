@@ -1,4 +1,10 @@
-import { type Item, type MenuSection, type Venue } from '@menu/shared/contracts';
+import {
+  type Item,
+  type MenuSection,
+  type Tag,
+  type Venue,
+  type VenueInsights,
+} from '@menu/shared/contracts';
 
 /** Contract-valid data for the menus specs. */
 export const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
@@ -33,4 +39,25 @@ export const item: Item = {
   submittedByMe: true,
   position: 0,
   createdAt: '2026-10-23T10:00:00.000Z',
+};
+
+export const tag: Tag = {
+  id: '3a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+  slug: 'hamburger',
+  name: { he: 'המבורגר', en: 'Hamburger' },
+  kind: 'dish',
+};
+
+export const insights: VenueInsights = {
+  items: [
+    {
+      itemId: item.id,
+      name: item.name,
+      score: 4.5,
+      ratingCount: 6,
+      publicEntryCount: 4,
+      otherEntryCount: null,
+      wouldOrderAgainPercent: 80,
+    },
+  ],
 };
