@@ -26,6 +26,10 @@ pnpm start                   # API on :3000, web on :4200 (proxies /api)
 | `pnpm nx graph`                                 | Project graph                |
 | `pnpm nx run api-shared-db:prisma-migrate`      | Create/apply a dev migration |
 
+## Deployment
+
+The web app is on Firebase Hosting: each PR gets a preview URL, merges to `main` go live (`.github/workflows/deploy-web.yml`). One-time setup for Firebase and Nx Cloud is in [`docs/deployment.md`](docs/deployment.md); the decision is ADR 0002.
+
 ## Structure
 
 ```
