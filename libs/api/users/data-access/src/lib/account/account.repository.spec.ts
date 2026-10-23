@@ -42,6 +42,34 @@ describe('AccountRepository', () => {
     });
   });
 
+  it('returns the account another request created at the same moment', async () => {
+    const findUnique = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce(row);
+    const upsert = vi.fn().mockRejectedValue(Object.assign(new Error('unique'), { code: 'P2002' }));
+    const repository = repositoryWith({ findUnique, upsert });
+    await expect(
+      repository.findOrCreateByFirebaseUid({
+        firebaseUid: 'uid-1',
+        displayName: '',
+        isAdmin: false,
+      }),
+    ).resolves.toEqual(account);
+    expect(findUnique).toHaveBeenCalledTimes(2);
+  });
+
+  it('still fails on any other database error', async () => {
+    const repository = repositoryWith({
+      findUnique: vi.fn().mockResolvedValue(null),
+      upsert: vi.fn().mockRejectedValue(new Error('connection lost')),
+    });
+    await expect(
+      repository.findOrCreateByFirebaseUid({
+        firebaseUid: 'uid-1',
+        displayName: '',
+        isAdmin: false,
+      }),
+    ).rejects.toThrow('connection lost');
+  });
+
   it('returns an existing account without writing or changing its role', async () => {
     const upsert = vi.fn();
     const repository = repositoryWith({ findUnique: vi.fn().mockResolvedValue(row), upsert });
