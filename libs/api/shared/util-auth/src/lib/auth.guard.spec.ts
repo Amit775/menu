@@ -13,17 +13,20 @@ describe('AuthGuard', () => {
     ownedVenueIds: [],
   };
   const verifier: TokenVerifier = {
-    verify: (token) =>
-      token === 'good' ? Promise.resolve({ uid: 'u1' }) : Promise.reject(new Error('bad')),
+    verify: (token) => {
+      if (token === 'good') return Promise.resolve({ uid: 'u1' });
+      if (token === 'outage') return Promise.reject(new Error('keys unavailable'));
+      return Promise.reject(new UnauthorizedException('bad token'));
+    },
   };
 
   function run(
     headers: RequestWithPrincipal['headers'],
-    requirement?: AuthRequirement,
+    requirements: (AuthRequirement | undefined)[] = [],
     resolved: Principal = principal,
   ): { result: Promise<boolean>; request: RequestWithPrincipal } {
     const resolver: PrincipalResolver = { resolve: () => Promise.resolve(resolved) };
-    const reflector = { getAllAndOverride: () => requirement } as unknown as Reflector;
+    const reflector = { getAll: () => requirements } as unknown as Reflector;
     const guard = new AuthGuard(reflector, verifier, resolver);
     const request: RequestWithPrincipal = { headers };
     const context = {
@@ -52,18 +55,39 @@ describe('AuthGuard', () => {
     );
   });
 
+  it.each(['Bearer', 'Bearer a b', 'Basic abc', ''])(
+    'rejects the malformed header "%s"',
+    async (authorization) => {
+      await expect(run({ authorization }).result).rejects.toThrow(UnauthorizedException);
+    },
+  );
+
+  it('keeps a provider outage a server error instead of signing the user out', async () => {
+    const result = run({ authorization: 'Bearer outage' }).result;
+    await expect(result).rejects.toThrow('keys unavailable');
+    await expect(result).rejects.not.toBeInstanceOf(UnauthorizedException);
+  });
+
   it('rejects a visitor on a signed-in route', async () => {
-    await expect(run({}, 'signed-in').result).rejects.toThrow(UnauthorizedException);
+    await expect(run({}, ['signed-in']).result).rejects.toThrow(UnauthorizedException);
   });
 
   it('forbids a non-Admin on an Admin route', async () => {
-    await expect(run({ authorization: 'Bearer good' }, 'admin').result).rejects.toThrow(
+    await expect(run({ authorization: 'Bearer good' }, ['admin']).result).rejects.toThrow(
       ForbiddenException,
     );
   });
 
+  it('keeps a class-level Admin rule when a method only asks for sign-in', async () => {
+    await expect(
+      run({ authorization: 'Bearer good' }, ['signed-in', 'admin']).result,
+    ).rejects.toThrow(ForbiddenException);
+  });
+
   it('lets an Admin through an Admin route', async () => {
     const admin = { ...principal, isAdmin: true };
-    await expect(run({ authorization: 'Bearer good' }, 'admin', admin).result).resolves.toBe(true);
+    await expect(run({ authorization: 'Bearer good' }, ['admin'], admin).result).resolves.toBe(
+      true,
+    );
   });
 });
