@@ -1,0 +1,9 @@
+{
+  "name": "api-discover-data-access",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/discover/data-access/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:discover", "type:data-access"],
+  "// targets": "to see all targets run: nx show project api-discover-data-access --web",
+  "targets": {}
+}
