@@ -10,3 +10,22 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// --- users -----------------------------------------------------------------
+
+enum Language {
+  he
+  en
+}
+
+/// A person who signed in with Firebase Authentication.
+model Account {
+  id          String   @id @default(uuid()) @db.Uuid
+  firebaseUid String   @unique @map("firebase_uid")
+  displayName String   @default("") @map("display_name")
+  language    Language @default(he)
+  isAdmin     Boolean  @default(false) @map("is_admin")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("account")
+}
