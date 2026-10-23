@@ -1,7 +1,9 @@
 # Local development database. `docker compose up -d`
+# Same major version as Cloud SQL (docs/deployment.md). Postgres 18 keeps its
+# data under /var/lib/postgresql/18, so the volume mounts the parent directory.
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: menu
       POSTGRES_PASSWORD: menu
@@ -9,6 +11,6 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - menu-postgres:/var/lib/postgresql/data
+      - menu-postgres-18:/var/lib/postgresql
 volumes:
-  menu-postgres:
+  menu-postgres-18:

@@ -57,8 +57,8 @@ Rough cost: about $10 to $13 a month for the smallest Cloud SQL instance and its
 1. **Budget alert**: https://console.cloud.google.com/billing/budgets, create one for the project (for example $20 a month, alerts at 50%, 90%, 100%).
 2. **Enable APIs**: https://console.cloud.google.com/flows/enableapi?apiid=run.googleapis.com,sqladmin.googleapis.com,secretmanager.googleapis.com,artifactregistry.googleapis.com&project=menu-b29eb
 3. **Cloud SQL instance**: https://console.cloud.google.com/sql/instances?project=menu-b29eb, **Create instance > PostgreSQL**.
-   - Edition **Enterprise** (not Enterprise Plus; only Enterprise has the small shared-core machines), preset **Sandbox**.
-   - Version **PostgreSQL 17** (same as `docker-compose.yml`). Instance ID `menu-db`. Set a `postgres` password and keep it in your password manager.
+   - Edition **Enterprise** (not Enterprise Plus; only Enterprise has the small shared-core machines), preset **Sandbox**. Alternatively, the 30-day **free trial** instance (Enterprise Plus, 8 vCPU, 64 GB) works the same way; before it ends, move to Enterprise with a shared-core machine, or the bill jumps to hundreds of dollars a month.
+   - Version **PostgreSQL 18** (same major version as `docker-compose.yml`). Instance ID `menu-db`. Set a `postgres` password and keep it in your password manager.
    - Region `europe-west1`, **Single zone**.
    - Machine: **Shared core, 1 vCPU, 0.614 GB**. Storage: SSD, 10 GB.
    - Connections: keep **Public IP** on and add **no** authorized networks. Cloud Run and the CI proxy connect through the IAM-checked Cloud SQL connection, so nothing else can reach it.
