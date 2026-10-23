@@ -1,0 +1,10 @@
+{
+  "name": "web-users-data-access",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/users/data-access/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:users", "type:data-access"],
+  "// targets": "to see all targets run: nx show project web-users-data-access --web",
+  "targets": {}
+}
