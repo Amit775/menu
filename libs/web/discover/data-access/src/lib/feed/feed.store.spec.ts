@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
+import { DataChanges } from '@menu/web/shared/util-events';
 import { item, VENUE_ID } from '../testing/fixtures';
 import { DiscoverApiClient } from '../api/discover.api-client';
 import { DeviceLocation } from '../location/device-location';
@@ -149,6 +150,34 @@ describe('FeedStore', () => {
     await store.load();
     expect(feed).toHaveBeenCalledTimes(2);
     expect(store.reelIndex()).toBe(0);
+  });
+
+  it('fetches again after an entry changes, from the first reel when the feed got shorter', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item, unranked, item], nextOffset: null });
+    const store = setup({ feed });
+    TestBed.tick();
+    await store.load();
+    store.setReelIndex(2);
+    TestBed.inject(DataChanges).notify('entries');
+    TestBed.tick();
+    expect(store.status()).toBe('idle');
+    feed.mockResolvedValue({ items: [item], nextOffset: null });
+    await store.load();
+    expect(feed).toHaveBeenCalledTimes(2);
+    expect(store.reelIndex()).toBe(0);
+  });
+
+  it('keeps the reel when the refreshed feed still reaches it', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item, unranked, item], nextOffset: null });
+    const store = setup({ feed });
+    TestBed.tick();
+    await store.load();
+    store.setReelIndex(2);
+    TestBed.inject(DataChanges).notify('entries');
+    TestBed.tick();
+    await store.load();
+    expect(feed).toHaveBeenCalledTimes(2);
+    expect(store.reelIndex()).toBe(2);
   });
 
   it('does not ask twice while a page is loading, and reports a failed next page', async () => {

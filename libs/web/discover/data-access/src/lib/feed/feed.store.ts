@@ -1,6 +1,7 @@
 import { computed, effect, inject, untracked } from '@angular/core';
 import { type DiscoverItem, type GeoPoint, type MapPin, type Tag } from '@menu/shared/contracts';
 import { Auth } from '@menu/web/shared/util-auth';
+import { DataChanges } from '@menu/web/shared/util-events';
 import {
   patchState,
   signalStore,
@@ -87,6 +88,8 @@ export const FeedStore = signalStore(
   })),
   withMethods((store, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
     let request = 0;
+    /** Set by a refresh that should leave the user on the reel they were watching. */
+    let keepReel = false;
 
     async function fetchPage(offset: number): Promise<void> {
       const current = ++request;
@@ -112,8 +115,10 @@ export const FeedStore = signalStore(
         if (current !== request) {
           return;
         }
+        const reelIndex = keepReel && store.reelIndex() < page.items.length ? store.reelIndex() : 0;
+        keepReel = false;
         patchState(store, {
-          ...(offset === 0 ? { reelIndex: 0 } : {}),
+          ...(offset === 0 ? { reelIndex } : {}),
           items: offset === 0 ? page.items : [...store.items(), ...page.items],
           nextOffset: page.nextOffset,
           near,
@@ -164,8 +169,9 @@ export const FeedStore = signalStore(
        * Marks the feed out of date (another account, a new entry): the next
        * `load()` fetches again, with fresh scores and "you wrote about this" flags.
        */
-      invalidate(): void {
+      invalidate(options: { keepReel?: boolean } = {}): void {
         request++;
+        keepReel = options.keepReel ?? false;
         patchState(store, { status: 'idle', venueItems: {} });
       },
       async loadTags(): Promise<void> {
@@ -192,7 +198,7 @@ export const FeedStore = signalStore(
     };
   }),
   withHooks({
-    onInit(store, auth = inject(Auth)) {
+    onInit(store, auth = inject(Auth), changes = inject(DataChanges)) {
       let account: string | null | undefined;
       effect(() => {
         const uid = auth.status() === 'loading' ? undefined : (auth.user()?.uid ?? null);
@@ -205,6 +211,17 @@ export const FeedStore = signalStore(
           }
           account = uid;
         });
+      });
+      const entries = changes.version('entries');
+      let seen = entries();
+      effect(() => {
+        const version = entries();
+        if (version !== seen) {
+          seen = version;
+          untracked(() => {
+            store.invalidate({ keepReel: true });
+          });
+        }
       });
     },
   }),
