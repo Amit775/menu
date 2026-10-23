@@ -31,7 +31,13 @@
       "Bash(firebase deploy*)",
       "Bash(firebase hosting:*)",
       "Bash(firebase use*)",
-      "Bash(*firebase-tools* deploy*)"
+      "Bash(*firebase-tools* deploy*)",
+      "Bash(gcloud run*)",
+      "Bash(gcloud iam*)",
+      "Bash(gcloud projects*)",
+      "Bash(gcloud sql*)",
+      "Bash(gcloud secrets*)",
+      "Bash(*cloud-sql-proxy*)"
     ],
     "deny": [
       "Read(./.env)",
