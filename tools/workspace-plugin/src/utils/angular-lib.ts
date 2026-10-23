@@ -35,6 +35,8 @@ export async function createAngularLib(tree: Tree, options: AngularLibOptions): 
     prefix: 'menu',
     style: 'scss',
     standalone: true,
+    // Without it @nx/angular records `strict: false` as a workspace default in nx.json.
+    strict: true,
     skipModule: true,
     // Non-buildable libs use the AnalogJS Vitest setup.
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment -- @nx/angular does not export its UnitTestRunner enum
