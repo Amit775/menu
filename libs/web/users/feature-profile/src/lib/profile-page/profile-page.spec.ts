@@ -42,6 +42,7 @@ describe('ProfilePage', () => {
     const { element } = await setup(new FakeAuthBackend());
     expect(element.querySelector('a[href="/sign-in"]')?.textContent).toContain('כניסה');
     expect(element.querySelector('input')).toBeNull();
+    expect(element.querySelector('a.diary')).toBeNull();
   });
 
   it('shows and saves the display name when signed in', async () => {
@@ -50,6 +51,7 @@ describe('ProfilePage', () => {
     );
     const input = element.querySelector<HTMLInputElement>('input');
     expect(input?.value).toBe('נועה');
+    expect(element.querySelector('a.diary')?.getAttribute('href')).toBe('/diary');
     if (input) {
       input.value = 'נועה כ.';
       input.dispatchEvent(new Event('input'));
