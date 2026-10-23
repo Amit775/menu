@@ -1,7 +1,7 @@
-import { formatFiles, generateFiles, joinPathFragments, type Tree, updateJson } from '@nx/devkit';
-import { libraryGenerator } from '@nx/nest';
+import { formatFiles, generateFiles, type Tree } from '@nx/devkit';
 import { join } from 'node:path';
 import { projectExists } from '../../utils/angular-lib';
+import { createNestLib } from '../../utils/nest-lib';
 import {
   addExport,
   API_APP_MODULE,
@@ -18,35 +18,14 @@ import { type NestResourceGeneratorSchema } from './schema';
 async function ensureNestLib(tree: Tree, domain: string, type: LibType): Promise<string> {
   const directory = `libs/api/${domain}/${type}`;
   const projectName = `api-${domain}-${type}`;
-  if (projectExists(tree, projectName)) {
-    return directory;
-  }
-  await libraryGenerator(tree, {
-    directory,
-    name: projectName,
-    importPath: `@menu/api/${domain}/${type}`,
-    tags: tagsFor('api', domain, type),
-    unitTestRunner: 'vitest',
-    strict: true,
-    skipFormat: true,
-  });
-  updateJson(
-    tree,
-    joinPathFragments(directory, 'tsconfig.json'),
-    (json: Record<string, unknown>) => {
-      json['compilerOptions'] = { module: 'commonjs' };
-      return json;
-    },
-  );
-  const specConfig = joinPathFragments(directory, 'tsconfig.spec.json');
-  if (tree.exists(specConfig)) {
-    updateJson(tree, specConfig, (json: { compilerOptions?: Record<string, unknown> }) => {
-      json.compilerOptions = { ...json.compilerOptions, module: 'esnext' };
-      return json;
+  if (!projectExists(tree, projectName)) {
+    await createNestLib(tree, {
+      directory,
+      projectName,
+      importPath: `@menu/api/${domain}/${type}`,
+      tags: tagsFor('api', domain, type),
     });
   }
-  tree.delete(joinPathFragments(directory, 'src/lib'));
-  tree.write(joinPathFragments(directory, 'src/index.ts'), 'export {};\n');
   return directory;
 }
 
