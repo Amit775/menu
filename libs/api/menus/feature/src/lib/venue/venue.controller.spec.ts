@@ -3,7 +3,9 @@ import { VenueController } from './venue.controller';
 import { VenueService } from './venue.service';
 
 describe('VenueController', () => {
-  async function setup(service: Partial<Record<keyof VenueService, unknown>>): Promise<VenueController> {
+  async function setup(
+    service: Partial<Record<keyof VenueService, unknown>>,
+  ): Promise<VenueController> {
     const moduleRef = await Test.createTestingModule({
       controllers: [VenueController],
       providers: [{ provide: VenueService, useValue: service }],

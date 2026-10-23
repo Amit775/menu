@@ -3,7 +3,12 @@ import { TagRepository } from './tag.repository';
 
 describe('TagRepository', () => {
   const row = { id: 't1', slug: 'hamburger', nameHe: 'המבורגר', nameEn: 'Hamburger', kind: 'dish' };
-  const tag = { id: 't1', slug: 'hamburger', name: { he: 'המבורגר', en: 'Hamburger' }, kind: 'dish' };
+  const tag = {
+    id: 't1',
+    slug: 'hamburger',
+    name: { he: 'המבורגר', en: 'Hamburger' },
+    kind: 'dish',
+  };
 
   function repositoryWith(model: Record<string, unknown>): TagRepository {
     return new TagRepository({ tag: model } as unknown as PrismaService);
