@@ -68,10 +68,8 @@ export const ItemEntriesStore = signalStore(
           return created;
         },
         async update(id: string, input: UpdateEntry): Promise<Entry> {
+          // Editing an old entry leaves the default for new ones alone.
           const updated = await api.update(id, input);
-          if (input.visibility) {
-            lastVisibility.set(input.visibility);
-          }
           replaceMine(store.mine().map((entry) => (entry.id === id ? updated : entry)));
           changes.notify('entries');
           return updated;
