@@ -1,7 +1,12 @@
 import { NotFoundException } from '@nestjs/common';
 import { type EntryRecord } from '@menu/api/entries/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
-import { type Entry, type PublicEntry, type SharedEntryView } from '@menu/shared/contracts';
+import {
+  type Entry,
+  type ItemRef,
+  type PublicEntry,
+  type SharedEntryView,
+} from '@menu/shared/contracts';
 
 /**
  * The spec's Entry, with its privacy rules as methods. Only its author reads or
@@ -30,14 +35,15 @@ export class DiaryEntry {
    * What the share link shows. Private (or on an item that is not public) reads
    * as private, even when hidden; a hidden shared or public entry as removed.
    */
-  sharedView(authorName: string, itemIsPublic: boolean): SharedEntryView {
-    if (this.record.visibility === 'private' || !itemIsPublic) {
+  /** `publicItem` is null when the item is not public (pending, rejected, gone). */
+  sharedView(authorName: string, publicItem: ItemRef | null): SharedEntryView {
+    if (this.record.visibility === 'private' || !publicItem) {
       return { status: 'private' };
     }
     if (this.record.hidden) {
       return { status: 'removed' };
     }
-    return { status: 'visible', entry: this.toPublic(authorName) };
+    return { status: 'visible', entry: this.toPublic(authorName), item: publicItem };
   }
 
   toContract(): Entry {
