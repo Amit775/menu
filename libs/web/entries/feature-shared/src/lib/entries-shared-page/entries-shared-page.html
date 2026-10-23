@@ -37,7 +37,7 @@
             <li>{{ t().paid(entry.pricePaid | shekels) }}</li>
           }
           <li>
-            <time [attr.datetime]="entry.eatenAt">{{ formatDate(entry.eatenAt) }}</time>
+            <time [attr.datetime]="entry.eatenAt">{{ eatenOn() }}</time>
           </li>
         </ul>
         @if (entry.text) {
@@ -64,6 +64,12 @@
         <a mat-button routerLink="/">{{ t().toFeed }}</a>
       </div>
     }
+  }
+  @case ('not-found') {
+    <div class="state" role="status">
+      {{ t().removed }}
+      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+    </div>
   }
   @default {
     <div class="state" role="alert">
