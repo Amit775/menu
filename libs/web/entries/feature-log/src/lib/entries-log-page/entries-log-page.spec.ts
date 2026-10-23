@@ -61,6 +61,10 @@ describe('EntriesLogPage', () => {
     if (!element) {
       throw new Error('The page did not render.');
     }
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(element.querySelector('mat-spinner')).toBeNull();
+    });
     const field = (selector: string): HTMLElement => {
       const found = element.querySelector<HTMLElement>(selector);
       if (!found) {

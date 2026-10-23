@@ -74,6 +74,10 @@ describe('EntriesSheetPage', () => {
     if (!element) {
       throw new Error('The page did not render.');
     }
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(element.querySelector('mat-spinner')).toBeNull();
+    });
     return { harness, element };
   }
 
