@@ -91,8 +91,10 @@ export const FeedStore = signalStore(
     /** Set by a refresh that should leave the user on the reel they were watching. */
     let keepReel = false;
 
-    async function fetchPage(offset: number): Promise<void> {
+    /** `keep` leaves the user on their reel; any other fetch forgets an earlier ask to. */
+    async function fetchPage(offset: number, keep = false): Promise<void> {
       const current = ++request;
+      keepReel = false;
       patchState(store, { status: 'loading' });
       try {
         const near = await location.locate();
@@ -115,8 +117,7 @@ export const FeedStore = signalStore(
         if (current !== request) {
           return;
         }
-        const reelIndex = keepReel && store.reelIndex() < page.items.length ? store.reelIndex() : 0;
-        keepReel = false;
+        const reelIndex = keep && store.reelIndex() < page.items.length ? store.reelIndex() : 0;
         patchState(store, {
           ...(offset === 0 ? { reelIndex } : {}),
           items: offset === 0 ? page.items : [...store.items(), ...page.items],
@@ -135,7 +136,7 @@ export const FeedStore = signalStore(
       /** The first page, unless it is already here. */
       async load(): Promise<void> {
         if (store.status() === 'idle' || store.status() === 'error') {
-          await fetchPage(0);
+          await fetchPage(0, keepReel);
         }
       },
       async reload(): Promise<void> {
