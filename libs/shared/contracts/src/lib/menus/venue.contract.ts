@@ -35,12 +35,11 @@ export const CreateVenueSchema = VenueSchema.pick({
   name: true,
   address: true,
   location: true,
-})
-  .extend({
-    phone: PhoneSchema.nullable().default(null),
-    reservationUrl: VenueSchema.shape.reservationUrl.default(null),
-    sections: z.array(LocalizedTextSchema).max(30).default([]),
-  });
+}).extend({
+  phone: PhoneSchema.nullable().default(null),
+  reservationUrl: VenueSchema.shape.reservationUrl.default(null),
+  sections: z.array(LocalizedTextSchema).max(30).default([]),
+});
 
 export type CreateVenue = z.infer<typeof CreateVenueSchema>;
 
