@@ -55,7 +55,9 @@
         </div>
 
         @if (page.myEntryCount > 0) {
-          <p class="mine">{{ t().myEntries(page.myEntryCount) }}</p>
+          <a class="mine" routerLink="/diary" [queryParams]="{ venueId: page.venue.id }">{{
+            t().myEntries(page.myEntryCount)
+          }}</a>
         }
 
         @if (page.topItems.length > 0) {
@@ -81,6 +83,10 @@
           } @else {
             <p class="empty">{{ t().emptyMenu }}</p>
           }
+          <a class="add-item" [routerLink]="['/venues', page.venue.id, 'add-item']">
+            <mat-icon aria-hidden="true">add</mat-icon>
+            {{ t().addItem }}
+          </a>
         </section>
       </article>
     }

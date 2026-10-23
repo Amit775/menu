@@ -16,6 +16,7 @@ export const venueMessages = defineMessages({
     topItems: 'מה טעים כאן',
     menu: 'התפריט',
     emptyMenu: 'התפריט עוד לא הוזן.',
+    addItem: 'לא בתפריט? הוסיפו פריט ורשמו עליו',
   },
   en: {
     back: 'Back',
@@ -32,5 +33,6 @@ export const venueMessages = defineMessages({
     topItems: 'What is good here',
     menu: 'Menu',
     emptyMenu: 'The menu is not in yet.',
+    addItem: 'Not on the menu? Add it and write about it',
   },
 });

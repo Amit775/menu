@@ -94,6 +94,25 @@ article {
   cursor: pointer;
 }
 
+.side-item:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 4px;
+}
+
+a.side-item {
+  text-decoration: none;
+}
+
+.log-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+}
+
 .side-count {
   font: var(--mat-sys-title-large);
   font-weight: 700;
