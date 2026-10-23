@@ -180,6 +180,33 @@ describe('FeedStore', () => {
     expect(store.reelIndex()).toBe(2);
   });
 
+  it('starts from the first reel when filters change after an entry did', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item, unranked, item], nextOffset: null });
+    const store = setup({ feed });
+    TestBed.tick();
+    await store.load();
+    store.setReelIndex(2);
+    TestBed.inject(DataChanges).notify('entries');
+    TestBed.tick();
+    await store.setFilters({ radiusKm: 5 });
+    expect(store.reelIndex()).toBe(0);
+  });
+
+  it('forgets the reel to keep once that refresh fails', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item, unranked, item], nextOffset: null });
+    const store = setup({ feed });
+    TestBed.tick();
+    await store.load();
+    store.setReelIndex(2);
+    TestBed.inject(DataChanges).notify('entries');
+    TestBed.tick();
+    feed.mockRejectedValueOnce(new Error('offline'));
+    await store.load();
+    store.setReelIndex(2);
+    await store.reload();
+    expect(store.reelIndex()).toBe(0);
+  });
+
   it('does not ask twice while a page is loading, and reports a failed next page', async () => {
     const feed = vi
       .fn()
