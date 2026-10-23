@@ -19,6 +19,9 @@ export const itemMessages = defineMessages({
     latestPrice: 'מחיר אחרון',
     ratings: 'דירוגים',
     alsoGoodAt: (venue: string) => `עוד טעים ב${venue}`,
+    whatPeopleSay: 'מה אומרים',
+    allEntries: 'לכל הרשומות',
+    logIt: 'אכלתי את זה',
   },
   en: {
     back: 'Back',
@@ -38,5 +41,8 @@ export const itemMessages = defineMessages({
     latestPrice: 'latest price',
     ratings: 'ratings',
     alsoGoodAt: (venue: string) => `Also good at ${venue}`,
+    whatPeopleSay: 'What people say',
+    allEntries: 'All entries',
+    logIt: 'I had this',
   },
 });

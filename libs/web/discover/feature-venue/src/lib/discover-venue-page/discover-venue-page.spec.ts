@@ -78,7 +78,12 @@ describe('DiscoverVenuePage', () => {
     expect(element.querySelector('.address')?.textContent).toContain('1.2 ק״מ');
     const links = [...element.querySelectorAll('.actions a')].map((a) => a.getAttribute('href'));
     expect(links).toEqual(['https://waze.com/ul?ll=32.0641,34.7744&navigate=yes', 'tel:035664949']);
-    expect(element.querySelector('.mine')?.textContent).toBe('2 רשומות שלך כאן');
+    const mine = element.querySelector('a.mine');
+    expect(mine?.textContent).toBe('2 רשומות שלך כאן');
+    expect(mine?.getAttribute('href')).toBe(`/diary?venueId=${page.venue.id}`);
+    expect(element.querySelector('a.add-item')?.getAttribute('href')).toBe(
+      `/venues/${page.venue.id}/add-item`,
+    );
     expect(element.querySelector('h3')?.textContent).toBe('עיקריות');
     expect(element.querySelectorAll('menu-item-row')).toHaveLength(2);
   });

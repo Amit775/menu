@@ -31,6 +31,9 @@ export const feedMessages = defineMessages({
     noScoreYet: 'עדיין אין ציון. היו הראשונים לדרג.',
     writtenByMe: 'יש לך רשומה',
     entriesWord: 'רשומות',
+    whatPeopleSay: (count: number) =>
+      count === 1 ? 'מה אומרים: רשומה אחת' : `מה אומרים: ${String(count)} רשומות`,
+    logIt: 'אכלתי',
     // Filters
     filters: 'סינון',
     tags: 'סוג',
@@ -88,6 +91,9 @@ export const feedMessages = defineMessages({
     noScoreYet: 'No score yet. Be the first to rate it.',
     writtenByMe: 'You wrote about this',
     entriesWord: 'entries',
+    whatPeopleSay: (count: number) =>
+      count === 1 ? 'What people say: 1 entry' : `What people say: ${String(count)} entries`,
+    logIt: 'I had this',
     filters: 'Filters',
     tags: 'Type',
     radius: 'Distance',

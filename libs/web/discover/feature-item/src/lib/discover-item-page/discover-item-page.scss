@@ -91,3 +91,19 @@ menu-item-row {
   padding: 32px 16px;
   text-align: center;
 }
+
+.people {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  a {
+    color: var(--mat-sys-primary);
+  }
+}
+
+.log {
+  height: 52px;
+  margin-top: 8px;
+  border-radius: 14px;
+}
