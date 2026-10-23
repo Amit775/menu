@@ -101,7 +101,13 @@ describe('EntriesSheetPage', () => {
       shareToken: 'abcdefghijklmnopqrstuv',
     });
     const { harness, element } = await open({ update });
-    element.querySelector<HTMLButtonElement>('.mine button')?.click();
+    const button = element.querySelector<HTMLButtonElement>('.mine button');
+    button?.click();
+    await harness.fixture.whenStable();
+    expect(update).not.toHaveBeenCalled();
+    expect(button?.textContent.trim()).toBe('לאשר: כולם יראו');
+    expect(element.querySelector('.mine [role="status"]')?.textContent).toContain('בשמך');
+    button?.click();
     await harness.fixture.whenStable();
     expect(update).toHaveBeenCalledWith(mine.id, { visibility: 'public' });
     expect(element.querySelector('.mine .who')?.textContent).toContain('ציבורית');
@@ -110,6 +116,8 @@ describe('EntriesSheetPage', () => {
 
   it('says so when the change fails', async () => {
     const { harness, element } = await open({ update: vi.fn().mockRejectedValue(new Error('x')) });
+    element.querySelector<HTMLButtonElement>('.mine button')?.click();
+    await harness.fixture.whenStable();
     element.querySelector<HTMLButtonElement>('.mine button')?.click();
     await harness.fixture.whenStable();
     expect(element.querySelector('[role="alert"]')?.textContent).toContain('השינוי לא נשמר');
@@ -126,6 +134,19 @@ describe('EntriesSheetPage', () => {
     await harness.fixture.whenStable();
     expect(share).toHaveBeenCalledWith('/e/abcdefghijklmnopqrstuv', 'המבורגר הקלאסי');
     expect(element.querySelector('[role="status"]')?.textContent).toBe('הקישור הועתק');
+  });
+
+  it('does not offer to share an entry an Admin hid', async () => {
+    const hidden = {
+      ...mine,
+      visibility: 'public' as const,
+      shareToken: 'abcdefghijklmnopqrstuv',
+      hidden: true,
+    };
+    const { element } = await open({
+      forItem: vi.fn().mockResolvedValue({ ...sheet, mine: [hidden] }),
+    });
+    expect(element.querySelector('.mine button')).toBeNull();
   });
 
   it('invites a first entry when there is nothing yet', async () => {
