@@ -1,0 +1,91 @@
+<div class="hero">
+  <button mat-icon-button type="button" [attr.aria-label]="t().back" (click)="back()">
+    <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+  </button>
+  @if (store.page()) {
+    <button mat-icon-button type="button" [attr.aria-label]="t().share" (click)="share()">
+      <mat-icon aria-hidden="true">share</mat-icon>
+    </button>
+  }
+</div>
+
+@switch (store.status()) {
+  @case ('loading') {
+    <div class="state"><mat-spinner diameter="32" /></div>
+  }
+  @case ('not-found') {
+    <div class="state" role="status">
+      {{ t().notFound }}
+      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="state" role="alert">
+      {{ t().loadFailed }}
+      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+    </div>
+  }
+  @default {
+    @if (store.page(); as page) {
+      @let item = page.item;
+      <article>
+        <h1>{{ item.name | localize }}</h1>
+        <a class="venue" [routerLink]="['/venues', item.venue.id]">{{
+          item.venue.name | localize
+        }}</a>
+        @if (page.tags.length > 0) {
+          <mat-chip-set>
+            @for (tag of page.tags; track tag.id) {
+              <mat-chip>{{ tag.name | localize }}</mat-chip>
+            }
+          </mat-chip-set>
+        }
+        @if (page.archived) {
+          <p class="archived" role="note">{{ t().archived }}</p>
+        }
+        @if (copied()) {
+          <p role="status">{{ t().copied }}</p>
+        }
+
+        <div class="score">
+          @if (item.score !== null) {
+            <menu-score-badge [score]="item.score" [showCount]="false" size="large" />
+            <span>{{ t().entries(item.ratingCount) }}</span>
+          } @else {
+            <span>{{ t().noScore(item.ratingCount) }}</span>
+          }
+        </div>
+
+        <dl class="stats">
+          <div>
+            <dt>{{ t().wouldOrderAgain }}</dt>
+            <dd>
+              {{ item.wouldOrderAgainPercent === null ? '–' : item.wouldOrderAgainPercent + '%' }}
+            </dd>
+          </div>
+          <div>
+            <dt>{{ t().latestPrice }}</dt>
+            <dd>{{ item.latestPrice === null ? '–' : (item.latestPrice | shekels) }}</dd>
+          </div>
+          <div>
+            <dt>{{ t().ratings }}</dt>
+            <dd>{{ item.ratingCount }}</dd>
+          </div>
+        </dl>
+
+        @if (page.priceHistory.length > 0) {
+          <menu-price-history [points]="page.priceHistory" />
+        }
+
+        @if (page.alsoGoodHere.length > 0) {
+          <section>
+            <h2>{{ t().alsoGoodAt(item.venue.name | localize) }}</h2>
+            @for (other of page.alsoGoodHere; track other.id) {
+              <menu-item-row [item]="other" [showVenue]="false" />
+            }
+          </section>
+        }
+      </article>
+    }
+  }
+}

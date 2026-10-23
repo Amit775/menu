@@ -1,0 +1,45 @@
+<section role="dialog" aria-modal="true" [attr.aria-label]="t().search">
+  <header>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>{{ t().searchLabel }}</mat-label>
+      <input matInput type="search" autocomplete="off" [formControl]="text" />
+    </mat-form-field>
+    <button mat-button type="button" (click)="closed.emit()">{{ t().close }}</button>
+  </header>
+
+  @switch (search.status()) {
+    @case ('error') {
+      <p role="alert">{{ t().searchFailed }}</p>
+    }
+    @case ('loaded') {
+      @if (search.results(); as results) {
+        @if (results.items.length + results.venues.length + results.tags.length === 0) {
+          <p role="status">{{ t().noResults }}</p>
+        }
+        @if (results.tags.length > 0) {
+          <mat-chip-set>
+            @for (tag of results.tags; track tag.id) {
+              <mat-chip (click)="filterBy(tag)">{{ tag.name | localize }}</mat-chip>
+            }
+          </mat-chip-set>
+        }
+        @if (results.items.length > 0) {
+          <h3>{{ t().items }}</h3>
+          @for (item of results.items; track item.id) {
+            <menu-item-row [item]="item" />
+          }
+        }
+        @if (results.venues.length > 0) {
+          <h3>{{ t().venues }}</h3>
+          <ul>
+            @for (venue of results.venues; track venue.id) {
+              <li>
+                <a [routerLink]="['/venues', venue.id]">{{ venue.name | localize }}</a>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  }
+</section>

@@ -1,0 +1,98 @@
+:host {
+  display: block;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 160px;
+  padding: 8px;
+  background:
+    radial-gradient(
+      120% 90% at 80% 0%,
+      color-mix(in srgb, var(--mat-sys-primary) 55%, transparent),
+      transparent 60%
+    ),
+    var(--mat-sys-inverse-surface);
+  --mat-icon-button-icon-color: var(--mat-sys-inverse-on-surface);
+}
+
+// The back arrow points to where the user came from: right in Hebrew, left in English.
+:host-context([dir='ltr']) .hero mat-icon:first-child {
+  transform: scaleX(-1);
+}
+
+article {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+  font-weight: 800;
+}
+
+.venue {
+  font: var(--mat-sys-title-medium);
+}
+
+.archived {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: var(--mat-sys-body-large);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+
+  div {
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--mat-sys-surface-container-low);
+  }
+
+  dt {
+    font: var(--mat-sys-label-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 4px 0 0;
+    font: var(--mat-sys-title-large);
+    font-weight: 700;
+  }
+}
+
+h2 {
+  margin: 8px 0 0;
+  font: var(--mat-sys-title-medium);
+}
+
+menu-item-row {
+  display: block;
+  margin-inline: -16px;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+}

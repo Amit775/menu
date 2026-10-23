@@ -1,0 +1,86 @@
+<header class="top">
+  <button mat-icon-button type="button" [attr.aria-label]="t().back" (click)="back()">
+    <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+  </button>
+</header>
+
+@switch (store.status()) {
+  @case ('loading') {
+    <div class="state"><mat-spinner diameter="32" /></div>
+  }
+  @case ('not-found') {
+    <div class="state" role="status">
+      {{ t().notFound }}
+      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="state" role="alert">
+      {{ t().loadFailed }}
+      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+    </div>
+  }
+  @default {
+    @if (store.page(); as page) {
+      <article>
+        <h1>{{ page.venue.name | localize }}</h1>
+        <p class="address">
+          {{ page.venue.address }}
+          @if (page.distanceMeters !== null) {
+            · {{ page.distanceMeters | distance }}
+          }
+        </p>
+
+        <div class="actions">
+          @if (navigateUrl(); as url) {
+            <a mat-stroked-button [href]="url" target="_blank" rel="noopener">
+              <mat-icon aria-hidden="true">directions</mat-icon>
+              {{ t().navigate }}
+            </a>
+          }
+          @if (phoneUrl(); as url) {
+            <a mat-stroked-button [href]="url">
+              <mat-icon aria-hidden="true">call</mat-icon>
+              {{ t().call }}
+            </a>
+          }
+          @if (page.venue.reservationUrl; as url) {
+            <a mat-stroked-button [href]="url" target="_blank" rel="noopener">
+              <mat-icon aria-hidden="true">event</mat-icon>
+              {{ t().reserve }}
+            </a>
+          }
+        </div>
+
+        @if (page.myEntryCount > 0) {
+          <p class="mine">{{ t().myEntries(page.myEntryCount) }}</p>
+        }
+
+        @if (page.topItems.length > 0) {
+          <section>
+            <h2>{{ t().topItems }}</h2>
+            @for (item of page.topItems; track item.id) {
+              <menu-item-row [item]="item" [showVenue]="false" />
+            }
+          </section>
+        }
+
+        <section>
+          <h2>{{ t().menu }}</h2>
+          @if (hasMenu()) {
+            @for (entry of page.sections; track entry.section.id) {
+              @if (entry.items.length > 0) {
+                <h3>{{ entry.section.name | localize }}</h3>
+                @for (item of entry.items; track item.id) {
+                  <menu-item-row [item]="item" [showVenue]="false" />
+                }
+              }
+            }
+          } @else {
+            <p class="empty">{{ t().emptyMenu }}</p>
+          }
+        </section>
+      </article>
+    }
+  }
+}
