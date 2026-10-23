@@ -16,6 +16,7 @@ concurrency:
 jobs:
   main:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,12 +46,39 @@ jobs:
       - name: Lint, typecheck, test, build
         run: pnpm nx affected -t lint typecheck test build --outputStyle=static
 
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium webkit
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Browsers and their system libraries come preinstalled in the official image,
+    # so CI skips the ~190 apt packages `playwright install --with-deps` pulls in
+    # (that apt step can hang for many minutes). Keep the tag on the same minor
+    # version as @playwright/test in pnpm-lock.yaml; the first step checks it.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Playwright matches the image
+        run: |
+          installed="$(pnpm exec playwright --version | grep -oE '[0-9]+\.[0-9]+' | head -1)"
+          if [ "$installed" != "1.64" ]; then
+            echo "::error::@playwright/test is $installed but the CI image is v1.64. Update container.image in ci.yml."
+            exit 1
+          fi
 
       # The atomized e2e-ci target only runs on Nx Agents (distributed CI); switch once those are enabled.
+      # Unchanged e2e runs are Nx Cloud cache hits.
       - name: E2E
-        run: pnpm nx affected -t e2e --outputStyle=static
+        run: pnpm nx e2e web-e2e --outputStyle=static
 
       - uses: actions/upload-artifact@v4
         if: failure()
