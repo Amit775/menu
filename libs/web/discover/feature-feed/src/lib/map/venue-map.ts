@@ -17,16 +17,10 @@ import { RouterLink } from '@angular/router';
 import { type GeoPoint, type MapPin } from '@menu/shared/contracts';
 import { FeedStore } from '@menu/web/discover/data-access';
 import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { LeafletLoader, OSM_ATTRIBUTION, OSM_TILES, TEL_AVIV } from '@menu/web/shared/util-map';
 import type * as Leaflet from 'leaflet';
 import { feedMessages } from '../feed.messages';
-import { LeafletLoader } from './leaflet-loader';
 
-/** Where the map opens before any pin or position is known. */
-export const TEL_AVIV: GeoPoint = { lat: 32.0853, lng: 34.7818 };
-
-const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 /** Never zoom in closer than a few streets when fitting the pins. */
 const FIT_MAX_ZOOM = 15;
 
@@ -113,7 +107,7 @@ export class VenueMap {
     const element = this.container().nativeElement;
     this.leaflet = L;
     this.map = L.map(element).setView(TEL_AVIV, 12);
-    L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION }).addTo(this.map);
+    L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(this.map);
     this.pins = L.layerGroup().addTo(this.map);
     if (typeof ResizeObserver === 'function') {
       // Leaflet only follows window resizes; the bars above the map come and go.
