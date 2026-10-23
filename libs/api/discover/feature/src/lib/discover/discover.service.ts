@@ -1,6 +1,7 @@
 import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { type CatalogItem, DiscoverRepository } from '@menu/api/discover/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
+import { ENTRY_STATS, type EntryStatsSource } from '@menu/api/shared/util-ports';
 import {
   type DiscoverItem,
   type Feed,
@@ -10,15 +11,19 @@ import {
   type MapPin,
   type MapQuery,
   type Near,
-  SCORE_FLOOR,
   type SearchResults,
   type VenueInsights,
   type VenuePage,
 } from '@menu/shared/contracts';
 import { orderFeed } from './feed-order';
 import { distanceMeters } from './geo';
-import { EMPTY_STATS, type ItemStats, summarizeByItem } from './item-stats';
-import { NEUTRAL_MEAN, peerMeans, type RankingStrategy } from './ranking';
+import {
+  EMPTY_STATS,
+  type ItemStats,
+  NEUTRAL_MEAN,
+  peerMeans,
+  type RankingStrategy,
+} from './ranking';
 import { foldForSearch } from './search-text';
 
 export const RANKING_STRATEGY = Symbol('RANKING_STRATEGY');
@@ -29,9 +34,9 @@ const TOP_ITEMS = 3;
 /** Everything one request ranks against: the catalog, its entry stats and the caller's flags. */
 interface Snapshot {
   catalog: CatalogItem[];
-  stats: Map<string, ItemStats>;
+  stats: ReadonlyMap<string, ItemStats>;
   means: Map<string, number>;
-  writtenByMe: Set<string>;
+  writtenByMe: ReadonlySet<string>;
 }
 
 function pointOf(near: Near): GeoPoint | null {
@@ -52,6 +57,7 @@ export class DiscoverService {
   constructor(
     private readonly repository: DiscoverRepository,
     @Inject(RANKING_STRATEGY) private readonly ranking: RankingStrategy,
+    @Inject(ENTRY_STATS) private readonly entries: EntryStatsSource,
   ) {}
 
   async feed(principal: Principal | null, query: FeedQuery): Promise<Feed> {
@@ -74,8 +80,9 @@ export class DiscoverService {
   async map(principal: Principal | null, query: MapQuery): Promise<MapPin[]> {
     const snapshot = await this.snapshot(principal);
     const pins = new Map<string, MapPin>();
+    const locations = new Map(snapshot.catalog.map((item) => [item.venueId, item.venueLocation]));
     for (const item of this.filter(snapshot, query)) {
-      const location = this.catalogItem(snapshot, item.id).venueLocation;
+      const location = locations.get(item.venue.id) ?? { lat: 0, lng: 0 };
       const pin = pins.get(item.venue.id) ?? {
         venue: item.venue,
         location,
@@ -101,7 +108,7 @@ export class DiscoverService {
     const [snapshot, sections, myEntryCount] = await Promise.all([
       this.snapshot(principal),
       this.repository.listSections(venueId),
-      principal ? this.repository.countEntriesAt(principal.accountId, venueId) : 0,
+      principal ? this.entries.countEntriesAt(principal.accountId, venueId) : 0,
     ]);
     const point = pointOf(near);
     const items = snapshot.catalog
@@ -153,6 +160,9 @@ export class DiscoverService {
   /** Items, venues and tags whose names contain the query, Hebrew-folded (see `foldForSearch`). */
   async search(principal: Principal | null, q: string): Promise<SearchResults> {
     const needle = foldForSearch(q);
+    if (needle === '') {
+      return { items: [], venues: [], tags: [] };
+    }
     const matches = (...texts: (string | undefined)[]): boolean =>
       texts.some((text) => text !== undefined && foldForSearch(text).includes(needle));
     const [snapshot, venues, tags] = await Promise.all([
@@ -196,7 +206,7 @@ export class DiscoverService {
             score: shown.score,
             ratingCount: stats.ratingCount,
             publicEntryCount: stats.publicEntryCount,
-            otherEntryCount: stats.otherEntryCount >= SCORE_FLOOR ? stats.otherEntryCount : null,
+            otherEntryCount: stats.otherEntryCount,
             wouldOrderAgainPercent: stats.wouldOrderAgainPercent,
           };
         }),
@@ -204,12 +214,11 @@ export class DiscoverService {
   }
 
   private async snapshot(principal: Principal | null): Promise<Snapshot> {
-    const [catalog, writtenByMe] = await Promise.all([
+    const [catalog, stats, writtenByMe] = await Promise.all([
       this.repository.loadCatalog(),
-      principal ? this.repository.itemIdsWrittenBy(principal.accountId) : new Set<string>(),
+      this.entries.statsByItem(),
+      principal ? this.entries.itemIdsWrittenBy(principal.accountId) : new Set<string>(),
     ]);
-    const facts = await this.repository.loadEntryFacts(catalog.map((item) => item.id));
-    const stats = summarizeByItem(facts);
     return { catalog, stats, means: peerMeans(catalog, stats), writtenByMe };
   }
 
@@ -223,14 +232,6 @@ export class DiscoverService {
       .filter(
         (item) => item.distanceMeters === null || item.distanceMeters <= query.radiusKm * 1000,
       );
-  }
-
-  private catalogItem(snapshot: Snapshot, id: string): CatalogItem {
-    const item = snapshot.catalog.find((candidate) => candidate.id === id);
-    if (!item) {
-      throw new Error(`Item ${id} is not in the snapshot.`);
-    }
-    return item;
   }
 
   private toItem(snapshot: Snapshot, item: CatalogItem, point: GeoPoint | null): DiscoverItem {

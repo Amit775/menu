@@ -25,6 +25,18 @@ export interface NewEntry {
   shareToken: string | null;
 }
 
+/** One unhidden entry, reduced to what aggregates need. Never leaves the entries domain. */
+export interface EntryFact {
+  itemId: string;
+  authorId: string;
+  rating: number | null;
+  wouldOrderAgain: boolean | null;
+  pricePaid: number | null;
+  visibility: EntryVisibility;
+  eatenAt: Date;
+  createdAt: Date;
+}
+
 export type EntryChanges = UpdateEntry & { shareToken?: string };
 
 interface EntryRow {
@@ -120,6 +132,37 @@ export class EntryRepository {
       where: { id, visibility: { not: 'private' } },
       data: { hiddenAt: hidden ? new Date() : null },
     });
+  }
+
+  /** Every unhidden entry, for aggregates. Fine at friends scale; a stored score can replace it. */
+  listFacts(): Promise<EntryFact[]> {
+    return this.prisma.entry.findMany({
+      where: { hiddenAt: null },
+      select: {
+        itemId: true,
+        authorId: true,
+        rating: true,
+        wouldOrderAgain: true,
+        pricePaid: true,
+        visibility: true,
+        eatenAt: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  /** Hidden entries count: they are still the author's. */
+  async itemIdsWrittenBy(authorId: string): Promise<Set<string>> {
+    const rows = await this.prisma.entry.findMany({
+      where: { authorId },
+      select: { itemId: true },
+      distinct: ['itemId'],
+    });
+    return new Set(rows.map((row) => row.itemId));
+  }
+
+  countByAuthorAtVenue(authorId: string, venueId: string): Promise<number> {
+    return this.prisma.entry.count({ where: { authorId, venueId } });
   }
 
   /** Re-points every entry from one item to another. Safe to run twice. */
