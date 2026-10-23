@@ -36,6 +36,7 @@ describe('ReelCard', () => {
     });
     expect(venue).toHaveBeenCalledWith(VENUE_ID, null);
     expect(element.querySelectorAll('.dot')).toHaveLength(3);
+    expect(element.querySelector('[aria-live]')?.textContent.trim()).toBe('פריט 2 מתוך 3 במוזס');
     element.querySelector<HTMLButtonElement>('.edge.start')?.click();
     element.querySelector<HTMLButtonElement>('.edge.start')?.click();
     await vi.waitFor(() => {
@@ -54,6 +55,21 @@ describe('ReelCard', () => {
     expect(navigate).toHaveBeenCalledWith(['/venues', VENUE_ID]);
   });
 
+  it('does not also step through items when a swipe up ends on an edge', async () => {
+    const { fixture, element, venue } = await render();
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const edge = element.querySelector<HTMLButtonElement>('.edge.end');
+    edge?.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, clientX: 300, clientY: 500 }),
+    );
+    edge?.dispatchEvent(
+      new PointerEvent('pointerup', { bubbles: true, clientX: 300, clientY: 300 }),
+    );
+    edge?.click();
+    await fixture.whenStable();
+    expect(venue).not.toHaveBeenCalled();
+  });
+
   it('ignores a sideways swipe, which moves the feed', async () => {
     const { element } = await render();
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
@@ -69,6 +85,6 @@ describe('ReelCard', () => {
     [...element.querySelectorAll('button')].find((b) => b.textContent.includes('שיתוף'))?.click();
     await fixture.whenStable();
     expect(share).toHaveBeenCalledWith(`/items/${sampleItem(1).id}`, 'פריט 1');
-    expect(element.querySelector('.side')?.textContent).toContain('הקישור הועתק');
+    expect(element.querySelector('[role=status]')?.textContent).toBe('הקישור הועתק');
   });
 });

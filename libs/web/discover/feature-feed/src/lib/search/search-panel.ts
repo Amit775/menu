@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
@@ -13,14 +13,13 @@ import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { debounceTime } from 'rxjs';
 import { feedMessages } from '../feed.messages';
 
-/** Search across items, venues and tags; picking a tag filters the feed by it. */
+/** Search across items, venues and tags (opened as a full-screen dialog); picking a tag filters the feed by it. */
 @Component({
   selector: 'menu-search-panel',
   imports: [
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
-    MatChipsModule,
     MatFormFieldModule,
     MatInputModule,
     ItemRow,
@@ -36,7 +35,7 @@ export class SearchPanel {
   private readonly feed = inject(FeedStore);
   protected readonly t = injectMessages(feedMessages);
 
-  readonly closed = output();
+  private readonly dialog = inject(MatDialogRef);
 
   protected readonly text = new FormControl('', { nonNullable: true });
 
@@ -48,6 +47,10 @@ export class SearchPanel {
 
   protected filterBy(tag: Tag): void {
     void this.feed.setFilters({ tagIds: [tag.id] });
-    this.closed.emit();
+    this.dialog.close();
+  }
+
+  protected close(): void {
+    this.dialog.close();
   }
 }

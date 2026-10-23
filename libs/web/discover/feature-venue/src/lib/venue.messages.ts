@@ -3,6 +3,7 @@ import { defineMessages } from '@menu/web/shared/util-i18n';
 export const venueMessages = defineMessages({
   he: {
     back: 'חזרה',
+    loading: 'טוען…',
     loadFailed: 'לא הצלחנו לטעון את המקום.',
     retry: 'לנסות שוב',
     notFound: 'המקום הזה לא נמצא.',
@@ -18,6 +19,7 @@ export const venueMessages = defineMessages({
   },
   en: {
     back: 'Back',
+    loading: 'Loading…',
     loadFailed: 'Could not load this place.',
     retry: 'Try again',
     notFound: 'This place was not found.',

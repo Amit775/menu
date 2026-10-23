@@ -6,10 +6,6 @@
   padding: 8px;
 }
 
-:host-context([dir='ltr']) .top mat-icon {
-  transform: scaleX(-1);
-}
-
 article {
   display: flex;
   flex-direction: column;

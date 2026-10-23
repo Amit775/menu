@@ -28,7 +28,7 @@ Follow Angular's current best practices (use the `angular-cli` MCP `get_best_pra
 ## Lib types
 
 - `feature-*`: routed pages; inject stores; compose `ui` components.
-- `ui`: presentational only. Inputs and outputs, no injected services, no HTTP.
+- `ui`: presentational only. Inputs and outputs, no injected services, no HTTP. Text comes through the `util-i18n` pipes (`localize`, `messages`, `distance`, `shekels`), which follow the current language; that is the one service a `ui` component reaches.
 - `data-access`: stores and API clients. No components.
 
 ## UI

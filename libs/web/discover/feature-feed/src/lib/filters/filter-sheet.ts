@@ -1,19 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { DEFAULT_FILTERS, FeedStore, type FeedSort } from '@menu/web/discover/data-access';
-import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { injectMessages, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
 import { feedMessages } from '../feed.messages';
 
 export const RADIUS_OPTIONS = [1, 2, 5, 10, 25];
 /** In agorot. */
 export const PRICE_OPTIONS = [5000, 8000, 12000];
 
-/** The filter sheet: tags from the vocabulary, distance, order and price. */
+/** The filter sheet (opened as a Material bottom sheet): tags, distance, order and price. */
 @Component({
   selector: 'menu-filter-sheet',
   imports: [
@@ -24,6 +25,7 @@ export const PRICE_OPTIONS = [5000, 8000, 12000];
     MatFormFieldModule,
     MatSelectModule,
     LocalizePipe,
+    ShekelsPipe,
   ],
   templateUrl: './filter-sheet.html',
   styleUrl: './filter-sheet.scss',
@@ -35,7 +37,7 @@ export class FilterSheet {
   protected readonly radiusOptions = RADIUS_OPTIONS;
   protected readonly priceOptions = PRICE_OPTIONS;
 
-  readonly closed = output();
+  private readonly sheet = inject(MatBottomSheetRef);
 
   private readonly current = this.store.filters();
   protected readonly form = new FormGroup({
@@ -52,7 +54,11 @@ export class FilterSheet {
   protected apply(): void {
     const value = this.form.getRawValue();
     void this.store.setFilters(value);
-    this.closed.emit();
+    this.sheet.dismiss();
+  }
+
+  protected close(): void {
+    this.sheet.dismiss();
   }
 
   protected reset(): void {

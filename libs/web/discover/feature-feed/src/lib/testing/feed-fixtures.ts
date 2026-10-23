@@ -1,6 +1,7 @@
 import { type Provider } from '@angular/core';
 import { type DiscoverItem } from '@menu/shared/contracts';
 import { DeviceLocation, DeviceShare, DiscoverApiClient } from '@menu/web/discover/data-access';
+import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 
 /** Sample data and boundary fakes for this lib's specs. */
 export const VENUE_ID = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
@@ -33,5 +34,6 @@ export function boundaries(
       useValue: { locate: () => Promise.resolve(null), position: () => null },
     },
     { provide: DeviceShare, useValue: { share } },
+    { provide: AUTH_BACKEND, useValue: new FakeAuthBackend() },
   ];
 }

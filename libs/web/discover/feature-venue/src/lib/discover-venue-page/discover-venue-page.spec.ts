@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { type DiscoverItem, type VenuePage } from '@menu/shared/contracts';
 import { DeviceLocation, DiscoverApiClient } from '@menu/web/discover/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
@@ -43,6 +43,13 @@ describe('DiscoverVenuePage', () => {
     ],
     myEntryCount: 2,
   };
+
+  it('goes to discover from a shared link, where there is no back', async () => {
+    const element = await render(vi.fn().mockResolvedValue(page));
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    element.querySelector<HTMLButtonElement>('button[aria-label="חזרה"]')?.click();
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
 
   async function render(load: DiscoverApiClient['venue']) {
     TestBed.configureTestingModule({

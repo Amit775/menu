@@ -14,11 +14,13 @@ export const feedMessages = defineMessages({
     empty: 'אין פריטים באזור הזה עם הסינון הזה.',
     clearFilters: 'ניקוי הסינון',
     loadMore: 'עוד פריטים',
-    summary: (count: number, radiusKm: number) =>
-      `${String(count)} פריטים · עד ${String(radiusKm)} ק״מ`,
+    summary: (count: number, more: boolean, radiusKm: number) =>
+      `${String(count)}${more ? '+' : ''} פריטים · עד ${String(radiusKm)} ק״מ`,
+    loadMoreFailed: 'לא הצלחנו לטעון עוד פריטים.',
     notEnoughRatings: 'עדיין אין מספיק דירוגים · לפי מרחק',
     // Reels
-    moreAt: (venue: string) => `עוד ב${venue}`,
+    position: (index: number, count: number, venue: string) =>
+      `פריט ${String(index)} מתוך ${String(count)} ב${venue}`,
     previousAtVenue: 'הפריט הקודם במקום',
     nextAtVenue: 'הפריט הבא במקום',
     swipeUp: 'החליקו למעלה לעמוד המקום',
@@ -62,10 +64,12 @@ export const feedMessages = defineMessages({
     empty: 'Nothing here with these filters.',
     clearFilters: 'Clear filters',
     loadMore: 'More items',
-    summary: (count: number, radiusKm: number) =>
-      `${String(count)} items · within ${String(radiusKm)} km`,
+    summary: (count: number, more: boolean, radiusKm: number) =>
+      `${String(count)}${more ? '+' : ''} items · within ${String(radiusKm)} km`,
+    loadMoreFailed: 'Could not load more items.',
     notEnoughRatings: 'Not enough ratings yet · by distance',
-    moreAt: (venue: string) => `More at ${venue}`,
+    position: (index: number, count: number, venue: string) =>
+      `Item ${String(index)} of ${String(count)} at ${venue}`,
     previousAtVenue: 'Previous item here',
     nextAtVenue: 'Next item here',
     swipeUp: 'Swipe up for the venue',

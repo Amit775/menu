@@ -18,11 +18,6 @@
   --mat-icon-button-icon-color: var(--mat-sys-inverse-on-surface);
 }
 
-// The back arrow points to where the user came from: right in Hebrew, left in English.
-:host-context([dir='ltr']) .hero mat-icon:first-child {
-  transform: scaleX(-1);
-}
-
 article {
   display: flex;
   flex-direction: column;

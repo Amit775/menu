@@ -3,6 +3,7 @@ import { defineMessages } from '@menu/web/shared/util-i18n';
 export const itemMessages = defineMessages({
   he: {
     back: 'חזרה',
+    loading: 'טוען…',
     share: 'שיתוף',
     copied: 'הקישור הועתק',
     loadFailed: 'לא הצלחנו לטעון את הפריט.',
@@ -14,12 +15,14 @@ export const itemMessages = defineMessages({
     noScore: (count: number) =>
       count === 0 ? 'עדיין אין דירוגים. היו הראשונים.' : 'עדיין אין מספיק דירוגים לציון.',
     wouldOrderAgain: 'יזמינו שוב',
+    percent: (value: number) => `${String(value)}%`,
     latestPrice: 'מחיר אחרון',
     ratings: 'דירוגים',
     alsoGoodAt: (venue: string) => `עוד טעים ב${venue}`,
   },
   en: {
     back: 'Back',
+    loading: 'Loading…',
     share: 'Share',
     copied: 'Link copied',
     loadFailed: 'Could not load this item.',
@@ -31,6 +34,7 @@ export const itemMessages = defineMessages({
     noScore: (count: number) =>
       count === 0 ? 'No ratings yet. Be the first.' : 'Not enough ratings for a score yet.',
     wouldOrderAgain: 'would order again',
+    percent: (value: number) => `${String(value)}%`,
     latestPrice: 'latest price',
     ratings: 'ratings',
     alsoGoodAt: (venue: string) => `Also good at ${venue}`,

@@ -1,10 +1,10 @@
-<section role="dialog" aria-modal="true" [attr.aria-label]="t().search">
+<section>
   <header>
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>{{ t().searchLabel }}</mat-label>
       <input matInput type="search" autocomplete="off" [formControl]="text" />
     </mat-form-field>
-    <button mat-button type="button" (click)="closed.emit()">{{ t().close }}</button>
+    <button mat-button type="button" (click)="close()">{{ t().close }}</button>
   </header>
 
   @switch (search.status()) {
@@ -17,11 +17,15 @@
           <p role="status">{{ t().noResults }}</p>
         }
         @if (results.tags.length > 0) {
-          <mat-chip-set>
+          <ul class="tags">
             @for (tag of results.tags; track tag.id) {
-              <mat-chip (click)="filterBy(tag)">{{ tag.name | localize }}</mat-chip>
+              <li>
+                <button mat-stroked-button type="button" (click)="filterBy(tag)">
+                  {{ tag.name | localize }}
+                </button>
+              </li>
             }
-          </mat-chip-set>
+          </ul>
         }
         @if (results.items.length > 0) {
           <h3>{{ t().items }}</h3>

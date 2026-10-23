@@ -1,7 +1,7 @@
-<section role="dialog" aria-modal="true" aria-labelledby="filters-title">
+<section>
   <header>
     <h2 id="filters-title">{{ t().filters }}</h2>
-    <button mat-button type="button" (click)="closed.emit()">{{ t().close }}</button>
+    <button mat-button type="button" (click)="close()">{{ t().close }}</button>
   </header>
 
   <form [formGroup]="form" (ngSubmit)="apply()">
@@ -35,7 +35,7 @@
       <mat-select formControlName="maxPrice">
         <mat-option [value]="null">{{ t().anyPrice }}</mat-option>
         @for (price of priceOptions; track price) {
-          <mat-option [value]="price">₪{{ price / 100 }}</mat-option>
+          <mat-option [value]="price">{{ price | shekels }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
