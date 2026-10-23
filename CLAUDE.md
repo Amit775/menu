@@ -28,15 +28,16 @@ Run tasks through `pnpm nx`, never the underlying tool. `typecheck` uses `ngc` f
 
 ## Generators (`tools/workspace-plugin`)
 
-| Generator                         | Creates                                                                            |
-| --------------------------------- | ---------------------------------------------------------------------------------- |
-| `domain <name> [--resource=<r>]`  | Registers `scope:<name>`; with a resource, scaffolds the full slice below          |
-| `contract --domain --name`        | Zod schema + types + spec in `libs/shared/contracts`                               |
-| `nest-resource --domain --name`   | Nest module/controller/service, Prisma repository + model, specs, app registration |
-| `data-access-lib --domain --name` | Signal Store + validated API client + specs                                        |
-| `feature-lib --domain --name`     | Routed OnPush page + lazy route in `apps/web`                                      |
-| `ui-lib <domain>`                 | Presentational component lib                                                       |
-| `adr "<title>"`                   | Numbered ADR in `docs/decisions`                                                   |
+| Generator                               | Creates                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------ |
+| `domain <name> [--resource=<r>]`        | Registers `scope:<name>`; with a resource, scaffolds the full slice below            |
+| `contract --domain --name`              | Zod schema + types + spec in `libs/shared/contracts`                                 |
+| `nest-resource --domain --name`         | Nest module/controller/service, Prisma repository + model, specs, app registration   |
+| `data-access-lib --domain --name`       | Signal Store + validated API client + specs                                          |
+| `feature-lib --domain --name`           | Routed OnPush page + lazy route in `apps/web`                                        |
+| `ui-lib <domain>`                       | Presentational component lib                                                         |
+| `util-lib --platform --domain [--name]` | Util lib (`libs/<platform>/<domain>/util[-<name>]`) for pure helpers and value types |
+| `adr "<title>"`                         | Numbered ADR in `docs/decisions`                                                     |
 
 ## Where things are
 

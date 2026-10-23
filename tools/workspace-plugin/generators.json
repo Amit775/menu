@@ -34,6 +34,11 @@
       "factory": "./src/generators/adr/generator",
       "schema": "./src/generators/adr/schema.json",
       "description": "Create a numbered architecture decision record in docs/decisions."
+    },
+    "util-lib": {
+      "factory": "./src/generators/util-lib/generator",
+      "schema": "./src/generators/util-lib/schema.json",
+      "description": "Create a util lib (libs/<platform>/<domain>/util[-<name>]) for pure helpers and value types."
     }
   }
 }

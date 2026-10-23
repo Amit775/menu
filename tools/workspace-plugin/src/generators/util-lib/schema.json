@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "UtilLib",
+  "title": "Create a util library (libs/<platform>/<domain>/util[-<name>])",
+  "type": "object",
+  "properties": {
+    "platform": {
+      "type": "string",
+      "enum": ["web", "api", "shared"],
+      "description": "web (Angular), api (Nest) or shared (framework-free TypeScript).",
+      "x-prompt": "Which platform?"
+    },
+    "domain": {
+      "type": "string",
+      "description": "Registered domain, or shared.",
+      "x-prompt": "Which domain (or shared)?"
+    },
+    "name": {
+      "type": "string",
+      "description": "Optional purpose, e.g. i18n creates util-i18n. Leave empty for the domain's single util lib."
+    }
+  },
+  "required": ["platform", "domain"]
+}
