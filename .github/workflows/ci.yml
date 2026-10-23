@@ -31,7 +31,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Nx Cloud remote cache turns on automatically once nx.json has an nxCloudId.
+      # Nx Cloud remote cache is on via nxCloudId in nx.json.
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -48,9 +48,9 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium webkit
 
-      # Use the atomized e2e-ci target instead once Nx Cloud is connected.
+      # Atomized: one cached task per Playwright file (needs Nx Cloud).
       - name: E2E
-        run: pnpm nx affected -t e2e --outputStyle=static
+        run: pnpm nx affected -t e2e-ci --outputStyle=static
 
       - uses: actions/upload-artifact@v4
         if: failure()
