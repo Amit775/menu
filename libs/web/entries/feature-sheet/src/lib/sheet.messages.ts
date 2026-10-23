@@ -1,0 +1,46 @@
+import { defineMessages } from '@menu/web/shared/util-i18n';
+
+export const sheetMessages = defineMessages({
+  he: {
+    close: 'סגירה',
+    title: (count: number) =>
+      count === 1 ? 'מה אומרים · אחת ציבורית' : `מה אומרים · ${String(count)} ציבוריות`,
+    yours: 'הרשומות שלך',
+    everyone: 'כולם · מהחדש לישן',
+    noneYet: 'עוד אין רשומות ציבוריות על הפריט הזה.',
+    edit: 'עריכה',
+    makePublic: 'הפיכה לציבורית',
+    share: 'שיתוף',
+    copied: 'הקישור הועתק',
+    shareFailed: 'לא הצלחנו לשתף. נסו שוב.',
+    updateFailed: 'השינוי לא נשמר. נסו שוב.',
+    logAgain: 'אכלתי את זה שוב · רשומה חדשה',
+    logFirst: 'אכלתי את זה · רשומה חדשה',
+    loading: 'טוען…',
+    loadFailed: 'לא הצלחנו לטעון את הרשומות.',
+    retry: 'לנסות שוב',
+    notFound: 'הפריט הזה לא נמצא.',
+    toFeed: 'לגילוי',
+  },
+  en: {
+    close: 'Close',
+    title: (count: number) =>
+      count === 1 ? 'What people say · 1 public' : `What people say · ${String(count)} public`,
+    yours: 'Your entries',
+    everyone: 'Everyone · newest first',
+    noneYet: 'No public entries on this item yet.',
+    edit: 'Edit',
+    makePublic: 'Make public',
+    share: 'Share',
+    copied: 'Link copied',
+    shareFailed: 'Could not share. Try again.',
+    updateFailed: 'The change was not saved. Try again.',
+    logAgain: 'I had it again · new entry',
+    logFirst: 'I had this · new entry',
+    loading: 'Loading…',
+    loadFailed: 'Could not load the entries.',
+    retry: 'Try again',
+    notFound: 'This item was not found.',
+    toFeed: 'To discover',
+  },
+});
