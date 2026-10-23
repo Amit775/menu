@@ -1,0 +1,34 @@
+import { defineMessages } from '@menu/web/shared/util-i18n';
+
+export const profileMessages = defineMessages({
+  he: {
+    title: 'פרופיל',
+    signedOutTitle: 'היומן שלך מחכה',
+    signedOutText: 'אחרי כניסה אפשר לשמור מה אכלת, לדרג ולשתף.',
+    signIn: 'כניסה',
+    name: 'השם שיופיע ליד רשומות ציבוריות',
+    save: 'שמירה',
+    saved: 'נשמר',
+    saveFailed: 'השמירה לא הצליחה.',
+    loadFailed: 'לא הצלחנו לטעון את החשבון.',
+    language: 'שפה',
+    hebrew: 'עברית',
+    english: 'English',
+    signOut: 'יציאה',
+  },
+  en: {
+    title: 'Profile',
+    signedOutTitle: 'Your diary is waiting',
+    signedOutText: 'Sign in to keep what you ate, rate it and share it.',
+    signIn: 'Sign in',
+    name: 'Name shown beside your public entries',
+    save: 'Save',
+    saved: 'Saved',
+    saveFailed: 'Could not save.',
+    loadFailed: 'Could not load your account.',
+    language: 'Language',
+    hebrew: 'עברית',
+    english: 'English',
+    signOut: 'Sign out',
+  },
+});
