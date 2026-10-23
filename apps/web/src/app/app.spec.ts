@@ -1,5 +1,7 @@
+import { DOCUMENT } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { I18n } from '@menu/web/shared/util-i18n';
 import { App } from './app';
 
 describe('App', () => {
@@ -10,10 +12,24 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('renders the app title in the toolbar', async () => {
+  async function render(): Promise<HTMLElement> {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelector('h1')?.textContent).toContain('Menu');
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  it('shows the navigation in Hebrew, right to left', async () => {
+    const element = await render();
+    const links = [...element.querySelectorAll('nav a')].map((a) => a.textContent.trim());
+    expect(links).toEqual(['view_carousel גילוי', 'person פרופיל']);
+    expect(TestBed.inject(DOCUMENT).documentElement.dir).toBe('rtl');
+  });
+
+  it('switches the navigation to English', async () => {
+    const element = await render();
+    TestBed.inject(I18n).setLanguage('en');
+    TestBed.tick();
+    expect(element.querySelector('nav')?.getAttribute('aria-label')).toBe('Navigation');
+    expect(TestBed.inject(DOCUMENT).documentElement.dir).toBe('ltr');
   });
 });
