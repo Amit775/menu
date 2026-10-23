@@ -27,5 +27,82 @@ model Account {
   isAdmin     Boolean  @default(false) @map("is_admin")
   createdAt   DateTime @default(now()) @map("created_at")
 
+  ownerships Ownership[] @relation("owner")
+
   @@map("account")
+}
+
+/// Makes an account the Owner of one venue. Granted and revoked by Admins.
+model Ownership {
+  accountId   String   @map("account_id") @db.Uuid
+  venueId     String   @map("venue_id") @db.Uuid
+  grantedById String?  @map("granted_by_id") @db.Uuid
+  grantedAt   DateTime @default(now()) @map("granted_at")
+
+  account Account @relation("owner", fields: [accountId], references: [id], onDelete: Cascade)
+  venue   Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, venueId])
+  @@index([venueId])
+  @@map("ownership")
+}
+
+// --- menus -----------------------------------------------------------------
+
+enum VenueStatus {
+  active
+  hidden
+}
+
+/// A restaurant or bar. Names are stored per language (`name_en` falls back to Hebrew).
+model Venue {
+  id             String      @id @default(uuid()) @db.Uuid
+  nameHe         String      @map("name_he")
+  nameEn         String?     @map("name_en")
+  address        String
+  lat            Float
+  lng            Float
+  phone          String?
+  reservationUrl String?     @map("reservation_url")
+  status         VenueStatus @default(active)
+  createdById    String?     @map("created_by_id") @db.Uuid
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  sections   MenuSection[]
+  ownerships Ownership[]
+
+  @@index([lat, lng])
+  @@map("venue")
+}
+
+/// A heading on a venue's menu, ordered by `position`.
+model MenuSection {
+  id       String  @id @default(uuid()) @db.Uuid
+  venueId  String  @map("venue_id") @db.Uuid
+  nameHe   String  @map("name_he")
+  nameEn   String? @map("name_en")
+  position Int
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId, position])
+  @@map("menu_section")
+}
+
+enum TagKind {
+  dish
+  diet
+  flavour
+}
+
+/// A word in the Admin-curated tag vocabulary.
+model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique
+  nameHe    String   @map("name_he")
+  nameEn    String?  @map("name_en")
+  kind      TagKind
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("tag")
 }
