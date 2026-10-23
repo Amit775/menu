@@ -16,6 +16,7 @@ concurrency:
 jobs:
   main:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,7 +32,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Nx Cloud remote cache turns on automatically once nx.json has an nxCloudId.
+      # Nx Cloud remote cache is on via nxCloudId in nx.json.
 
       - uses: nrwl/nx-set-shas@v4
 
@@ -45,12 +46,68 @@ jobs:
       - name: Lint, typecheck, test, build
         run: pnpm nx affected -t lint typecheck test build --outputStyle=static
 
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium webkit
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
 
-      # Use the atomized e2e-ci target instead once Nx Cloud is connected.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(pnpm exec playwright --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')" >> "$GITHUB_OUTPUT"
+
+      # Browser binaries are cached per Playwright version; only their system
+      # libraries are installed each run.
+      - uses: actions/cache@v4
+        id: browsers
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      # WebKit needs ~190 apt packages (GStreamer and friends) and the runner's
+      # Ubuntu mirror is sometimes very slow, so keep the downloaded .deb files
+      # in the Actions cache and only fetch from the mirror on a cold cache.
+      - uses: actions/cache/restore@v4
+        id: apt-debs
+        with:
+          path: ~/apt-debs
+          key: playwright-apt-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: Seed apt with cached packages
+        if: steps.apt-debs.outputs.cache-hit == 'true'
+        run: sudo cp ~/apt-debs/*.deb /var/cache/apt/archives/
+
+      - name: Install Playwright system dependencies
+        timeout-minutes: 15
+        run: pnpm exec playwright install-deps chromium webkit
+
+      - name: Collect apt packages for the cache
+        if: steps.apt-debs.outputs.cache-hit != 'true'
+        run: mkdir -p ~/apt-debs && cp /var/cache/apt/archives/*.deb ~/apt-debs/
+
+      - uses: actions/cache/save@v4
+        if: steps.apt-debs.outputs.cache-hit != 'true'
+        with:
+          path: ~/apt-debs
+          key: ${{ steps.apt-debs.outputs.cache-primary-key }}
+
+      - name: Install Playwright browsers
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --only-shell chromium webkit
+
+      # The atomized e2e-ci target only runs on Nx Agents (distributed CI); switch once those are enabled.
+      # Unchanged e2e runs are Nx Cloud cache hits.
       - name: E2E
-        run: pnpm nx affected -t e2e --outputStyle=static
+        run: pnpm nx e2e web-e2e --outputStyle=static
 
       - uses: actions/upload-artifact@v4
         if: failure()

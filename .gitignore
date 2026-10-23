@@ -58,3 +58,8 @@ vitest.config.*.timestamp*
 .env
 .env.*
 !.env.example
+
+# Firebase
+.firebase
+firebase-debug.log
+firebase-debug.*.log

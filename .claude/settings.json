@@ -27,7 +27,11 @@
       "Bash(pnpm add*)",
       "Bash(pnpm remove*)",
       "Bash(pnpm update*)",
-      "Bash(pnpm nx migrate*)"
+      "Bash(pnpm nx migrate*)",
+      "Bash(firebase deploy*)",
+      "Bash(firebase hosting:*)",
+      "Bash(firebase use*)",
+      "Bash(*firebase-tools* deploy*)"
     ],
     "deny": [
       "Read(./.env)",

@@ -3,6 +3,10 @@
     "angular-cli": {
       "command": "pnpm",
       "args": ["exec", "ng", "mcp"]
+    },
+    "firebase": {
+      "command": "npx",
+      "args": ["-y", "firebase-tools@15.34.1", "mcp", "--dir", "."]
     }
   }
 }
