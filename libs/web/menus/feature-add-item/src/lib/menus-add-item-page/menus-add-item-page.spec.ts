@@ -48,7 +48,7 @@ const created: Item = {
 };
 
 describe('MenusAddItemPage', () => {
-  async function open(api: Partial<MenuApiClient>) {
+  async function open(api: Partial<MenuApiClient>, language: 'he' | 'en' = 'he') {
     TestBed.configureTestingModule({
       providers: [
         provideRouter(
@@ -68,7 +68,7 @@ describe('MenusAddItemPage', () => {
         },
       ],
     });
-    TestBed.inject(I18n).setLanguage('he');
+    TestBed.inject(I18n).setLanguage(language);
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(`/venues/${VENUE_ID}/add-item`, MenusAddItemPage);
     await harness.fixture.whenStable();
@@ -115,6 +115,19 @@ describe('MenusAddItemPage', () => {
       listPrice: 5400,
     });
     expect(TestBed.inject(Router).url).toBe(`/log/${created.id}`);
+  });
+
+  it('keeps a name typed in English as its English name too', async () => {
+    const addItem = vi.fn().mockResolvedValue(created);
+    const { harness, element } = await open({ addItem }, 'en');
+    type(element, 'input[formcontrolname="name"]', 'Shakshuka');
+    await pick(harness, element, 'עיקריות');
+    element.querySelector<HTMLButtonElement>('button.save')?.click();
+    await harness.fixture.whenStable();
+    expect(addItem).toHaveBeenCalledWith(
+      VENUE_ID,
+      expect.objectContaining({ name: { he: 'Shakshuka', en: 'Shakshuka' } }),
+    );
   });
 
   it('asks for a name and a section before adding', async () => {
