@@ -100,6 +100,38 @@ describe('ItemEntriesStore', () => {
     expect(version()).toBe(1);
   });
 
+  it('keeps the default for new entries when an old one changes visibility', async () => {
+    const { store, remember } = setup({
+      forItem: vi.fn().mockResolvedValue(sheet),
+      update: vi.fn().mockResolvedValue({ ...entry, visibility: 'public' }),
+    });
+    await store.load(ITEM_ID);
+    await store.update(entry.id, { visibility: 'public' });
+    expect(remember).not.toHaveBeenCalled();
+  });
+
+  it('keeps the entry as it was when an edit fails', async () => {
+    const { store, version } = setup({
+      forItem: vi.fn().mockResolvedValue(sheet),
+      update: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 403 })),
+    });
+    await store.load(ITEM_ID);
+    await expect(store.update(entry.id, { rating: 2 })).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.mine()).toEqual([entry]);
+    expect(version()).toBe(0);
+  });
+
+  it('keeps the entry when deleting fails', async () => {
+    const { store, version } = setup({
+      forItem: vi.fn().mockResolvedValue(sheet),
+      remove: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 500 })),
+    });
+    await store.load(ITEM_ID);
+    await expect(store.remove(entry.id)).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.mine()).toEqual([entry]);
+    expect(version()).toBe(0);
+  });
+
   it('drops a deleted entry and tells discover', async () => {
     const { store, version } = setup({
       forItem: vi.fn().mockResolvedValue({ ...sheet, mine: [entry, older] }),
