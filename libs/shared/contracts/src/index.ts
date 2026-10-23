@@ -9,3 +9,4 @@ export * from './lib/menus/venue.contract';
 export * from './lib/menus/menu-section.contract';
 export * from './lib/menus/tag.contract';
 export * from './lib/menus/item.contract';
+export * from './lib/entries/entry.contract';
