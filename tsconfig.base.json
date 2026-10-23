@@ -36,7 +36,11 @@
       "@menu/api/entries/feature": ["./libs/api/entries/feature/src/index.ts"],
       "@menu/api/entries/data-access": ["./libs/api/entries/data-access/src/index.ts"],
       "@menu/api/discover/feature": ["./libs/api/discover/feature/src/index.ts"],
-      "@menu/api/discover/data-access": ["./libs/api/discover/data-access/src/index.ts"]
+      "@menu/api/discover/data-access": ["./libs/api/discover/data-access/src/index.ts"],
+      "@menu/web/users/data-access": ["./libs/web/users/data-access/src/index.ts"],
+      "@menu/web/users/feature-sign-in": ["./libs/web/users/feature-sign-in/src/index.ts"],
+      "@menu/web/users/feature-profile": ["./libs/web/users/feature-profile/src/index.ts"],
+      "@menu/web/shared/util-auth": ["./libs/web/shared/util-auth/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
