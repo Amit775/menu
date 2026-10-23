@@ -2,7 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { type DiscoverItem, type VenuePage } from '@menu/shared/contracts';
-import { DeviceLocation, DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DeviceLocation } from '@menu/web/shared/util-device';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { DiscoverVenuePage } from './discover-venue-page';
 

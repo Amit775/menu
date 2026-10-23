@@ -11,7 +11,7 @@ import {
   withState,
 } from '@ngrx/signals';
 import { DiscoverApiClient } from '../api/discover.api-client';
-import { DeviceLocation } from '../location/device-location';
+import { DeviceLocation } from '@menu/web/shared/util-device';
 
 export type FeedView = 'reels' | 'list' | 'map';
 export type FeedSort = 'score' | 'distance' | 'price';
