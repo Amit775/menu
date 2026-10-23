@@ -37,13 +37,15 @@ describe('Item contract', () => {
     });
   });
 
-  it('names an item with its venue', () => {
+  it('names an item with its venue and list price', () => {
     const ref = {
       id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
       name: { he: 'המבורגר' },
+      listPrice: 6800,
       venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס' } },
     };
     expect(ItemRefSchema.parse(ref)).toEqual(ref);
     expect(ItemRefSchema.safeParse({ ...ref, venue: { id: 'x' } }).success).toBe(false);
+    expect(ItemRefSchema.safeParse({ ...ref, listPrice: undefined }).success).toBe(false);
   });
 });
