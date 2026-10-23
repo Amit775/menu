@@ -32,4 +32,16 @@ describe('AccountController', () => {
     await (await setup({ update })).updateMe(principal, { language: 'en' });
     expect(update).toHaveBeenCalledWith(principal.accountId, { language: 'en' });
   });
+
+  it('lists accounts', async () => {
+    const list = vi.fn().mockResolvedValue([]);
+    await expect((await setup({ list })).list()).resolves.toEqual([]);
+  });
+
+  it('passes the caller to setAdmin', async () => {
+    const setAdmin = vi.fn().mockResolvedValue({});
+    const id = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    await (await setup({ setAdmin })).setAdmin(principal, id, { isAdmin: true });
+    expect(setAdmin).toHaveBeenCalledWith(principal, id, true);
+  });
 });

@@ -36,15 +36,15 @@ describe('AccountService', () => {
   }
 
   it('resolves a first sign-in into a principal, taking the name from the provider', async () => {
-    const upsertByFirebaseUid = vi.fn().mockResolvedValue(account);
-    const service = await setup({ upsertByFirebaseUid });
+    const findOrCreateByFirebaseUid = vi.fn().mockResolvedValue(account);
+    const service = await setup({ findOrCreateByFirebaseUid });
     await expect(service.resolve({ uid: 'uid-1', name: ' נועה ' })).resolves.toEqual({
       accountId: account.id,
       isAdmin: false,
       language: 'he',
       ownedVenueIds: [],
     });
-    expect(upsertByFirebaseUid).toHaveBeenCalledWith({
+    expect(findOrCreateByFirebaseUid).toHaveBeenCalledWith({
       firebaseUid: 'uid-1',
       displayName: 'נועה',
       isAdmin: false,
@@ -52,10 +52,10 @@ describe('AccountService', () => {
   });
 
   it('makes a bootstrap uid an Admin', async () => {
-    const upsertByFirebaseUid = vi.fn().mockResolvedValue({ ...account, isAdmin: true });
-    const service = await setup({ upsertByFirebaseUid }, ['uid-1']);
+    const findOrCreateByFirebaseUid = vi.fn().mockResolvedValue({ ...account, isAdmin: true });
+    const service = await setup({ findOrCreateByFirebaseUid }, ['uid-1']);
     await expect(service.resolve({ uid: 'uid-1' })).resolves.toMatchObject({ isAdmin: true });
-    expect(upsertByFirebaseUid).toHaveBeenCalledWith(
+    expect(findOrCreateByFirebaseUid).toHaveBeenCalledWith(
       expect.objectContaining({ displayName: '', isAdmin: true }),
     );
   });
@@ -74,6 +74,30 @@ describe('AccountService', () => {
     };
     const service = await setup({ setAdmin: vi.fn().mockResolvedValue(summary) });
     await expect(service.setAdmin(admin, account.id, true)).resolves.toEqual(summary);
+  });
+
+  it('fails with 404 when promoting an unknown account', async () => {
+    const service = await setup({ setAdmin: vi.fn().mockResolvedValue(null) });
+    await expect(service.setAdmin(admin, account.id, true)).rejects.toThrow(NotFoundException);
+  });
+
+  it('updates the caller', async () => {
+    const service = await setup({
+      update: vi.fn().mockResolvedValue({ ...account, language: 'en' }),
+    });
+    await expect(service.update(account.id, { language: 'en' })).resolves.toMatchObject({
+      language: 'en',
+    });
+  });
+
+  it('fails with 404 when updating an unknown account', async () => {
+    const service = await setup({ update: vi.fn().mockResolvedValue(null) });
+    await expect(service.update(account.id, { language: 'en' })).rejects.toThrow(NotFoundException);
+  });
+
+  it('lists accounts for an Admin', async () => {
+    const list = vi.fn().mockResolvedValue([]);
+    await expect((await setup({ list })).list()).resolves.toEqual([]);
   });
 
   it('stops an Admin from removing their own role', async () => {
