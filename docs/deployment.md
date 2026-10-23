@@ -2,12 +2,12 @@
 
 What runs where, and the one-time steps a human does in web consoles. Agents cannot do these: they need your accounts, and `cloud.nx.app` is not reachable from agent sandboxes.
 
-| Piece                    | Where                               | Deployed by                          |
-| ------------------------ | ----------------------------------- | ------------------------------------ |
-| Web app (`apps/web`)     | Firebase Hosting                    | `.github/workflows/deploy-web.yml`   |
-| API (`apps/api`)         | Cloud Run (ADR 0002)                | Follow-up PR                         |
-| Postgres                 | Cloud SQL for PostgreSQL (ADR 0002) | Follow-up PR                         |
-| CI cache and e2e sharing | Nx Cloud                            | `.github/workflows/ci.yml` (nx.json) |
+| Piece                    | Where                       | Deployed by                          |
+| ------------------------ | --------------------------- | ------------------------------------ |
+| Web app (`apps/web`)     | Firebase Hosting            | `.github/workflows/deploy-web.yml`   |
+| API (`apps/api`)         | Cloud Run, behind `/api/**` | `.github/workflows/deploy-api.yml`   |
+| Postgres                 | Cloud SQL for PostgreSQL    | Migrations in `deploy-api.yml`       |
+| CI cache and e2e sharing | Nx Cloud                    | `.github/workflows/ci.yml` (nx.json) |
 
 ## 1. Connect Nx Cloud (done 2026-10-23)
 
@@ -36,7 +36,7 @@ Try it locally: `pnpm nx build web && firebase emulators:start --only hosting`, 
 
 ## 4. Let GitHub Actions deploy
 
-1. In https://console.cloud.google.com/iam-admin/serviceaccounts?project=menu-b29eb (the Google Cloud project behind your Firebase project, same id; do not create a new Cloud project), **Create service account** named `github-deployer` with these roles: **Firebase Hosting Admin**, **Service Usage Consumer** (without it deploys fail with `USER_PROJECT_DENIED`), **Cloud Run Viewer** (needed once Hosting rewrites to Cloud Run), **API Keys Viewer**.
+1. In https://console.cloud.google.com/iam-admin/serviceaccounts?project=menu-b29eb (the Google Cloud project behind your Firebase project, same id; do not create a new Cloud project), **Create service account** named `github-deployer` with these roles: **Firebase Hosting Admin**, **Service Usage Consumer** (without it deploys fail with `USER_PROJECT_DENIED`), **Cloud Run Viewer** (Hosting reads the `/api/**` Cloud Run target), **API Keys Viewer**. Section 5 adds the API roles.
 2. Open the account, **Keys > Add key > Create new key > JSON**. A file downloads.
 3. In GitHub, **Settings > Secrets and variables > Actions**:
    - **Secrets** tab: `FIREBASE_SERVICE_ACCOUNT` = the whole JSON file contents.
@@ -48,7 +48,48 @@ Shortcut: `firebase init hosting:github` creates the service account and uploads
 
 Once both are set, every same-repo PR gets a preview URL comment and every merge to `main` deploys the live site. Until then the deploy workflow is skipped and shows as such.
 
-## 5. Later
+## 5. Run the API on Cloud Run with Cloud SQL
+
+Needs the Blaze plan. Everything goes in project `menu-b29eb`, region **`europe-west1`** (Belgium). The region is written in `firebase.json` and `deploy-api.yml`; to use another one, change both before you create anything. Names below (`menu-db`, `menu-api`, `menu`) are what the workflow expects.
+
+Rough cost: about $10 to $13 a month for the smallest Cloud SQL instance and its storage. Cloud Run scales to zero and usually stays in the free tier; Artifact Registry and Secret Manager cost cents.
+
+1. **Budget alert**: https://console.cloud.google.com/billing/budgets, create one for the project (for example $20 a month, alerts at 50%, 90%, 100%).
+2. **Enable APIs**: https://console.cloud.google.com/flows/enableapi?apiid=run.googleapis.com,sqladmin.googleapis.com,secretmanager.googleapis.com,artifactregistry.googleapis.com&project=menu-b29eb
+3. **Cloud SQL instance**: https://console.cloud.google.com/sql/instances?project=menu-b29eb, **Create instance > PostgreSQL**.
+   - Edition **Enterprise** (not Enterprise Plus; only Enterprise has the small shared-core machines), preset **Sandbox**.
+   - Version **PostgreSQL 17** (same as `docker-compose.yml`). Instance ID `menu-db`. Set a `postgres` password and keep it in your password manager.
+   - Region `europe-west1`, **Single zone**.
+   - Machine: **Shared core, 1 vCPU, 0.614 GB**. Storage: SSD, 10 GB.
+   - Connections: keep **Public IP** on and add **no** authorized networks. Cloud Run and the CI proxy connect through the IAM-checked Cloud SQL connection, so nothing else can reach it.
+   - Keep automated backups on. Create, and wait a few minutes.
+   - In the instance: **Databases > Create database** `menu`. **Users > Add user account**, built-in authentication, user `menu`, a generated password (letters and digits only, so it needs no URL encoding).
+   - Copy the **Connection name** from **Overview**: `menu-b29eb:europe-west1:menu-db`.
+4. **Database URL secret**: https://console.cloud.google.com/security/secret-manager?project=menu-b29eb, **Create secret** named `DATABASE_URL` with this value (your password in place of `PASSWORD`):
+   ```
+   postgresql://menu:PASSWORD@localhost/menu?host=/cloudsql/menu-b29eb:europe-west1:menu-db
+   ```
+   The `host` parameter is the Unix socket Cloud Run mounts for the instance; CI's proxy serves the same path, so one secret works for both.
+5. **Image repository**: https://console.cloud.google.com/artifacts?project=menu-b29eb, **Create repository** named `menu`, format **Docker**, region `europe-west1`. Optional: a cleanup policy that keeps the 10 most recent versions.
+6. **Runtime service account** (what the API runs as): in https://console.cloud.google.com/iam-admin/serviceaccounts?project=menu-b29eb, create `menu-api` with the role **Cloud SQL Client**. Then open the `DATABASE_URL` secret, **Permissions > Grant access**: `menu-api@menu-b29eb.iam.gserviceaccount.com`, role **Secret Manager Secret Accessor**.
+7. **API deployer service account**, separate from `github-deployer` so pull requests (which get the Hosting key for previews) can never reach the database:
+   - In https://console.cloud.google.com/iam-admin/serviceaccounts?project=menu-b29eb, create `api-deployer` with the roles **Cloud Run Admin** (deploys, and makes the service public for Hosting), **Artifact Registry Writer** and **Cloud SQL Client** (migrations go through the proxy).
+   - On the `DATABASE_URL` secret, **Permissions > Grant access**: `api-deployer@menu-b29eb.iam.gserviceaccount.com`, role **Secret Manager Secret Accessor**.
+   - On the `menu-api` service account, **Permissions > Grant access**: `api-deployer`, role **Service Account User** (lets it deploy a service that runs as `menu-api`).
+   - Open `api-deployer`, **Keys > Add key > Create new key > JSON**.
+   - In GitHub, **Settings > Environments > production**: set **Deployment branches and tags** to **Selected branches**, add `main`. Then **Environment secrets > Add secret** `GCP_DEPLOY_SERVICE_ACCOUNT` = the whole JSON file. Delete the file.
+8. **Placeholder service**, so the Hosting rewrite has a target before the first API deploy: https://console.cloud.google.com/run/create?project=menu-b29eb
+   - **Deploy one revision from an existing container image**: `us-docker.pkg.dev/cloudrun/container/hello`.
+   - Service name `menu-api`, region `europe-west1`, **Allow public access** (unauthenticated).
+   - Under **Containers, volumes, networking, security > Security**, service account `menu-api`. Create.
+9. **GitHub variable**: **Settings > Secrets and variables > Actions > Variables**, `CLOUD_SQL_INSTANCE` = `menu-b29eb:europe-west1:menu-db`. This turns on the deploy steps.
+
+After that, every merge to `main` builds the image, applies Prisma migrations, deploys Cloud Run and checks `/api/health`. Check it yourself at https://menu-b29eb.web.app/api/health. Pull requests only build and smoke-test the image.
+
+Preview channels use the same `/api/**` rewrite, so PR previews talk to the production API and database. A staging service can come later.
+
+## 6. Later
 
 - Custom domain: **Hosting > Add custom domain**.
-- API and database: see `docs/decisions/0002-host-on-firebase.md`.
+- Keyless deploys: replace the JSON key with Workload Identity Federation (`google-github-actions/auth` supports both).
+- Staging API and database for previews.

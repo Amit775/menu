@@ -19,7 +19,7 @@ The web app needs a home with HTTPS, a CDN, SPA fallback routing and per-PR prev
 - Run `apps/api` as a container on **Cloud Run** in the same Google Cloud project, reached through a Hosting rewrite (`/api/**` to the Cloud Run service, above the SPA fallback), so the web app keeps calling same-origin `/api` with no CORS.
 - Run Postgres on **Cloud SQL for PostgreSQL** in the same project; Cloud Run connects through the Cloud SQL connection, with credentials in Secret Manager.
 - Both need the Blaze plan. A serverless Postgres such as Neon was cheaper to start but adds a second vendor. Firebase Data Connect and Cloud Functions were set aside because they would replace Prisma and the Nest app model fixed in ADR 0001.
-- Wiring (Dockerfile, deploy workflow, rewrite) lands in a follow-up PR.
+- Wiring (Dockerfile, deploy workflow, rewrite): ADR 0003.
 
 ## Consequences
 

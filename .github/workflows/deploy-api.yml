@@ -1,0 +1,129 @@
+name: Deploy API
+
+# Builds apps/api into a container and checks that it serves /api/health.
+# On main it also pushes the image to Artifact Registry, applies Prisma
+# migrations to Cloud SQL through the Cloud SQL Auth Proxy, and deploys the
+# image to Cloud Run (ADR 0003). Deploy steps are skipped until the repository
+# variable CLOUD_SQL_INSTANCE exists. GCP_DEPLOY_SERVICE_ACCOUNT is a secret of
+# the production environment only, so PR runs cannot read it (docs/deployment.md).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-api-${{ github.ref }}
+  # Never cancel a main run halfway through a migration.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # REGION and SERVICE must match the /api/** rewrite in firebase.json.
+  REGION: europe-west1
+  SERVICE: menu-api
+  REPOSITORY: menu
+  CLOUD_SQL_PROXY_VERSION: v2.26.0
+  CLOUD_SQL_PROXY_SHA256: a38fe97690a27490e60a7945a8a178186ff9464abb81fe2bc652a3f773443387
+  DEPLOY: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.CLOUD_SQL_INSTANCE != '' }}
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && 'production' || 'preview' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # main.js plus a package.json and lockfile with only the runtime dependencies.
+      - name: Build and prune
+        run: pnpm nx run api:prune --outputStyle=static
+
+      - name: Build image
+        run: |
+          docker build \
+            --file apps/api/Dockerfile \
+            --build-arg NODE_VERSION="$(cat .nvmrc)" \
+            --build-arg PNPM_VERSION="$(node -p "require('./package.json').packageManager.split('@')[1]")" \
+            --tag "$SERVICE:$GITHUB_SHA" \
+            dist/apps/api
+
+      - name: Smoke test image
+        run: |
+          docker run --detach --name api --publish 8080:8080 --env PORT=8080 "$SERVICE:$GITHUB_SHA"
+          for _ in $(seq 1 30); do
+            if curl --silent --fail http://localhost:8080/api/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs api
+          exit 1
+
+      - name: Authenticate to Google Cloud
+        if: env.DEPLOY == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        if: env.DEPLOY == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Push image
+        if: env.DEPLOY == 'true'
+        run: |
+          IMAGE="$REGION-docker.pkg.dev/${{ vars.FIREBASE_PROJECT_ID }}/$REPOSITORY/$SERVICE:$GITHUB_SHA"
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker tag "$SERVICE:$GITHUB_SHA" "$IMAGE"
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      # The proxy serves the instance at the same socket path Cloud Run uses,
+      # so the one DATABASE_URL secret works for both.
+      - name: Apply database migrations
+        if: env.DEPLOY == 'true'
+        env:
+          CLOUD_SQL_INSTANCE: ${{ vars.CLOUD_SQL_INSTANCE }}
+        run: |
+          curl --silent --show-error --fail --location --output cloud-sql-proxy \
+            "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/$CLOUD_SQL_PROXY_VERSION/cloud-sql-proxy.linux.amd64"
+          echo "$CLOUD_SQL_PROXY_SHA256  cloud-sql-proxy" | sha256sum --check
+          chmod +x cloud-sql-proxy
+          sudo mkdir -p /cloudsql && sudo chown "$USER" /cloudsql
+          ./cloud-sql-proxy --unix-socket /cloudsql "$CLOUD_SQL_INSTANCE" > cloud-sql-proxy.log 2>&1 &
+          SOCKET="/cloudsql/$CLOUD_SQL_INSTANCE/.s.PGSQL.5432"
+          for _ in $(seq 1 30); do
+            [ -S "$SOCKET" ] && break
+            sleep 1
+          done
+          [ -S "$SOCKET" ] || { echo "Cloud SQL proxy did not start"; cat cloud-sql-proxy.log; exit 1; }
+          DATABASE_URL="$(gcloud secrets versions access latest --secret=DATABASE_URL)"
+          echo "::add-mask::$DATABASE_URL"
+          export DATABASE_URL
+          pnpm nx run api-shared-db:prisma-deploy --outputStyle=static || { cat cloud-sql-proxy.log; exit 1; }
+
+      - name: Deploy to Cloud Run
+        if: env.DEPLOY == 'true'
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --service-account "$SERVICE@${{ vars.FIREBASE_PROJECT_ID }}.iam.gserviceaccount.com" \
+            --add-cloudsql-instances "${{ vars.CLOUD_SQL_INSTANCE }}" \
+            --set-secrets DATABASE_URL=DATABASE_URL:latest \
+            --allow-unauthenticated \
+            --max-instances 2 \
+            --quiet
+          URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')"
+          curl --silent --show-error --fail "$URL/api/health"
