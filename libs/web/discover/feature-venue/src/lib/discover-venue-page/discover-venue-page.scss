@@ -1,0 +1,72 @@
+:host {
+  display: block;
+}
+
+.top {
+  padding: 8px;
+}
+
+:host-context([dir='ltr']) .top mat-icon {
+  transform: scaleX(-1);
+}
+
+article {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+  font-weight: 800;
+}
+
+.address,
+.mine,
+.empty {
+  margin: 0;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mine {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+h2 {
+  margin: 12px 0 0;
+  font: var(--mat-sys-title-large);
+}
+
+h3 {
+  margin: 12px 0 0;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+menu-item-row {
+  display: block;
+  margin-inline: -16px;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+}

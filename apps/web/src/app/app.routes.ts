@@ -12,4 +12,20 @@ export const appRoutes: Route[] = [
     loadChildren: () =>
       import('@menu/web/users/feature-sign-in').then((m) => m.webUsersFeatureSignInRoutes),
   },
+  {
+    path: 'items/:id',
+    loadChildren: () =>
+      import('@menu/web/discover/feature-item').then((m) => m.webDiscoverFeatureItemRoutes),
+  },
+  {
+    path: 'venues/:id',
+    loadChildren: () =>
+      import('@menu/web/discover/feature-venue').then((m) => m.webDiscoverFeatureVenueRoutes),
+  },
+  {
+    path: '',
+    pathMatch: 'full',
+    loadChildren: () =>
+      import('@menu/web/discover/feature-feed').then((m) => m.webDiscoverFeatureFeedRoutes),
+  },
 ];
