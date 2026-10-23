@@ -1,6 +1,6 @@
 {
   "$comment": "Source of truth for @nx/enforce-module-boundaries. Domains are added by `nx g @menu/workspace-plugin:domain`, never by hand.",
-  "domains": [],
+  "domains": ["discover", "entries", "menus", "users"],
   "platforms": {
     "platform:web": {
       "allow": ["platform:web", "platform:shared"],
