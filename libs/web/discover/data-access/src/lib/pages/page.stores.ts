@@ -7,8 +7,11 @@ import { DeviceLocation } from '../location/device-location';
 
 export type PageStatus = 'loading' | 'loaded' | 'not-found' | 'error';
 
+/** A 404, or a 400 for an id that is not one (`/items/foo`), means there is nothing to retry. */
 function failure(error: unknown): PageStatus {
-  return error instanceof HttpErrorResponse && error.status === 404 ? 'not-found' : 'error';
+  return error instanceof HttpErrorResponse && (error.status === 404 || error.status === 400)
+    ? 'not-found'
+    : 'error';
 }
 
 interface ItemPageState {

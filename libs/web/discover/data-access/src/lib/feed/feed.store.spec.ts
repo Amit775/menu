@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 import { item, VENUE_ID } from '../testing/fixtures';
 import { DiscoverApiClient } from '../api/discover.api-client';
 import { DeviceLocation } from '../location/device-location';
@@ -8,9 +9,10 @@ describe('FeedStore', () => {
   const near = { lat: 32.08, lng: 34.78 };
   const unranked = { ...item, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', score: null };
 
-  function setup(api: Partial<DiscoverApiClient>) {
+  function setup(api: Partial<DiscoverApiClient>, backend = new FakeAuthBackend()) {
     TestBed.configureTestingModule({
       providers: [
+        { provide: AUTH_BACKEND, useValue: backend },
         { provide: DiscoverApiClient, useValue: api },
         {
           provide: DeviceLocation,
@@ -86,6 +88,43 @@ describe('FeedStore', () => {
     slow({ items: [item], nextOffset: null });
     await first;
     expect(store.items()).toEqual([unranked]);
+  });
+
+  it('fetches again after another account signs in', async () => {
+    const feed = vi.fn().mockResolvedValue({ items: [item], nextOffset: null });
+    const backend = new FakeAuthBackend();
+    const store = setup({ feed }, backend);
+    TestBed.tick();
+    await store.load();
+    store.setReelIndex(4);
+    backend.signIn();
+    TestBed.tick();
+    expect(store.status()).toBe('idle');
+    await store.load();
+    expect(feed).toHaveBeenCalledTimes(2);
+    expect(store.reelIndex()).toBe(0);
+  });
+
+  it('does not ask twice while a page is loading, and reports a failed next page', async () => {
+    const feed = vi
+      .fn()
+      .mockResolvedValueOnce({ items: [item], nextOffset: 1 })
+      .mockRejectedValueOnce(new Error('offline'));
+    const store = setup({ feed });
+    await store.load();
+    const more = store.loadMore();
+    await store.loadMore();
+    await more;
+    expect(feed).toHaveBeenCalledTimes(2);
+    expect(store.status()).toBe('error');
+    expect(store.items()).toEqual([item]);
+  });
+
+  it('does nothing when the view does not change', async () => {
+    const feed = vi.fn();
+    const store = setup({ feed });
+    await store.setView('reels');
+    expect(feed).not.toHaveBeenCalled();
   });
 
   it('loads a venue’s other items once', async () => {

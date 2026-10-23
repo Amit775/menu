@@ -68,6 +68,18 @@ describe('DiscoverApiClient', () => {
     await expect(page).rejects.toThrow();
   });
 
+  it('rejects an item page that breaks the contract', async () => {
+    const page = client.item(ITEM_ID, null);
+    http.expectOne(`/api/discover/items/${ITEM_ID}`).flush({ item: { id: ITEM_ID } });
+    await expect(page).rejects.toThrow();
+  });
+
+  it('rejects search results that break the contract', async () => {
+    const results = client.search('x');
+    http.expectOne((r) => r.url === '/api/discover/search').flush({ items: 'nope' });
+    await expect(results).rejects.toThrow();
+  });
+
   it('searches', async () => {
     const results = client.search('בורגר');
     const request = http.expectOne((r) => r.url === '/api/discover/search');

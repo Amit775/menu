@@ -1,6 +1,14 @@
-import { computed, inject } from '@angular/core';
+import { computed, effect, inject, untracked } from '@angular/core';
 import { type DiscoverItem, type Tag } from '@menu/shared/contracts';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { Auth } from '@menu/web/shared/util-auth';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
 import { DiscoverApiClient } from '../api/discover.api-client';
 import { DeviceLocation } from '../location/device-location';
 
@@ -33,6 +41,8 @@ interface FeedState {
   tags: Tag[];
   /** Other items at a venue, for tapping through them in reels. */
   venueItems: Record<string, DiscoverItem[]>;
+  /** The reels card on screen, restored when the user comes back to the feed. */
+  reelIndex: number;
 }
 
 const initialState: FeedState = {
@@ -43,6 +53,7 @@ const initialState: FeedState = {
   status: 'idle',
   tags: [],
   venueItems: {},
+  reelIndex: 0,
 };
 
 /**
@@ -88,6 +99,7 @@ export const FeedStore = signalStore(
           return;
         }
         patchState(store, {
+          ...(offset === 0 ? { reelIndex: 0 } : {}),
           items: offset === 0 ? page.items : [...store.items(), ...page.items],
           nextOffset: page.nextOffset,
           status: 'loaded',
@@ -130,6 +142,17 @@ export const FeedStore = signalStore(
           await fetchPage(0);
         }
       },
+      setReelIndex(reelIndex: number): void {
+        patchState(store, { reelIndex });
+      },
+      /**
+       * Marks the feed out of date (another account, a new entry): the next
+       * `load()` fetches again, with fresh scores and "you wrote about this" flags.
+       */
+      invalidate(): void {
+        request++;
+        patchState(store, { status: 'idle', venueItems: {} });
+      },
       async loadTags(): Promise<void> {
         if (store.tags().length === 0) {
           try {
@@ -152,5 +175,22 @@ export const FeedStore = signalStore(
         }
       },
     };
+  }),
+  withHooks({
+    onInit(store, auth = inject(Auth)) {
+      let account: string | null | undefined;
+      effect(() => {
+        const uid = auth.status() === 'loading' ? undefined : (auth.user()?.uid ?? null);
+        untracked(() => {
+          if (uid === undefined) {
+            return;
+          }
+          if (account !== undefined && account !== uid) {
+            store.invalidate();
+          }
+          account = uid;
+        });
+      });
+    },
   }),
 );
