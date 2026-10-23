@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { type EntryRecord, EntryRepository } from '@menu/api/entries/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -201,6 +201,14 @@ describe('EntryService', () => {
     const diary = await (await setup({ listByAuthor })).diary(author, { venueId: 'v1' });
     expect(listByAuthor).toHaveBeenCalledWith('a1', { venueId: 'v1' });
     expect(diary).toEqual([expect.objectContaining({ id: 'e1', item: itemRef })]);
+  });
+
+  it('warns about a diary entry whose item cannot be named', async () => {
+    const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const listByAuthor = vi.fn().mockResolvedValue([record({ id: 'e2', itemId: 'gone' })]);
+    await (await setup({ listByAuthor })).diary(author, {});
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('e2'));
+    warn.mockRestore();
   });
 
   describe('a share link', () => {
