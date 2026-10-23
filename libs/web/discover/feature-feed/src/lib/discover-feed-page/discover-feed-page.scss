@@ -34,8 +34,8 @@ header {
   inset-block-start: 0;
   z-index: 1;
   background: transparent;
-  --mat-outlined-button-label-text-color: var(--mat-sys-inverse-on-surface);
-  --mat-outlined-button-outline-color: color-mix(
+  --mat-button-outlined-label-text-color: var(--mat-sys-inverse-on-surface);
+  --mat-button-outlined-outline-color: color-mix(
     in srgb,
     var(--mat-sys-inverse-on-surface) 50%,
     transparent
