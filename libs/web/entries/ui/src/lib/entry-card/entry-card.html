@@ -1,0 +1,30 @@
+@let t = messages | messages;
+@let current = entry();
+<div class="head">
+  @if (own(); as mine) {
+    <span class="who"> {{ t.yourEntry }} · {{ t.visibility[mine.visibility] }} </span>
+  } @else {
+    <span class="who">{{ author() || t.anonymous }}</span>
+  }
+  <span class="facts">
+    @if (current.rating !== null) {
+      <span [attr.aria-label]="t.rating(current.rating)">★ {{ current.rating }}</span>
+    }
+    @if (current.wouldOrderAgain !== null) {
+      <span>{{ current.wouldOrderAgain ? t.wouldOrderAgain : t.wouldNotOrderAgain }}</span>
+    }
+    @if (current.pricePaid !== null) {
+      <span [attr.aria-label]="t.paid(current.pricePaid | shekels)">{{
+        current.pricePaid | shekels
+      }}</span>
+    }
+    <time [attr.datetime]="current.eatenAt">{{ current.eatenAt | relativeDate }}</time>
+  </span>
+</div>
+@if (current.text) {
+  <p class="text">{{ current.text }}</p>
+}
+@if (own()?.hidden) {
+  <p class="hidden" role="note">{{ t.hidden }}</p>
+}
+<div class="actions"><ng-content /></div>

@@ -47,7 +47,8 @@
       "@menu/web/discover/feature-item": ["./libs/web/discover/feature-item/src/index.ts"],
       "@menu/web/discover/feature-venue": ["./libs/web/discover/feature-venue/src/index.ts"],
       "@menu/web/shared/util-events": ["./libs/web/shared/util-events/src/index.ts"],
-      "@menu/web/entries/data-access": ["./libs/web/entries/data-access/src/index.ts"]
+      "@menu/web/entries/data-access": ["./libs/web/entries/data-access/src/index.ts"],
+      "@menu/web/entries/ui": ["./libs/web/entries/ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
