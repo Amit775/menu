@@ -1,6 +1,18 @@
-<mat-toolbar>
-  <h1>{{ title }}</h1>
-</mat-toolbar>
 <main>
   <router-outlet />
 </main>
+<nav [attr.aria-label]="t().navigation">
+  <a
+    routerLink="/"
+    routerLinkActive="active"
+    [routerLinkActiveOptions]="{ exact: true }"
+    ariaCurrentWhenActive="page"
+  >
+    <mat-icon aria-hidden="true">view_carousel</mat-icon>
+    {{ t().discover }}
+  </a>
+  <a routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page">
+    <mat-icon aria-hidden="true">person</mat-icon>
+    {{ t().profile }}
+  </a>
+</nav>

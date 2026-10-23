@@ -1,12 +1,37 @@
 @use '@angular/material' as mat;
 
+// Look from the approved mockups: Heebo for both scripts, white ground,
+// near-black score chips, one warm accent for the primary action.
+// Components use these --mat-sys-* tokens, never raw colors.
 html {
-  color-scheme: light dark;
+  color-scheme: light;
   @include mat.theme(
     (
-      color: mat.$azure-palette,
-      typography: Roboto,
+      color: (
+        primary: mat.$orange-palette,
+        theme-type: light,
+      ),
+      typography: Heebo,
       density: 0,
+    )
+  );
+  @include mat.theme-overrides(
+    (
+      primary: #b3400a,
+      on-primary: #ffffff,
+      primary-container: #fff4ee,
+      on-primary-container: #1a1a1a,
+      surface: #ffffff,
+      on-surface: #1a1a1a,
+      on-surface-variant: #5b5b5b,
+      surface-container-lowest: #ffffff,
+      surface-container-low: #faf9f7,
+      surface-container: #f3f1ed,
+      surface-container-high: #ece9e4,
+      outline: #d6d3ce,
+      outline-variant: #ece9e4,
+      inverse-surface: #1a1a1a,
+      inverse-on-surface: #ffffff,
     )
   );
 }
@@ -18,7 +43,11 @@ body {
 
 body {
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font-family: Heebo, system-ui, sans-serif;
   background: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
+}
+
+a {
+  color: var(--mat-sys-primary);
 }
