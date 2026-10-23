@@ -30,8 +30,15 @@ describe('MenusItemCatalog', () => {
   };
 
   function catalog(record: ItemRecord | null, venueStatus = 'active'): MenusItemCatalog {
-    const repository = { findById: vi.fn().mockResolvedValue(record) };
-    const venues = { findById: vi.fn().mockResolvedValue({ id: venueId, status: venueStatus }) };
+    const repository = {
+      findById: vi.fn().mockResolvedValue(record),
+      findByIds: vi.fn().mockResolvedValue(record ? [record] : []),
+    };
+    const venue = { id: venueId, status: venueStatus, name: { he: 'מוזס' } };
+    const venues = {
+      findById: vi.fn().mockResolvedValue(venue),
+      list: vi.fn().mockResolvedValue([venue]),
+    };
     return new MenusItemCatalog(
       repository as unknown as ItemRepository,
       venues as unknown as VenueRepository,
@@ -87,5 +94,19 @@ describe('MenusItemCatalog', () => {
 
   it('returns null for an unknown item', async () => {
     await expect(catalog(null).findForEntries(submitter, 'i1')).resolves.toBeNull();
+  });
+
+  it('names items with their venue, in any state', async () => {
+    const pending = { ...base, state: 'pending' as const };
+    const refs = await catalog(pending, 'hidden').refsFor(['i1', 'i1']);
+    expect(refs.get('i1')).toEqual({
+      id: 'i1',
+      name: { he: 'פיצה' },
+      venue: { id: venueId, name: { he: 'מוזס' } },
+    });
+  });
+
+  it('leaves out unknown items', async () => {
+    await expect(catalog(null).refsFor(['nope'])).resolves.toEqual(new Map());
   });
 });

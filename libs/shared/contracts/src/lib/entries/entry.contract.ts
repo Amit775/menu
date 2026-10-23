@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AgorotSchema } from '../common/values.contract';
+import { ItemRefSchema } from '../menus/item.contract';
 import { DisplayNameSchema } from '../users/account.contract';
 
 /** REST base path: `/api/entries` (the caller's diary, one entry, Admin hide). */
@@ -103,7 +104,12 @@ export const ItemEntriesSchema = z.object({
 
 export type ItemEntries = z.infer<typeof ItemEntriesSchema>;
 
-/** `GET /api/entries?venueId=&itemId=`: the caller's diary, newest first, optionally for one venue or item. */
+/** One line of the caller's diary: the entry and what it was about. */
+export const EntryWithItemSchema = EntrySchema.extend({ item: ItemRefSchema });
+
+export type EntryWithItem = z.infer<typeof EntryWithItemSchema>;
+
+/** `GET /api/entries?venueId=&itemId=`: the caller's diary (`EntryWithItem[]`), newest first, optionally for one venue or item. */
 export const DiaryQuerySchema = z.object({
   venueId: z.uuid().optional(),
   itemId: z.uuid().optional(),
@@ -121,7 +127,7 @@ export type SetEntryHidden = z.infer<typeof SetEntryHiddenSchema>;
  * revealing anything; a deleted or hidden entry reads as removed.
  */
 export const SharedEntryViewSchema = z.discriminatedUnion('status', [
-  z.object({ status: z.literal('visible'), entry: PublicEntrySchema }),
+  z.object({ status: z.literal('visible'), entry: PublicEntrySchema, item: ItemRefSchema }),
   z.object({ status: z.literal('private') }),
   z.object({ status: z.literal('removed') }),
 ]);

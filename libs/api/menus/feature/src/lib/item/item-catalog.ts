@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ItemRepository, VenueRepository } from '@menu/api/menus/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
 import { type EntryTarget, type ItemCatalog } from '@menu/api/shared/util-ports';
+import { type ItemRef } from '@menu/shared/contracts';
 import { MenuItem } from './menu-item';
 
 /** The menus side of the `ITEM_CATALOG` port: entries asks here before touching an item. */
@@ -28,5 +29,25 @@ export class MenusItemCatalog implements ItemCatalog {
       isPublic: item.state !== 'pending' && item.state !== 'rejected',
       acceptsEntry: principal !== null && item.acceptsEntryFrom(principal),
     };
+  }
+
+  async refsFor(itemIds: readonly string[]): Promise<ReadonlyMap<string, ItemRef>> {
+    const items = await this.repository.findByIds([...new Set(itemIds)]);
+    const venueIds = [...new Set(items.map((item) => item.venueId))];
+    const venues =
+      venueIds.length > 0 ? await this.venues.list({ ids: venueIds, includeHidden: true }) : [];
+    const venueNames = new Map(venues.map((venue) => [venue.id, venue.name]));
+    const refs = new Map<string, ItemRef>();
+    for (const item of items) {
+      const venueName = venueNames.get(item.venueId);
+      if (venueName) {
+        refs.set(item.id, {
+          id: item.id,
+          name: item.name,
+          venue: { id: item.venueId, name: venueName },
+        });
+      }
+    }
+    return refs;
   }
 }

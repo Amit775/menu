@@ -14,6 +14,7 @@ import {
   type CreateEntry,
   type DiaryQuery,
   type Entry,
+  type EntryWithItem,
   type ItemEntries,
   type SharedEntryView,
   type UpdateEntry,
@@ -69,9 +70,14 @@ export class EntryService {
     return new DiaryEntry(record).toContract();
   }
 
-  async diary(principal: Principal, query: DiaryQuery): Promise<Entry[]> {
+  /** The caller's own entries, each with its item and venue names. */
+  async diary(principal: Principal, query: DiaryQuery): Promise<EntryWithItem[]> {
     const records = await this.repository.listByAuthor(principal.accountId, query);
-    return records.map((record) => new DiaryEntry(record).toContract());
+    const refs = await this.catalog.refsFor(records.map((record) => record.itemId));
+    return records.flatMap((record) => {
+      const item = refs.get(record.itemId);
+      return item ? [{ ...new DiaryEntry(record).toContract(), item }] : [];
+    });
   }
 
   async get(principal: Principal, id: string): Promise<Entry> {
@@ -112,9 +118,12 @@ export class EntryService {
       return { status: 'removed' };
     }
     const entry = new DiaryEntry(record);
-    const item = await this.catalog.findForEntries(null, record.itemId);
+    const target = await this.catalog.findForEntries(null, record.itemId);
+    const item = target?.isPublic
+      ? ((await this.catalog.refsFor([record.itemId])).get(record.itemId) ?? null)
+      : null;
     const names = await this.authors.displayNames([record.authorId]);
-    return entry.sharedView(names.get(record.authorId) ?? '', item?.isPublic ?? false);
+    return entry.sharedView(names.get(record.authorId) ?? '', item);
   }
 
   private async findItem(principal: Principal | null, itemId: string): Promise<EntryTarget> {
