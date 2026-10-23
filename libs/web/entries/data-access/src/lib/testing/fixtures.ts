@@ -45,4 +45,9 @@ export const publicEntry: PublicEntry = {
   createdAt: '2026-10-19T20:00:00.000Z',
 };
 
-export const sheet: ItemEntries = { item: itemRef, mine: [entry], others: [publicEntry] };
+export const sheet: ItemEntries = {
+  item: itemRef,
+  itemIsPublic: true,
+  mine: [entry],
+  others: [publicEntry],
+};

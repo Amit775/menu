@@ -31,6 +31,7 @@ const sheet: ItemEntries = {
     listPrice: 6800,
     venue: { id: VENUE_ID, name: { he: 'בורגר 24' } },
   },
+  itemIsPublic: true,
   mine: [mine],
   others: [
     {
