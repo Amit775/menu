@@ -1,0 +1,50 @@
+<section>
+  <h1>{{ t().title }}</h1>
+
+  @switch (auth.status()) {
+    @case ('loading') {
+      <mat-spinner diameter="32" />
+    }
+    @case ('signed-out') {
+      <h2>{{ t().signedOutTitle }}</h2>
+      <p>{{ t().signedOutText }}</p>
+      <a mat-flat-button routerLink="/sign-in">{{ t().signIn }}</a>
+    }
+    @default {
+      @if (store.error() === 'load-failed') {
+        <p class="error" role="alert">{{ t().loadFailed }}</p>
+      }
+      <form [formGroup]="nameForm" (ngSubmit)="saveName()">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ t().name }}</mat-label>
+          <input matInput autocomplete="nickname" maxlength="60" formControlName="name" />
+        </mat-form-field>
+        <button mat-stroked-button type="submit" [disabled]="name.invalid || !store.account()">
+          {{ t().save }}
+        </button>
+        @if (saved()) {
+          <span class="saved" role="status">{{ t().saved }}</span>
+        }
+        @if (store.error() === 'save-failed') {
+          <span class="error" role="alert">{{ t().saveFailed }}</span>
+        }
+      </form>
+    }
+  }
+
+  <div class="language">
+    <span id="language-label">{{ t().language }}</span>
+    <mat-button-toggle-group
+      aria-labelledby="language-label"
+      [value]="i18n.language()"
+      (change)="setLanguage($event.value)"
+    >
+      <mat-button-toggle value="he" lang="he">{{ t().hebrew }}</mat-button-toggle>
+      <mat-button-toggle value="en" lang="en">{{ t().english }}</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  @if (auth.signedIn()) {
+    <button mat-button type="button" class="sign-out" (click)="signOut()">{{ t().signOut }}</button>
+  }
+</section>
