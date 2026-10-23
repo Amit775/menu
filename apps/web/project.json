@@ -28,7 +28,8 @@
             "bundleName": "leaflet-1.9.4",
             "inject": false
           }
-        ]
+        ],
+        "allowedCommonJsDependencies": ["leaflet"]
       },
       "configurations": {
         "production": {
