@@ -56,3 +56,13 @@ input,
 .visually-hidden {
   opacity: 1;
 }
+
+.clear {
+  margin-top: 4px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-primary);
+  cursor: pointer;
+}

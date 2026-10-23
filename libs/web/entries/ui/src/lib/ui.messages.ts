@@ -12,6 +12,7 @@ export const entriesUiMessages = defineMessages({
     hidden: 'הוסתרה על ידי מנהל. רק את/ה רואה אותה.',
     ratingLegend: 'דירוג',
     optional: '(לא חובה)',
+    clearRating: 'ניקוי הדירוג',
     stars: (rating: number) => (rating === 1 ? 'כוכב אחד' : `${String(rating)} כוכבים`),
   },
   en: {
@@ -25,6 +26,7 @@ export const entriesUiMessages = defineMessages({
     hidden: 'Hidden by an Admin. Only you can see it.',
     ratingLegend: 'Rating',
     optional: '(optional)',
+    clearRating: 'Clear rating',
     stars: (rating: number) => (rating === 1 ? '1 star' : `${String(rating)} stars`),
   },
 });
