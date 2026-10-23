@@ -5,7 +5,8 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 import { webDiscoverFeatureItemRoutes } from '../lib.routes';
 import { type DiscoverItem, type ItemPage } from '@menu/shared/contracts';
-import { DeviceLocation, DeviceShare, DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DeviceLocation, DeviceShare } from '@menu/web/shared/util-device';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { DiscoverItemPage } from './discover-item-page';
 
