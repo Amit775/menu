@@ -12,6 +12,14 @@ export const ID_TOKEN_DECODER = Symbol('ID_TOKEN_DECODER');
 /** The Firebase project whose ID tokens are accepted (the Hosting and Cloud Run project, ADR 0002). */
 export const DEFAULT_FIREBASE_PROJECT_ID = 'menu-b29eb';
 
+/** `FIREBASE_PROJECT_ID`, or the default when unset or empty (as `.env.example` ships it). */
+export function firebaseProjectId(env: NodeJS.ProcessEnv = process.env): string {
+  const configured = env['FIREBASE_PROJECT_ID']?.trim();
+  return configured !== undefined && configured.length > 0
+    ? configured
+    : DEFAULT_FIREBASE_PROJECT_ID;
+}
+
 async function firebaseDecoder(projectId: string): Promise<IdTokenDecoder> {
   const { getApps, initializeApp } = await import('firebase-admin/app');
   const { getAuth } = await import('firebase-admin/auth');
@@ -19,10 +27,22 @@ async function firebaseDecoder(projectId: string): Promise<IdTokenDecoder> {
   return getAuth(getApps()[0] ?? initializeApp({ projectId }));
 }
 
-/** Errors that mean "this token is not valid", as opposed to "Firebase could not be reached". */
+/**
+ * Errors that mean "this token is not valid". Anything else (Firebase out of
+ * reach, a missing project id) is a server fault and stays a 500, so clients do
+ * not sign users out over it.
+ */
+const TOKEN_ERRORS = new Set([
+  'auth/argument-error',
+  'auth/id-token-expired',
+  'auth/id-token-revoked',
+  'auth/user-disabled',
+  'auth/user-not-found',
+]);
+
 function isTokenError(error: unknown): boolean {
   const code = (error as { code?: unknown } | null)?.code;
-  return typeof code === 'string' && code.startsWith('auth/') && code !== 'auth/internal-error';
+  return typeof code === 'string' && TOKEN_ERRORS.has(code);
 }
 
 /** Checks Firebase Authentication ID tokens (Google and phone sign-in). */
@@ -37,9 +57,7 @@ export class FirebaseTokenVerifier implements TokenVerifier {
   }
 
   async verify(token: string): Promise<VerifiedIdentity> {
-    this.decoder ??= firebaseDecoder(
-      process.env['FIREBASE_PROJECT_ID'] ?? DEFAULT_FIREBASE_PROJECT_ID,
-    );
+    this.decoder ??= firebaseDecoder(firebaseProjectId());
     try {
       const decoded = await (await this.decoder).verifyIdToken(token);
       return typeof decoded.name === 'string'
