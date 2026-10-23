@@ -73,6 +73,14 @@ export class AccountRepository {
     return rows.map(toSummary);
   }
 
+  async displayNames(ids: readonly string[]): Promise<Map<string, string>> {
+    const rows = await this.prisma.account.findMany({
+      where: { id: { in: [...ids] } },
+      select: { id: true, displayName: true },
+    });
+    return new Map(rows.map((row) => [row.id, row.displayName]));
+  }
+
   async setAdmin(id: string, isAdmin: boolean): Promise<AccountSummary | null> {
     const { count } = await this.prisma.account.updateMany({ where: { id }, data: { isAdmin } });
     if (count === 0) {
