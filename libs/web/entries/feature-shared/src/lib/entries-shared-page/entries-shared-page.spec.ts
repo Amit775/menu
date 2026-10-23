@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -102,6 +103,21 @@ describe('EntriesSharedPage', () => {
     expect(element.querySelector('[role="status"]')?.textContent).toContain(
       'This note was removed.',
     );
+  });
+
+  it('reads a link that is not one as removed, with nothing to retry', async () => {
+    const { element } = await open(
+      vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 400 })),
+    );
+    expect(element.querySelector('[role="status"]')?.textContent).toContain(
+      'This note was removed.',
+    );
+    expect(element.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('dates the entry in the reader’s language', async () => {
+    const { element } = await open(vi.fn().mockResolvedValue(visible));
+    expect(element.querySelector('time')?.textContent).toBe('Oct 22, 2026');
   });
 
   it('offers to try again when loading fails', async () => {
