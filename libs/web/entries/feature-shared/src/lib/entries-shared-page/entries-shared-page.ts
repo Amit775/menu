@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
@@ -43,11 +44,15 @@ export class EntriesSharedPage {
     });
   }
 
-  protected formatDate(iso: string): string {
-    return new Intl.DateTimeFormat(this.i18n.language(), { dateStyle: 'medium' }).format(
-      new Date(iso),
-    );
-  }
+  /** When the entry was eaten, in the reader's language. */
+  protected readonly eatenOn = computed(() => {
+    const view = this.store.view();
+    return view?.status === 'visible'
+      ? new Intl.DateTimeFormat(this.i18n.language(), { dateStyle: 'medium' }).format(
+          new Date(view.entry.eatenAt),
+        )
+      : '';
+  });
 
   protected retry(): void {
     void this.store.load(this.token());
