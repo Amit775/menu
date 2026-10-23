@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { item, section, venue, VENUE_ID } from '../testing/fixtures';
+import { insights, item, section, tag, venue, VENUE_ID } from '../testing/fixtures';
 import { MenuApiClient } from './menu.api-client';
 
 describe('MenuApiClient', () => {
@@ -58,5 +58,110 @@ describe('MenuApiClient', () => {
     const result = client.addItem(VENUE_ID, { sectionId: section.id, name: { he: 'שקשוקה' } });
     http.expectOne(`/api/venues/${VENUE_ID}/items`).flush({ ...item, state: 'unknown' });
     await expect(result).rejects.toThrow();
+  });
+
+  it('lists every venue, or only the caller’s own', async () => {
+    const all = client.venues();
+    http.expectOne('/api/venues').flush([venue]);
+    await expect(all).resolves.toEqual([venue]);
+    const owned = client.venues(true);
+    http.expectOne('/api/venues?owned=true').flush([venue]);
+    await expect(owned).resolves.toEqual([venue]);
+  });
+
+  it('creates and edits a venue', async () => {
+    const input = { name: venue.name, address: venue.address, location: venue.location };
+    const created = client.createVenue(input);
+    const post = http.expectOne('/api/venues');
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual(input);
+    post.flush(venue);
+    await expect(created).resolves.toEqual(venue);
+    const edited = client.updateVenue(VENUE_ID, { status: 'hidden' });
+    const patch = http.expectOne(`/api/venues/${VENUE_ID}`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush({ ...venue, status: 'hidden' });
+    await expect(edited).resolves.toMatchObject({ status: 'hidden' });
+  });
+
+  it('adds, renames and reorders sections', async () => {
+    const added = client.addSection(VENUE_ID, { name: { he: 'קינוחים' } });
+    const post = http.expectOne(`/api/venues/${VENUE_ID}/sections`);
+    expect(post.request.method).toBe('POST');
+    post.flush(section);
+    await expect(added).resolves.toEqual(section);
+    const renamed = client.renameSection(VENUE_ID, section.id, { name: { he: 'מנות' } });
+    const patch = http.expectOne(`/api/venues/${VENUE_ID}/sections/${section.id}`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush(section);
+    await expect(renamed).resolves.toEqual(section);
+    const reordered = client.reorderSections(VENUE_ID, [section.id]);
+    const put = http.expectOne(`/api/venues/${VENUE_ID}/sections/order`);
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body).toEqual({ sectionIds: [section.id] });
+    put.flush([section]);
+    await expect(reordered).resolves.toEqual([section]);
+  });
+
+  it('reads the menu, edits an item and decides on it', async () => {
+    const menu = client.items(VENUE_ID);
+    http.expectOne(`/api/venues/${VENUE_ID}/items`).flush([item]);
+    await expect(menu).resolves.toEqual([item]);
+    const edited = client.updateItem(item.id, { listPrice: 5800 });
+    const patch = http.expectOne(`/api/items/${item.id}`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush({ ...item, listPrice: 5800 });
+    await expect(edited).resolves.toMatchObject({ listPrice: 5800 });
+    const approved = client.decide(item.id, 'approve');
+    const post = http.expectOne(`/api/items/${item.id}/approve`);
+    expect(post.request.method).toBe('POST');
+    post.flush({ ...item, state: 'approved' });
+    await expect(approved).resolves.toMatchObject({ state: 'approved' });
+    const merged = client.merge(item.id, section.id);
+    const merge = http.expectOne(`/api/items/${item.id}/merge`);
+    expect(merge.request.body).toEqual({ intoItemId: section.id });
+    merge.flush({ ...item, state: 'merged', mergedIntoId: section.id });
+    await expect(merged).resolves.toMatchObject({ state: 'merged' });
+  });
+
+  it('reads the pending queue and rejects an item that breaks the contract', async () => {
+    const pending = client.pending();
+    http.expectOne('/api/items/pending').flush([{ ...item, name: 'שקשוקה' }]);
+    await expect(pending).rejects.toThrow();
+  });
+
+  it('keeps the tag vocabulary', async () => {
+    const list = client.tags();
+    http.expectOne('/api/tags').flush([tag]);
+    await expect(list).resolves.toEqual([tag]);
+    const added = client.addTag({ slug: tag.slug, name: tag.name, kind: tag.kind });
+    http.expectOne('/api/tags').flush(tag);
+    await expect(added).resolves.toEqual(tag);
+    const renamed = client.updateTag(tag.id, { name: { he: 'בורגר' } });
+    const patch = http.expectOne(`/api/tags/${tag.id}`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush(tag);
+    await expect(renamed).resolves.toEqual(tag);
+    const merged = client.mergeTag(tag.id, item.id);
+    const merge = http.expectOne(`/api/tags/${tag.id}/merge`);
+    expect(merge.request.body).toEqual({ intoTagId: item.id });
+    merge.flush(null, { status: 204, statusText: 'No Content' });
+    await expect(merged).resolves.toBeUndefined();
+  });
+
+  it('rejects a tag with a bad slug', async () => {
+    const list = client.tags();
+    http.expectOne('/api/tags').flush([{ ...tag, slug: 'Not A Slug' }]);
+    await expect(list).rejects.toThrow();
+  });
+
+  it('reads a venue’s insights and rejects a private count under the floor', async () => {
+    const read = client.insights(VENUE_ID);
+    http.expectOne(`/api/discover/venues/${VENUE_ID}/insights`).flush(insights);
+    await expect(read).resolves.toEqual(insights);
+    const leaky = client.insights(VENUE_ID);
+    const row = { ...insights.items[0], otherEntryCount: 1 };
+    http.expectOne(`/api/discover/venues/${VENUE_ID}/insights`).flush({ items: [row] });
+    await expect(leaky).rejects.toThrow();
   });
 });
