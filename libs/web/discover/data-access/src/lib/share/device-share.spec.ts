@@ -28,6 +28,11 @@ describe('DeviceShare', () => {
     await expect(setup({ share: cancelled }).share('/', 'x')).resolves.toBe('cancelled');
   });
 
+  it('fails when the clipboard refuses', async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+    await expect(setup({ clipboard: { writeText } }).share('/', 'x')).resolves.toBe('failed');
+  });
+
   it('fails without a share sheet or a clipboard', async () => {
     await expect(setup({}).share('/', 'x')).resolves.toBe('failed');
   });

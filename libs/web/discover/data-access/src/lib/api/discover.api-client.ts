@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import {
   discoverPath,
   type Feed,
+  type FeedQuery,
   FeedSchema,
   type GeoPoint,
   type ItemPage,
@@ -18,16 +19,16 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { z } from 'zod';
 
-/** What the feed can be asked for; the API fills in the defaults. */
+/** What the feed can be asked for (`FeedQuerySchema`); the API fills in the defaults. */
 export interface FeedRequest {
   near: GeoPoint | null;
-  radiusKm?: number;
+  radiusKm?: FeedQuery['radiusKm'];
   tagIds?: readonly string[];
-  mode?: 'reels' | 'list';
-  sort?: 'score' | 'distance' | 'price';
-  maxPrice?: number | null;
-  offset?: number;
-  limit?: number;
+  mode?: FeedQuery['mode'];
+  sort?: FeedQuery['sort'];
+  maxPrice?: FeedQuery['maxPrice'] | null;
+  offset?: FeedQuery['offset'];
+  limit?: FeedQuery['limit'];
 }
 
 type ParamValue = string | number | null | undefined;

@@ -39,6 +39,35 @@ describe('page stores', () => {
     expect(items.status()).toBe('error');
   });
 
+  it('treats an id that is not one as missing', async () => {
+    const { items } = setup({
+      item: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 400 })),
+    });
+    await items.load('foo');
+    expect(items.status()).toBe('not-found');
+  });
+
+  it('keeps the page of the latest id when an older load answers last', async () => {
+    let slow: (value: unknown) => void = () => undefined;
+    const other = { item: { ...item, id: 'other' } };
+    const load = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise((resolve) => (slow = resolve)))
+      .mockResolvedValueOnce(other);
+    const { items } = setup({ item: load });
+    const first = items.load(ITEM_ID);
+    await items.load('other');
+    slow({ item });
+    await first;
+    expect(items.page()).toEqual(other);
+  });
+
+  it('reports a venue that failed to load', async () => {
+    const { venues } = setup({ venue: vi.fn().mockRejectedValue(new Error('offline')) });
+    await venues.load(VENUE_ID);
+    expect(venues.status()).toBe('error');
+  });
+
   it('loads a venue page and reports a missing venue', async () => {
     const venue = vi
       .fn()
