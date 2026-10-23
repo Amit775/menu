@@ -18,4 +18,7 @@
       </label>
     }
   </div>
+  @if (value() !== null) {
+    <button class="clear" type="button" (click)="value.set(null)">{{ t.clearRating }}</button>
+  }
 </fieldset>
