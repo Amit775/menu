@@ -5,17 +5,12 @@
       type="button"
       class="filter"
       [class.active]="store.filterCount() > 0"
-      (click)="panel.set('filters')"
+      (click)="openFilters()"
     >
       <mat-icon aria-hidden="true">tune</mat-icon>
       {{ filterLabel() }}
     </button>
-    <button
-      mat-icon-button
-      type="button"
-      [attr.aria-label]="t().search"
-      (click)="panel.set('search')"
-    >
+    <button mat-icon-button type="button" [attr.aria-label]="t().search" (click)="openSearch()">
       <mat-icon aria-hidden="true">search</mat-icon>
     </button>
     <mat-button-toggle-group
@@ -35,6 +30,9 @@
       </mat-button-toggle>
     </mat-button-toggle-group>
   </header>
+  @if (refreshing()) {
+    <mat-progress-bar mode="indeterminate" [attr.aria-label]="t().loading" />
+  }
 
   @if (store.status() === 'error' && store.items().length === 0) {
     <div class="state" role="alert">
@@ -42,7 +40,9 @@
       <button mat-button type="button" (click)="store.reload()">{{ t().retry }}</button>
     </div>
   } @else if (store.status() === 'loading' && store.items().length === 0) {
-    <div class="state"><mat-spinner diameter="32" [attr.aria-label]="t().loading" /></div>
+    <div class="state" role="status">
+      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+    </div>
   } @else if (store.status() === 'loaded' && store.items().length === 0) {
     <div class="state" role="status">
       {{ t().empty }}
@@ -53,6 +53,12 @@
       }
     </div>
   } @else if (store.view() === 'reels') {
+    @if (pageFailed()) {
+      <p class="reel-error" role="alert">
+        {{ t().loadMoreFailed }}
+        <button mat-button type="button" (click)="store.loadMore()">{{ t().retry }}</button>
+      </p>
+    }
     <div class="reel-track" #track (scroll)="scrolled(track)">
       @for (item of store.items(); track item.id) {
         <menu-reel-card [item]="item" />
@@ -60,17 +66,32 @@
     </div>
   } @else {
     <div class="list">
-      <p class="summary">{{ t().summary(store.items().length, store.filters().radiusKm) }}</p>
-      @for (item of store.ranked(); track item.id) {
-        <menu-item-row [item]="item" />
-      }
-      @if (store.unranked().length > 0) {
-        <p class="divider">{{ t().notEnoughRatings }}</p>
-        @for (item of store.unranked(); track item.id) {
+      <p class="summary">
+        {{
+          t().summary(store.items().length, store.nextOffset() !== null, store.filters().radiusKm)
+        }}
+      </p>
+      @if (splitByRanking()) {
+        @for (item of store.ranked(); track item.id) {
+          <menu-item-row [item]="item" />
+        }
+        @if (store.unranked().length > 0) {
+          <p class="divider">{{ t().notEnoughRatings }}</p>
+          @for (item of store.unranked(); track item.id) {
+            <menu-item-row [item]="item" />
+          }
+        }
+      } @else {
+        @for (item of store.items(); track item.id) {
           <menu-item-row [item]="item" />
         }
       }
-      @if (store.nextOffset() !== null) {
+      @if (pageFailed()) {
+        <p class="divider" role="alert">
+          {{ t().loadMoreFailed }}
+          <button mat-button type="button" (click)="store.loadMore()">{{ t().retry }}</button>
+        </p>
+      } @else if (store.nextOffset() !== null) {
         <button mat-button type="button" class="more" (click)="store.loadMore()">
           {{ t().loadMore }}
         </button>
@@ -78,12 +99,3 @@
     </div>
   }
 </div>
-
-@switch (panel()) {
-  @case ('filters') {
-    <menu-filter-sheet (closed)="panel.set(null)" />
-  }
-  @case ('search') {
-    <menu-search-panel (closed)="panel.set(null)" />
-  }
-}

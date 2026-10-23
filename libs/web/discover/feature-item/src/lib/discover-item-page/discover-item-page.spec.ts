@@ -1,6 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
+import { webDiscoverFeatureItemRoutes } from '../lib.routes';
 import { type DiscoverItem, type ItemPage } from '@menu/shared/contracts';
 import { DeviceLocation, DeviceShare, DiscoverApiClient } from '@menu/web/discover/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
@@ -112,5 +115,31 @@ describe('DiscoverItemPage', () => {
     element.querySelector<HTMLButtonElement>('button[aria-label="שיתוף"]')?.click();
     await fixture.whenStable();
     expect(share).toHaveBeenCalledWith(`/items/${item.id}`, 'המבורגר הבית');
+  });
+
+  it('opens from its address, with the id from the route', async () => {
+    const load = vi.fn().mockResolvedValue(page);
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(
+          [{ path: 'items/:id', children: webDiscoverFeatureItemRoutes }],
+          withComponentInputBinding(),
+        ),
+        { provide: DiscoverApiClient, useValue: { item: load } },
+        { provide: DeviceLocation, useValue: { locate: () => Promise.resolve(null) } },
+        { provide: AUTH_BACKEND, useValue: new FakeAuthBackend() },
+      ],
+    });
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(`/items/${item.id}`);
+    expect(load).toHaveBeenCalledWith(item.id, null);
+  });
+
+  it('goes to discover from a shared link, where there is no back', async () => {
+    const { fixture, element } = await render(vi.fn().mockResolvedValue(page));
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    element.querySelector<HTMLButtonElement>('button[aria-label="חזרה"]')?.click();
+    await fixture.whenStable();
+    expect(navigate).toHaveBeenCalledWith('/');
   });
 });

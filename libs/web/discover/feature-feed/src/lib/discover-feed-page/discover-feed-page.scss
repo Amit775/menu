@@ -103,3 +103,22 @@ header {
   background: var(--mat-sys-inverse-surface);
   color: var(--mat-sys-inverse-on-surface);
 }
+
+mat-progress-bar {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: 2;
+}
+
+.reel-error {
+  position: absolute;
+  inset-inline: 16px;
+  inset-block-start: 64px;
+  z-index: 2;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface);
+  text-align: center;
+}

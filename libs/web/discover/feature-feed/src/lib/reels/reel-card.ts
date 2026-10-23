@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { type DiscoverItem } from '@menu/shared/contracts';
@@ -15,6 +23,8 @@ import { feedMessages } from '../feed.messages';
 
 /** How far a swipe must travel, in pixels, to count. */
 const SWIPE = 60;
+/** How long "link copied" stays up. */
+const COPIED_NOTICE_MS = 3000;
 
 /**
  * One full-screen card in the reels feed. Tapping the edges steps through the
@@ -48,6 +58,8 @@ export class ReelCard {
   protected readonly copied = signal(false);
 
   private start: { x: number; y: number } | null = null;
+  /** Set by a swipe up, so the click that follows it does not also step or open a link. */
+  private swiped = false;
 
   protected async step(direction: 1 | -1): Promise<void> {
     await this.store.loadVenueItems(this.item().venue.id);
@@ -62,6 +74,27 @@ export class ReelCard {
 
   protected pointerDown(event: PointerEvent): void {
     this.start = { x: event.clientX, y: event.clientY };
+    this.swiped = false;
+  }
+
+  /** The browser took the gesture over (a sideways pan of the feed). */
+  protected pointerCancel(): void {
+    this.start = null;
+  }
+
+  constructor() {
+    // Capture phase, so the click that ends a swipe never reaches an edge button or a link.
+    inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.addEventListener(
+      'click',
+      (event: MouseEvent) => {
+        if (this.swiped) {
+          this.swiped = false;
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      },
+      { capture: true },
+    );
   }
 
   protected pointerUp(event: PointerEvent): void {
@@ -72,6 +105,7 @@ export class ReelCard {
     const dy = event.clientY - this.start.y;
     this.start = null;
     if (dy < -SWIPE && Math.abs(dx) < SWIPE) {
+      this.swiped = true;
       void this.router.navigate(['/venues', this.shown().venue.id]);
     }
   }
@@ -79,6 +113,11 @@ export class ReelCard {
   protected async share(): Promise<void> {
     const item = this.shown();
     const outcome = await this.shareLink.share(`/items/${item.id}`, this.i18n.pick(item.name));
-    this.copied.set(outcome === 'copied');
+    if (outcome === 'copied') {
+      this.copied.set(true);
+      setTimeout(() => {
+        this.copied.set(false);
+      }, COPIED_NOTICE_MS);
+    }
   }
 }

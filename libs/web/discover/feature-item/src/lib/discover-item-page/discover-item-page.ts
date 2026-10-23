@@ -2,6 +2,7 @@ import { Location } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
@@ -12,7 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DeviceShare, ItemPageStore } from '@menu/web/discover/data-access';
 import { ItemRow, PriceHistory, ScoreBadge } from '@menu/web/discover/ui';
 import { I18n, injectMessages, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
@@ -41,6 +42,7 @@ import { itemMessages } from '../item.messages';
 export class DiscoverItemPage {
   protected readonly store = inject(ItemPageStore);
   private readonly location = inject(Location);
+  private readonly router = inject(Router);
   private readonly shareLink = inject(DeviceShare);
   private readonly i18n = inject(I18n);
   protected readonly t = injectMessages(itemMessages);
@@ -56,8 +58,18 @@ export class DiscoverItemPage {
     });
   }
 
+  /** The back arrow points where the user came from: right in Hebrew, left in English. */
+  protected readonly backIcon = computed(() =>
+    this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
+  );
+
+  /** Back in the app, or to discover when the page was opened from a shared link. */
   protected back(): void {
-    this.location.back();
+    if (this.router.lastSuccessfulNavigation()?.previousNavigation) {
+      this.location.back();
+    } else {
+      void this.router.navigateByUrl('/');
+    }
   }
 
   protected retry(): void {

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { FeedStore } from '@menu/web/discover/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { boundaries } from '../testing/feed-fixtures';
@@ -14,13 +15,15 @@ describe('FilterSheet', () => {
 
   async function render() {
     const feed = vi.fn().mockResolvedValue({ items: [], nextOffset: null });
+    const closed = vi.fn();
     TestBed.configureTestingModule({
-      providers: boundaries({ feed, tags: vi.fn().mockResolvedValue([tag]) }),
+      providers: [
+        ...boundaries({ feed, tags: vi.fn().mockResolvedValue([tag]) }),
+        { provide: MatBottomSheetRef, useValue: { dismiss: closed } },
+      ],
     });
     TestBed.inject(I18n).setLanguage('he');
     const fixture = TestBed.createComponent(FilterSheet);
-    const closed = vi.fn();
-    fixture.componentInstance.closed.subscribe(closed);
     await fixture.whenStable();
     await vi.waitFor(() => {
       fixture.detectChanges();

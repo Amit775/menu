@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { MatDialogRef } from '@angular/material/dialog';
 import { provideRouter } from '@angular/router';
 import { type DiscoverApiClient, FeedStore } from '@menu/web/discover/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
@@ -15,13 +16,16 @@ describe('SearchPanel', () => {
 
   async function render(search: DiscoverApiClient['search']) {
     const feed = vi.fn().mockResolvedValue({ items: [], nextOffset: null });
+    const closed = vi.fn();
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), ...boundaries({ search, feed })],
+      providers: [
+        provideRouter([]),
+        ...boundaries({ search, feed }),
+        { provide: MatDialogRef, useValue: { close: closed } },
+      ],
     });
     TestBed.inject(I18n).setLanguage('he');
     const fixture = TestBed.createComponent(SearchPanel);
-    const closed = vi.fn();
-    fixture.componentInstance.closed.subscribe(closed);
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
     const input = element.querySelector('input');
@@ -31,7 +35,7 @@ describe('SearchPanel', () => {
     }
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect(element.querySelector('[role=alert], [role=status], h3, mat-chip')).not.toBeNull();
+      expect(element.querySelector('[role=alert], [role=status], h3, .tags')).not.toBeNull();
     });
     return { fixture, element, feed, closed };
   }
@@ -51,7 +55,7 @@ describe('SearchPanel', () => {
   it('filters the feed by a tag it found', async () => {
     const search = vi.fn().mockResolvedValue({ items: [], venues: [], tags: [tag] });
     const { fixture, element, feed, closed } = await render(search);
-    element.querySelector<HTMLElement>('mat-chip')?.click();
+    element.querySelector<HTMLButtonElement>('.tags button')?.click();
     await fixture.whenStable();
     expect(TestBed.inject(FeedStore).filters().tagIds).toEqual([tag.id]);
     expect(feed).toHaveBeenCalled();

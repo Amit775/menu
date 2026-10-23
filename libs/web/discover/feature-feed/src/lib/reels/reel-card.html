@@ -3,13 +3,17 @@
   [attr.aria-label]="current.name | localize"
   (pointerdown)="pointerDown($event)"
   (pointerup)="pointerUp($event)"
+  (pointercancel)="pointerCancel()"
 >
   @if (siblings().length > 1) {
-    <div class="dots" [attr.aria-label]="t().moreAt(current.venue.name | localize)">
+    <div class="dots" aria-hidden="true">
       @for (sibling of siblings(); track sibling.id; let index = $index) {
         <span class="dot" [class.active]="index === position()"></span>
       }
     </div>
+    <p class="visually-hidden" aria-live="polite">
+      {{ t().position(position() + 1, siblings().length, current.venue.name | localize) }}
+    </p>
   }
 
   <button
@@ -32,8 +36,9 @@
     </span>
     <button type="button" class="side-item" (click)="share()">
       <mat-icon aria-hidden="true">share</mat-icon>
-      <span class="side-label">{{ copied() ? t().copied : t().share }}</span>
+      <span class="side-label">{{ t().share }}</span>
     </button>
+    <span class="side-label copied" role="status">{{ copied() ? t().copied : '' }}</span>
   </div>
 
   <div class="info">
