@@ -26,7 +26,10 @@
       "@menu/shared/contracts": ["./libs/shared/contracts/src/index.ts"],
       "@menu/api/shared/util": ["./libs/api/shared/util/src/index.ts"],
       "@menu/api/shared/db": ["./libs/api/shared/db/src/index.ts"],
-      "@menu/web/shared/util-i18n": ["./libs/web/shared/util-i18n/src/index.ts"]
+      "@menu/web/shared/util-i18n": ["./libs/web/shared/util-i18n/src/index.ts"],
+      "@menu/api/users/feature": ["./libs/api/users/feature/src/index.ts"],
+      "@menu/api/users/data-access": ["./libs/api/users/data-access/src/index.ts"],
+      "@menu/api/shared/util-auth": ["./libs/api/shared/util-auth/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
