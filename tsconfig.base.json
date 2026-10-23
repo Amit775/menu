@@ -40,7 +40,12 @@
       "@menu/web/users/data-access": ["./libs/web/users/data-access/src/index.ts"],
       "@menu/web/users/feature-sign-in": ["./libs/web/users/feature-sign-in/src/index.ts"],
       "@menu/web/users/feature-profile": ["./libs/web/users/feature-profile/src/index.ts"],
-      "@menu/web/shared/util-auth": ["./libs/web/shared/util-auth/src/index.ts"]
+      "@menu/web/shared/util-auth": ["./libs/web/shared/util-auth/src/index.ts"],
+      "@menu/web/discover/data-access": ["./libs/web/discover/data-access/src/index.ts"],
+      "@menu/web/discover/ui": ["./libs/web/discover/ui/src/index.ts"],
+      "@menu/web/discover/feature-feed": ["./libs/web/discover/feature-feed/src/index.ts"],
+      "@menu/web/discover/feature-item": ["./libs/web/discover/feature-item/src/index.ts"],
+      "@menu/web/discover/feature-venue": ["./libs/web/discover/feature-venue/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
