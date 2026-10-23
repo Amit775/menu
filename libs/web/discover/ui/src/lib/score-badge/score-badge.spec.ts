@@ -14,12 +14,13 @@ describe('ScoreBadge', () => {
 
   it('shows the score with one decimal and the entry count', async () => {
     const element = await render(4.567, 12);
-    expect(element.querySelector('.score')?.textContent.trim()).toBe('4.6');
+    expect(element.querySelector('.score [aria-hidden]')?.textContent).toBe('4.6');
+    expect(element.querySelector('.score .visually-hidden')?.textContent).toBe('ציון 4.6 מתוך 5');
     expect(element.querySelector('.count')?.textContent).toBe('12 רשומות');
   });
 
   it('shows no number below the floor', async () => {
     const element = await render(null, 2);
-    expect(element.querySelector('.score')?.getAttribute('aria-label')).toBe('אין עדיין ציון');
+    expect(element.querySelector('.score .visually-hidden')?.textContent).toBe('אין עדיין ציון');
   });
 });

@@ -5,7 +5,7 @@
     @for (bar of bars(); track bar.month) {
       <li [class.latest]="bar.latest">
         <span class="price">{{ bar.averagePrice | shekels }}</span>
-        <span class="bar" [style.height.%]="bar.height"></span>
+        <span class="track"><span class="bar" [style.height.%]="bar.height"></span></span>
         <span class="month">{{ t.month(bar.month) }}</span>
       </li>
     }

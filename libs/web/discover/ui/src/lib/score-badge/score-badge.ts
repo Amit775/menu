@@ -12,9 +12,14 @@ import { discoverUiMessages } from '../ui.messages';
   template: `
     @let t = messages | messages;
     @if (formatted(); as value) {
-      <span class="score" [attr.aria-label]="label()">{{ value }}</span>
+      <span class="score"
+        ><span aria-hidden="true">{{ value }}</span
+        ><span class="visually-hidden">{{ t.scoreLabel(value) }}</span></span
+      >
     } @else {
-      <span class="score none" [attr.aria-label]="t.noScore">–</span>
+      <span class="score none"
+        ><span aria-hidden="true">–</span><span class="visually-hidden">{{ t.noScore }}</span></span
+      >
     }
     @if (showCount()) {
       <span class="count">{{ t.entries(count()) }}</span>
@@ -36,5 +41,4 @@ export class ScoreBadge {
     const score = this.score();
     return score === null ? null : score.toFixed(1);
   });
-  protected readonly label = computed(() => `${this.formatted() ?? ''} / 5`);
 }

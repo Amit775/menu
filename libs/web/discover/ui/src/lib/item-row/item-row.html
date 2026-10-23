@@ -5,7 +5,8 @@
     <span class="name">
       {{ current.name | localize }}
       @if (current.writtenByMe) {
-        <span class="flag" [attr.aria-label]="t.writtenByMe" [title]="t.writtenByMe"></span>
+        <span class="flag" aria-hidden="true" [title]="t.writtenByMe"></span>
+        <span class="visually-hidden">{{ t.writtenByMe }}</span>
       }
     </span>
     <span class="meta">
