@@ -5,6 +5,7 @@ import { ApiExceptionFilter } from '@menu/api/shared/util';
 import { AuthModule, RejectingTokenVerifier } from '@menu/api/shared/util-auth';
 import { ItemModule, MenuSectionModule, TagModule, VenueModule } from '@menu/api/menus/feature';
 import { AccountModule, AccountService, OwnershipModule } from '@menu/api/users/feature';
+import { DiscoverModule } from '@menu/api/discover/feature';
 import { EntryModule } from '@menu/api/entries/feature';
 import { HealthController } from './health/health.controller';
 import { PortsModule } from './ports.module';
@@ -13,6 +14,7 @@ import { PortsModule } from './ports.module';
 // nest-resource generator. Keep this file to wiring only.
 @Module({
   imports: [
+    DiscoverModule,
     EntryModule,
     ItemModule,
     TagModule,
