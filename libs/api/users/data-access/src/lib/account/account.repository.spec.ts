@@ -96,4 +96,14 @@ describe('AccountRepository', () => {
       { id: row.id, displayName: 'נועה', isAdmin: false, createdAt: '2026-01-01T00:00:00.000Z' },
     ]);
   });
+
+  it('looks up display names by id', async () => {
+    const findMany = vi.fn().mockResolvedValue([{ id: 'a1', displayName: 'נועה' }]);
+    const repository = new AccountRepository({ account: { findMany } } as unknown as PrismaService);
+    await expect(repository.displayNames(['a1', 'a2'])).resolves.toEqual(new Map([['a1', 'נועה']]));
+    expect(findMany).toHaveBeenCalledWith({
+      where: { id: { in: ['a1', 'a2'] } },
+      select: { id: true, displayName: true },
+    });
+  });
 });
