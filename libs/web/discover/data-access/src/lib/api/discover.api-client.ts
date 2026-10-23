@@ -8,6 +8,8 @@ import {
   type GeoPoint,
   type ItemPage,
   ItemPageSchema,
+  type MapPin,
+  MapPinSchema,
   type SearchResults,
   SearchResultsSchema,
   type Tag,
@@ -61,6 +63,16 @@ export class DiscoverApiClient {
       tagIds: tagIds?.join(','),
     });
     return FeedSchema.parse(await this.get(`${this.baseUrl}/feed`, query));
+  }
+
+  /** One pin per venue with matching items, for the map. */
+  async map(request: Pick<FeedRequest, 'near' | 'radiusKm' | 'tagIds'>): Promise<MapPin[]> {
+    const query = params({
+      ...nearParams(request.near),
+      radiusKm: request.radiusKm,
+      tagIds: request.tagIds?.join(','),
+    });
+    return z.array(MapPinSchema).parse(await this.get(`${this.baseUrl}/map`, query));
   }
 
   async venue(id: string, near: GeoPoint | null): Promise<VenuePage> {

@@ -64,6 +64,26 @@ describe('FeedStore', () => {
     expect(feed).toHaveBeenLastCalledWith(expect.objectContaining({ mode: 'list' }));
   });
 
+  it('loads venue pins for the map with the same filters', async () => {
+    const pin = {
+      venue: item.venue,
+      location: { lat: 32.06, lng: 34.77 },
+      itemCount: 2,
+      bestScore: 4.6,
+      writtenByMe: false,
+    };
+    const map = vi.fn().mockResolvedValue([pin]);
+    const feed = vi.fn();
+    const store = setup({ map, feed });
+    await store.setFilters({ tagIds: ['t1'] });
+    await store.setView('map');
+    expect(map).toHaveBeenCalledWith({ near, radiusKm: 5, tagIds: ['t1'] });
+    expect(store.pins()).toEqual([pin]);
+    expect(store.near()).toEqual(near);
+    await store.loadMore();
+    expect(feed).toHaveBeenCalledTimes(1);
+  });
+
   it('records a failed load and tries again on the next load', async () => {
     const feed = vi
       .fn()
