@@ -9,6 +9,7 @@ describe('EntryService', () => {
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const other: Principal = { ...author, accountId: 'a2' };
   const item: EntryTarget = { id: 'i1', venueId: 'v1', isPublic: true, acceptsEntry: true };
+  const itemRef = { id: 'i1', name: { he: 'המבורגר' }, venue: { id: 'v1', name: { he: 'מוזס' } } };
   const input = {
     rating: 4,
     wouldOrderAgain: true,
@@ -45,7 +46,13 @@ describe('EntryService', () => {
       providers: [
         EntryService,
         { provide: EntryRepository, useValue: repository },
-        { provide: ITEM_CATALOG, useValue: { findForEntries: vi.fn().mockResolvedValue(target) } },
+        {
+          provide: ITEM_CATALOG,
+          useValue: {
+            findForEntries: vi.fn().mockResolvedValue(target),
+            refsFor: vi.fn().mockResolvedValue(new Map([['i1', itemRef]])),
+          },
+        },
         {
           provide: AUTHOR_DIRECTORY,
           useValue: { displayNames: vi.fn().mockResolvedValue(new Map([['a2', 'דנה']])) },
@@ -163,6 +170,15 @@ describe('EntryService', () => {
     expect(setHidden).toHaveBeenCalledWith('e1', true);
   });
 
+  it('lists the diary with each entry’s item and venue', async () => {
+    const listByAuthor = vi
+      .fn()
+      .mockResolvedValue([record(), record({ id: 'e2', itemId: 'gone' })]);
+    const diary = await (await setup({ listByAuthor })).diary(author, { venueId: 'v1' });
+    expect(listByAuthor).toHaveBeenCalledWith('a1', { venueId: 'v1' });
+    expect(diary).toEqual([expect.objectContaining({ id: 'e1', item: itemRef })]);
+  });
+
   describe('a share link', () => {
     const shared = record({
       authorId: 'a2',
@@ -175,6 +191,7 @@ describe('EntryService', () => {
       await expect(service.shared('abcdefghijklmnopqrstuv')).resolves.toMatchObject({
         status: 'visible',
         entry: { authorName: 'דנה' },
+        item: itemRef,
       });
     });
 

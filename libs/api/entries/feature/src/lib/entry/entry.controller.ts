@@ -24,6 +24,7 @@ import {
   type DiaryQuery,
   DiaryQuerySchema,
   type Entry,
+  type EntryWithItem,
   entryPath,
   IdSchema,
   type ItemEntries,
@@ -72,7 +73,7 @@ export class EntryController {
   diary(
     @CurrentPrincipal() principal: Principal,
     @Query(new ZodValidationPipe(DiaryQuerySchema)) query: DiaryQuery,
-  ): Promise<Entry[]> {
+  ): Promise<EntryWithItem[]> {
     return this.service.diary(principal, query);
   }
 

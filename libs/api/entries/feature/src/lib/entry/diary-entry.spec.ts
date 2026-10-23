@@ -4,6 +4,7 @@ import { type Principal } from '@menu/api/shared/util-auth';
 import { DiaryEntry } from './diary-entry';
 
 describe('DiaryEntry', () => {
+  const itemRef = { id: 'i1', name: { he: 'המבורגר' }, venue: { id: 'v1', name: { he: 'מוזס' } } };
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const admin: Principal = { ...author, accountId: 'x', isAdmin: true };
   const record: EntryRecord = {
@@ -46,31 +47,33 @@ describe('DiaryEntry', () => {
 
   describe('by its share link', () => {
     it('shows a shared entry with its author’s name', () => {
-      expect(new DiaryEntry(record).sharedView('נועה', true)).toMatchObject({
+      expect(new DiaryEntry(record).sharedView('נועה', itemRef)).toMatchObject({
         status: 'visible',
         entry: { authorName: 'נועה', text: 'טעים' },
       });
     });
 
     it('says an entry made private is private, and nothing else', () => {
-      expect(new DiaryEntry({ ...record, visibility: 'private' }).sharedView('נועה', true)).toEqual(
-        {
-          status: 'private',
-        },
-      );
+      expect(
+        new DiaryEntry({ ...record, visibility: 'private' }).sharedView('נועה', itemRef),
+      ).toEqual({
+        status: 'private',
+      });
     });
 
     it('treats an entry on an item that is not public as private', () => {
-      expect(new DiaryEntry(record).sharedView('נועה', false)).toEqual({ status: 'private' });
+      expect(new DiaryEntry(record).sharedView('נועה', null)).toEqual({ status: 'private' });
     });
 
     it('reads as private when it is private, hidden or not', () => {
       const hiddenPrivate = { ...record, visibility: 'private' as const, hidden: true };
-      expect(new DiaryEntry(hiddenPrivate).sharedView('נועה', true)).toEqual({ status: 'private' });
+      expect(new DiaryEntry(hiddenPrivate).sharedView('נועה', itemRef)).toEqual({
+        status: 'private',
+      });
     });
 
     it('reads as removed once an Admin hid it', () => {
-      expect(new DiaryEntry({ ...record, hidden: true }).sharedView('נועה', true)).toEqual({
+      expect(new DiaryEntry({ ...record, hidden: true }).sharedView('נועה', itemRef)).toEqual({
         status: 'removed',
       });
     });

@@ -88,3 +88,12 @@ export type ItemDecision = z.infer<typeof ItemDecisionSchema>;
 export const MergeTagSchema = z.object({ intoTagId: z.uuid() });
 
 export type MergeTag = z.infer<typeof MergeTagSchema>;
+
+/** An item named with its venue, for lists that show it away from its menu (a diary, a shared link). */
+export const ItemRefSchema = z.object({
+  id: z.uuid(),
+  name: LocalizedTextSchema,
+  venue: z.object({ id: z.uuid(), name: LocalizedTextSchema }),
+});
+
+export type ItemRef = z.infer<typeof ItemRefSchema>;
