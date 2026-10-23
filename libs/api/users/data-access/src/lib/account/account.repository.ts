@@ -16,6 +16,13 @@ interface AccountRow {
   createdAt: Date;
 }
 
+interface AccountWithOwnerships extends AccountRow {
+  ownerships: { venueId: string }[];
+}
+
+/** Loads the venues an account owns with it: that is what makes it an Owner. */
+const withOwnerships = { ownerships: { select: { venueId: true } } } as const;
+
 export interface NewAccount {
   firebaseUid: string;
   displayName: string;
@@ -34,6 +41,7 @@ export class AccountRepository {
   async findOrCreateByFirebaseUid(input: NewAccount): Promise<Account> {
     const existing = await this.prisma.account.findUnique({
       where: { firebaseUid: input.firebaseUid },
+      include: withOwnerships,
     });
     if (existing) {
       return toAccount(existing);
@@ -42,12 +50,13 @@ export class AccountRepository {
       where: { firebaseUid: input.firebaseUid },
       create: input,
       update: {},
+      include: withOwnerships,
     });
     return toAccount(row);
   }
 
   async findById(id: string): Promise<Account | null> {
-    const row = await this.prisma.account.findUnique({ where: { id } });
+    const row = await this.prisma.account.findUnique({ where: { id }, include: withOwnerships });
     return row ? toAccount(row) : null;
   }
 
@@ -74,13 +83,13 @@ export class AccountRepository {
   }
 }
 
-function toAccount(row: AccountRow): Account {
+function toAccount(row: AccountWithOwnerships): Account {
   return {
     id: row.id,
     displayName: row.displayName,
     language: row.language,
     isAdmin: row.isAdmin,
-    ownedVenueIds: [],
+    ownedVenueIds: row.ownerships.map((ownership) => ownership.venueId),
     createdAt: row.createdAt.toISOString(),
   };
 }
