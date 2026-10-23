@@ -22,7 +22,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { AddItemStore } from '@menu/web/menus/data-access';
-import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { type LocalizedText } from '@menu/shared/contracts';
+import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { addItemMessages } from '../add-item.messages';
 
 /** Required, and more than spaces: the API trims the name. */
@@ -57,6 +58,7 @@ export class MenusAddItemPage {
   protected readonly store = inject(AddItemStore);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
+  private readonly i18n = inject(I18n);
   protected readonly t = injectMessages(addItemMessages);
 
   /** The venue's `:id` route parameter. */
@@ -113,7 +115,7 @@ export class MenusAddItemPage {
     try {
       const item = await this.store.add({
         sectionId,
-        name: { he: this.name.value.trim() },
+        name: this.localizedName(),
         listPrice: this.price.value === null ? null : this.price.value * 100,
       });
       void this.router.navigate(['/log', item.id], { replaceUrl: true });
@@ -122,5 +124,11 @@ export class MenusAddItemPage {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Every name needs Hebrew; one typed in English stands in for it until someone translates it. */
+  private localizedName(): LocalizedText {
+    const name = this.name.value.trim();
+    return this.i18n.language() === 'en' ? { he: name, en: name } : { he: name };
   }
 }
