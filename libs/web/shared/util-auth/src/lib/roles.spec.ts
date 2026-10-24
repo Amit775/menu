@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router, type UrlTree } from '@angular/router';
+import { convertToParamMap, provideRouter, Router, type UrlTree } from '@angular/router';
 import { AUTH_BACKEND } from './auth-backend';
-import { adminGuard, managerGuard, NO_ROLES, Roles } from './roles';
+import { adminGuard, managerGuard, NO_ROLES, Roles, venueManagerGuard } from './roles';
 import { FakeAuthBackend } from './testing';
 
 describe('Roles', () => {
@@ -14,9 +14,10 @@ describe('Roles', () => {
     return TestBed.inject(Roles);
   }
 
-  function guard(fn: typeof managerGuard, url = '/manage'): Promise<unknown> {
+  function guard(fn: typeof managerGuard, url = '/manage', id = ''): Promise<unknown> {
+    const route = { paramMap: convertToParamMap({ id }) };
     return TestBed.runInInjectionContext(() =>
-      fn({} as never, { url } as never),
+      fn(route as never, { url } as never),
     ) as Promise<unknown>;
   }
 
@@ -63,6 +64,16 @@ describe('Roles', () => {
     expect(TestBed.inject(Router).serializeUrl(result)).toBe('/manage');
     roles.set({ isAdmin: true, ownedVenueIds: [] });
     await expect(guard(adminGuard, '/manage/tags')).resolves.toBe(true);
+  });
+
+  it('lets an Owner manage only their own venue', async () => {
+    const roles = setup();
+    roles.set({ isAdmin: false, ownedVenueIds: ['v1'] });
+    await expect(guard(venueManagerGuard, '/manage/venues/v1', 'v1')).resolves.toBe(true);
+    const result = (await guard(venueManagerGuard, '/manage/venues/v2', 'v2')) as UrlTree;
+    expect(TestBed.inject(Router).serializeUrl(result)).toBe('/manage');
+    roles.set({ isAdmin: true, ownedVenueIds: [] });
+    await expect(guard(venueManagerGuard, '/manage/venues/v2', 'v2')).resolves.toBe(true);
   });
 
   it('sends a visitor to sign in first, with the way back', async () => {
