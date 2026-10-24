@@ -1,0 +1,60 @@
+<header>
+  <p class="role">{{ roles.isAdmin() ? t().admin : t().owner }}</p>
+  <h1>{{ t().title }}</h1>
+</header>
+
+@if (roles.isAdmin()) {
+  <nav class="admin" [attr.aria-label]="t().admin">
+    <a mat-stroked-button routerLink="/manage/venues/new">
+      <mat-icon aria-hidden="true">add_location_alt</mat-icon>{{ t().newVenue }}
+    </a>
+    <a mat-stroked-button routerLink="/manage/tags">
+      <mat-icon aria-hidden="true">sell</mat-icon>{{ t().tags }}
+    </a>
+    <a mat-stroked-button routerLink="/manage/people">
+      <mat-icon aria-hidden="true">group</mat-icon>{{ t().people }}
+    </a>
+  </nav>
+}
+
+@switch (store.status()) {
+  @case ('loading') {
+    <div class="state" role="status">
+      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+    </div>
+  }
+  @case ('loaded') {
+    @if (store.pendingTotal() > 0) {
+      <p class="waiting">{{ t().waiting(store.pendingTotal()) }}</p>
+    }
+    @if (store.rows().length === 0) {
+      <p class="state">{{ t().empty }}</p>
+    } @else {
+      <ul>
+        @for (row of store.rows(); track row.venue.id) {
+          <li>
+            <a class="venue" [routerLink]="['/manage/venues', row.venue.id]">
+              <span class="names">
+                <span class="name">{{ row.venue.name | localize }}</span>
+                <span class="address">{{ row.venue.address }}</span>
+              </span>
+              @if (row.venue.status === 'hidden') {
+                <span class="chip muted">{{ t().hidden }}</span>
+              }
+              @if (row.pending > 0) {
+                <span class="chip">{{ t().pending(row.pending) }}</span>
+              }
+              <mat-icon class="go" aria-hidden="true">{{ openIcon() }}</mat-icon>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+  @default {
+    <div class="state" role="alert">
+      {{ t().loadFailed }}
+      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+    </div>
+  }
+}

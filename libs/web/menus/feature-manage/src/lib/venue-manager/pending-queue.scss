@@ -1,0 +1,86 @@
+:host {
+  display: block;
+}
+
+.intro,
+.empty {
+  margin: 0 0 12px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  padding: 14px 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 16px;
+
+  &.first {
+    border-color: var(--mat-sys-on-surface);
+  }
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+h3 {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+  font-weight: 700;
+}
+
+time,
+.facts,
+.hint {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.facts {
+  margin: 4px 0 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  button {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.reject {
+  flex: 0 1 auto;
+  color: var(--mat-sys-error);
+}
+
+.merge mat-form-field {
+  width: 100%;
+}
+
+.hint,
+.error {
+  margin: 8px 0 0;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.error {
+  color: var(--mat-sys-error);
+}
