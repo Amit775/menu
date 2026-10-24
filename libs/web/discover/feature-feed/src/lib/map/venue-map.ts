@@ -16,10 +16,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { type MapPin } from '@menu/shared/contracts';
 import { FeedStore } from '@menu/web/discover/data-access';
-import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { LeafletLoader, OSM_ATTRIBUTION, OSM_TILES, TEL_AVIV } from '@menu/web/shared/util-map';
 import type * as Leaflet from 'leaflet';
-import { feedMessages } from '../feed.messages';
+import { feedI18n } from '../feed.i18n';
 import { MapPins } from './map-pins';
 
 /**
@@ -40,7 +40,7 @@ export class VenueMap {
   protected readonly store = inject(FeedStore);
   private readonly loader = inject(LeafletLoader);
   private readonly injector = inject(Injector);
-  protected readonly t = injectMessages(feedMessages);
+  protected readonly t = injectTranslate(feedI18n);
 
   private readonly container = viewChild.required<ElementRef<HTMLElement>>('map');
   private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');

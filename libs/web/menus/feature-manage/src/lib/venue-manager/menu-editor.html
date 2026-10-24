@@ -1,5 +1,5 @@
 @if (failed()) {
-  <p class="error" role="alert">{{ t().saveFailed }}</p>
+  <p class="error" role="alert">{{ t('saveFailed') }}</p>
 }
 @for (view of sections(); track view.section.id) {
   <section class="section" [attr.aria-label]="view.label">
@@ -7,11 +7,11 @@
       @if (renaming() === view.section.id) {
         <form class="rename" [formGroup]="renameForm" (ngSubmit)="rename(view.section)">
           <mat-form-field appearance="outline">
-            <mat-label>{{ t().renameLabel }}</mat-label>
+            <mat-label>{{ t('renameLabel') }}</mat-label>
             <input matInput formControlName="name" maxlength="80" />
           </mat-form-field>
-          <button mat-flat-button type="submit" [disabled]="busy()">{{ t().save }}</button>
-          <button mat-button type="button" (click)="renaming.set(null)">{{ t().cancel }}</button>
+          <button mat-flat-button type="submit" [disabled]="busy()">{{ t('save') }}</button>
+          <button mat-button type="button" (click)="renaming.set(null)">{{ t('cancel') }}</button>
         </form>
       } @else {
         <h3>{{ view.label }}</h3>
@@ -20,7 +20,7 @@
           type="button"
           class="up"
           [disabled]="view.first || busy()"
-          [attr.aria-label]="t().sectionUp(view.label)"
+          [attr.aria-label]="t('sectionUp', { name: view.label })"
           (click)="move(view.section, -1)"
         >
           <mat-icon aria-hidden="true">arrow_upward</mat-icon>
@@ -30,18 +30,18 @@
           type="button"
           class="down"
           [disabled]="view.last || busy()"
-          [attr.aria-label]="t().sectionDown(view.label)"
+          [attr.aria-label]="t('sectionDown', { name: view.label })"
           (click)="move(view.section, 1)"
         >
           <mat-icon aria-hidden="true">arrow_downward</mat-icon>
         </button>
         <button mat-button type="button" class="rename-start" (click)="startRename(view.section)">
-          {{ t().rename }}
+          {{ t('rename') }}
         </button>
       }
     </header>
     @if (view.rows.length === 0) {
-      <p class="empty">{{ t().emptySection }}</p>
+      <p class="empty">{{ t('emptySection') }}</p>
     } @else {
       <ul>
         @for (row of view.rows; track row.item.id) {
@@ -50,7 +50,7 @@
               <span class="name">{{ row.item.name | localize }}</span>
               <span class="facts">{{ row.facts }}</span>
             </span>
-            <a mat-button [routerLink]="['items', row.item.id]">{{ t().edit }}</a>
+            <a mat-button [routerLink]="['items', row.item.id]">{{ t('edit') }}</a>
             <button
               mat-button
               type="button"
@@ -58,11 +58,11 @@
               [disabled]="busy()"
               (click)="archive(row.item)"
             >
-              {{ confirmingArchive() === row.item.id ? t().confirmArchive : t().archive }}
+              {{ confirmingArchive() === row.item.id ? t('confirmArchive') : t('archive') }}
             </button>
             <p class="hint" role="status">
               @if (confirmingArchive() === row.item.id) {
-                {{ t().archiveHint }}
+                {{ t('archiveHint') }}
               }
             </p>
           </li>
@@ -75,15 +75,15 @@
       [routerLink]="['items', 'new']"
       [queryParams]="{ sectionId: view.section.id }"
     >
-      <mat-icon aria-hidden="true">add</mat-icon>{{ t().addItem }}
+      <mat-icon aria-hidden="true">add</mat-icon>{{ t('addItem') }}
     </a>
   </section>
 }
 
 <form class="new-section" [formGroup]="newSectionForm" (ngSubmit)="addSection()">
   <mat-form-field appearance="outline">
-    <mat-label>{{ t().newSection }}</mat-label>
+    <mat-label>{{ t('newSection') }}</mat-label>
     <input matInput formControlName="name" maxlength="80" />
   </mat-form-field>
-  <button mat-stroked-button type="submit" [disabled]="busy()">{{ t().addSection }}</button>
+  <button mat-stroked-button type="submit" [disabled]="busy()">{{ t('addSection') }}</button>
 </form>

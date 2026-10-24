@@ -8,8 +8,8 @@ import { Router, RouterLink } from '@angular/router';
 import { ItemPageStore } from '@menu/web/discover/data-access';
 import { DeviceShare } from '@menu/web/shared/util-device';
 import { ItemRow, PriceHistory, ScoreBadge } from '@menu/web/discover/ui';
-import { I18n, injectMessages, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
-import { itemMessages } from '../item.messages';
+import { I18n, injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
+import { itemI18n } from '../item.i18n';
 
 /** An item's page: score and numbers, price history, and what else is good at the venue. */
 @Component({
@@ -38,7 +38,7 @@ export class DiscoverItemPage {
   private readonly router = inject(Router);
   private readonly shareLink = inject(DeviceShare);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(itemMessages);
+  protected readonly t = injectTranslate(itemI18n);
 
   /** The `:id` route parameter. */
   readonly id = input.required<string>();

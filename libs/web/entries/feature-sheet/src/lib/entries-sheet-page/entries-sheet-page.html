@@ -1,19 +1,19 @@
 @switch (store.status()) {
   @case ('loading') {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   }
   @case ('not-found') {
     <div class="state" role="status">
-      {{ t().notFound }}
-      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+      {{ t('notFound') }}
+      <a mat-button routerLink="/">{{ t('toFeed') }}</a>
     </div>
   }
   @case ('error') {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="retry()">{{ t('retry') }}</button>
     </div>
   }
   @default {
@@ -28,31 +28,31 @@
       </div>
       <section class="sheet" aria-labelledby="sheet-title">
         <header>
-          <h1 id="sheet-title">{{ t().title(store.others().length) }}</h1>
-          <button mat-icon-button type="button" [attr.aria-label]="t().close" (click)="close()">
+          <h1 id="sheet-title">{{ t('title', { count: store.others().length }) }}</h1>
+          <button mat-icon-button type="button" [attr.aria-label]="t('close')" (click)="close()">
             <mat-icon aria-hidden="true">close</mat-icon>
           </button>
         </header>
 
         @switch (notice()) {
           @case ('copied') {
-            <p class="notice" role="status">{{ t().copied }}</p>
+            <p class="notice" role="status">{{ t('copied') }}</p>
           }
           @case ('share-failed') {
-            <p class="notice error" role="alert">{{ t().shareFailed }}</p>
+            <p class="notice error" role="alert">{{ t('shareFailed') }}</p>
           }
           @case ('update-failed') {
-            <p class="notice error" role="alert">{{ t().updateFailed }}</p>
+            <p class="notice error" role="alert">{{ t('updateFailed') }}</p>
           }
         }
 
         @if (store.mine().length > 0) {
-          <h2 class="visually-hidden">{{ t().yours }}</h2>
+          <h2 class="visually-hidden">{{ t('yours') }}</h2>
           <ul class="mine">
             @for (entry of store.mine(); track entry.id) {
               <li>
                 <menu-entry-card [entry]="entry">
-                  <a mat-button [routerLink]="['/log', sheet.item.id, entry.id]">{{ t().edit }}</a>
+                  <a mat-button [routerLink]="['/log', sheet.item.id, entry.id]">{{ t('edit') }}</a>
                   @if (entry.visibility === 'private') {
                     <button
                       mat-button
@@ -60,15 +60,17 @@
                       [disabled]="busy() === entry.id"
                       (click)="makePublic(entry)"
                     >
-                      {{ confirmingPublic() === entry.id ? t().confirmPublic : t().makePublic }}
+                      {{ confirmingPublic() === entry.id ? t('confirmPublic') : t('makePublic') }}
                     </button>
                   } @else if (entry.shareToken && !entry.hidden) {
-                    <button mat-button type="button" (click)="share(entry)">{{ t().share }}</button>
+                    <button mat-button type="button" (click)="share(entry)">
+                      {{ t('share') }}
+                    </button>
                   }
                 </menu-entry-card>
                 <p class="confirm" role="status">
                   @if (confirmingPublic() === entry.id) {
-                    {{ t().publicHint }}
+                    {{ t('publicHint') }}
                   }
                 </p>
               </li>
@@ -76,9 +78,9 @@
           </ul>
         }
 
-        <h2 class="divider">{{ t().everyone }}</h2>
+        <h2 class="divider">{{ t('everyone') }}</h2>
         @if (store.others().length === 0) {
-          <p class="empty">{{ t().noneYet }}</p>
+          <p class="empty">{{ t('noneYet') }}</p>
         } @else {
           <ul class="others">
             @for (entry of store.others(); track entry.id) {
@@ -92,12 +94,12 @@
                       [disabled]="busy() === entry.id"
                       (click)="hide(entry)"
                     >
-                      {{ confirmingHide() === entry.id ? t().confirmHide : t().hide }}
+                      {{ confirmingHide() === entry.id ? t('confirmHide') : t('hide') }}
                     </button>
                   </menu-entry-card>
                   <p class="confirm" role="status">
                     @if (confirmingHide() === entry.id) {
-                      {{ t().hideHint }}
+                      {{ t('hideHint') }}
                     }
                   </p>
                 } @else {
@@ -109,7 +111,7 @@
         }
 
         <a mat-flat-button class="log" [routerLink]="['/log', sheet.item.id]">
-          {{ store.mine().length > 0 ? t().logAgain : t().logFirst }}
+          {{ store.mine().length > 0 ? t('logAgain') : t('logFirst') }}
         </a>
       </section>
     }

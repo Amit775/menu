@@ -1,28 +1,28 @@
 <section>
-  <h1>{{ t().title }}</h1>
-  <p class="intro">{{ t().intro }}</p>
+  <h1>{{ t('title') }}</h1>
+  <p class="intro">{{ t('intro') }}</p>
 
   <button mat-flat-button type="button" class="google" [disabled]="busy()" (click)="google()">
-    {{ t().google }}
+    {{ t('google') }}
   </button>
 
-  <p class="or">{{ t().or }}</p>
+  <p class="or">{{ t('or') }}</p>
 
   @if (step() === 'phone') {
     <form [formGroup]="phoneForm" (ngSubmit)="sendCode()">
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().phone }}</mat-label>
+        <mat-label>{{ t('phone') }}</mat-label>
         <input matInput type="tel" autocomplete="tel" dir="ltr" formControlName="phone" />
-        <mat-hint>{{ t().phoneHint }}</mat-hint>
+        <mat-hint>{{ t('phoneHint') }}</mat-hint>
       </mat-form-field>
       <button mat-stroked-button type="submit" [disabled]="busy() || phone.invalid">
-        {{ t().sendCode }}
+        {{ t('sendCode') }}
       </button>
     </form>
   } @else {
     <form [formGroup]="codeForm" (ngSubmit)="confirm()">
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().code }}</mat-label>
+        <mat-label>{{ t('code') }}</mat-label>
         <input
           matInput
           inputmode="numeric"
@@ -33,9 +33,9 @@
         />
       </mat-form-field>
       <button mat-flat-button type="submit" [disabled]="busy() || code.invalid">
-        {{ t().confirm }}
+        {{ t('confirm') }}
       </button>
-      <button mat-button type="button" (click)="changePhone()">{{ t().changePhone }}</button>
+      <button mat-button type="button" (click)="changePhone()">{{ t('changePhone') }}</button>
     </form>
   }
 
