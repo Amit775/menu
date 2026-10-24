@@ -1,4 +1,5 @@
-import { PayloadTooLargeException } from '@nestjs/common';
+import { Logger, PayloadTooLargeException } from '@nestjs/common';
+import { type PhotoStorage } from '@menu/api/entries/data-access';
 import { PHOTO_MAX_BYTES, type PhotoType } from '@menu/shared/contracts';
 
 const startsWith = (bytes: Buffer, signature: number[], at = 0): boolean =>
@@ -39,4 +40,16 @@ export async function readBody(
 /** Where an entry's photo is stored: one object per entry, replaced by a new upload. */
 export function entryPhotoKey(entryId: string): string {
   return `entries/${entryId}`;
+}
+
+/**
+ * Removes an entry's stored photo after its id is gone. The id no longer
+ * reaches it, so a failure is logged rather than failing the request.
+ */
+export async function deletePhoto(storage: PhotoStorage, entryId: string): Promise<void> {
+  try {
+    await storage.delete(entryPhotoKey(entryId));
+  } catch (error) {
+    Logger.warn(`Could not delete the photo of entry ${entryId}: ${String(error)}`, 'Photos');
+  }
 }

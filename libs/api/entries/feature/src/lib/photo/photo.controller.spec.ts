@@ -1,4 +1,4 @@
-import { PayloadTooLargeException, StreamableFile } from '@nestjs/common';
+import { NotFoundException, PayloadTooLargeException, StreamableFile } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AUTH_REQUIREMENT, type Principal } from '@menu/api/shared/util-auth';
 import { EntryPhotoController, PhotoController } from './photo.controller';
@@ -68,10 +68,23 @@ describe('Photo controllers', () => {
       read: vi.fn().mockResolvedValue({ bytes, type: 'image/jpeg' }),
     });
 
-    const file = await photo.read('p'.repeat(22));
+    const setHeader = vi.fn();
+    const file = await photo.read('p'.repeat(22), { setHeader });
 
     expect(file).toBeInstanceOf(StreamableFile);
+    expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'private, max-age=31536000, immutable');
+    expect(setHeader).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
     expect(file.getHeaders()).toMatchObject({ type: 'image/jpeg', length: 3 });
+  });
+
+  it('caches nothing when the photo is missing', async () => {
+    const setHeader = vi.fn();
+    const { photo } = await setup({ read: vi.fn().mockRejectedValue(new NotFoundException()) });
+
+    await expect(photo.read('p'.repeat(22), { setHeader })).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(setHeader).not.toHaveBeenCalled();
   });
 
   it('needs sign-in to change a photo but not to read one', () => {

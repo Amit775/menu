@@ -123,12 +123,12 @@
             aria-labelledby="photo-label"
             (change)="pickPhoto(photoInput)"
           />
-          @if (photoPreview(); as preview) {
+          @if (photoBackground(); as background) {
             <div
               class="preview"
               role="img"
               [attr.aria-label]="t().photoAlt"
-              [style.background-image]="'url(' + preview + ')'"
+              [style.background-image]="background"
             ></div>
           }
           <div class="photo-actions">
@@ -139,13 +139,7 @@
               [disabled]="saving() || preparingPhoto()"
               (click)="photoInput.click()"
             >
-              {{
-                preparingPhoto()
-                  ? t().preparingPhoto
-                  : photoPreview()
-                    ? t().changePhoto
-                    : t().addPhoto
-              }}
+              {{ pickLabel() }}
             </button>
             @if (photoPreview()) {
               <button

@@ -14,7 +14,8 @@ import { type Principal } from '@menu/api/shared/util-auth';
 import { type Entry } from '@menu/shared/contracts';
 import { newCapabilityId } from '../entry/capability-id';
 import { DiaryEntry } from '../entry/diary-entry';
-import { entryPhotoKey, photoTypeOf } from './photo-bytes';
+import { deletePhoto, entryPhotoKey, photoTypeOf } from './photo-bytes';
+import { withoutMetadata } from './photo-metadata';
 
 /**
  * An entry's one photo (ADR 0011): the author sets or removes it; anyone
@@ -27,20 +28,26 @@ export class PhotoService {
     @Inject(PHOTO_STORAGE) private readonly storage: PhotoStorage,
   ) {}
 
+  /**
+   * The new id is saved before the bytes, so an id handed out for the old
+   * photo never serves the new one; if the upload then fails, trying again
+   * replaces it.
+   */
   async set(principal: Principal, entryId: string, bytes: Buffer): Promise<Entry> {
-    const photoType = photoTypeOf(bytes);
-    if (!photoType) {
-      throw new UnsupportedMediaTypeException('Send a JPEG, PNG or WebP photo.');
-    }
+    const photo = this.clean(bytes);
     await this.findOwn(principal, entryId);
-    await this.storage.put(entryPhotoKey(entryId), { bytes, type: photoType });
-    return this.save(principal, entryId, { photoId: newCapabilityId(), photoType });
+    const entry = await this.save(principal, entryId, {
+      photoId: newCapabilityId(),
+      photoType: photo.type,
+    });
+    await this.storage.put(entryPhotoKey(entryId), photo);
+    return entry;
   }
 
   async remove(principal: Principal, entryId: string): Promise<Entry> {
     await this.findOwn(principal, entryId);
     const entry = await this.save(principal, entryId, null);
-    await this.storage.delete(entryPhotoKey(entryId));
+    await deletePhoto(this.storage, entryId);
     return entry;
   }
 
@@ -52,6 +59,18 @@ export class PhotoService {
       throw new NotFoundException('Photo not found.');
     }
     return photo;
+  }
+
+  private clean(bytes: Buffer): StoredPhoto {
+    const type = photoTypeOf(bytes);
+    if (!type) {
+      throw new UnsupportedMediaTypeException('Send a JPEG, PNG or WebP photo.');
+    }
+    try {
+      return { bytes: withoutMetadata(bytes, type), type };
+    } catch {
+      throw new UnsupportedMediaTypeException('This photo could not be read.');
+    }
   }
 
   private async findOwn(principal: Principal, entryId: string): Promise<void> {
