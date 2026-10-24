@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { type DiscoverItem } from '@menu/shared/contracts';
@@ -12,7 +13,15 @@ import { discoverUiMessages } from '../ui.messages';
  */
 @Component({
   selector: 'menu-item-row',
-  imports: [RouterLink, ScoreBadge, LocalizePipe, DistancePipe, ShekelsPipe, MessagesPipe],
+  imports: [
+    NgOptimizedImage,
+    RouterLink,
+    ScoreBadge,
+    LocalizePipe,
+    DistancePipe,
+    ShekelsPipe,
+    MessagesPipe,
+  ],
   templateUrl: './item-row.html',
   styleUrl: './item-row.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

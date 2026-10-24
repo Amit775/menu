@@ -4,6 +4,7 @@ export const sharedMessages = defineMessages({
   he: {
     brand: 'menu',
     signIn: 'כניסה',
+    photo: 'התמונה מהרשומה',
     sharedBy: (name: string) => (name ? `${name} שיתף/ה איתך רשומה` : 'שיתפו איתך רשומה'),
     rating: (rating: number) => `★ ${String(rating)}`,
     ratingLabel: (rating: number) => `דירוג ${String(rating)} מתוך 5`,
@@ -28,6 +29,7 @@ export const sharedMessages = defineMessages({
   en: {
     brand: 'menu',
     signIn: 'Sign in',
+    photo: 'The photo from the entry',
     sharedBy: (name: string) =>
       name ? `${name} shared a note with you` : 'A note shared with you',
     rating: (rating: number) => `★ ${String(rating)}`,

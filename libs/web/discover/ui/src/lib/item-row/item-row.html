@@ -1,6 +1,9 @@
 @let t = messages | messages;
 @let current = item();
 <a [routerLink]="['/items', current.id]">
+  @if (current.photoUrl) {
+    <span class="thumb"><img [ngSrc]="current.photoUrl" fill alt="" /></span>
+  }
   <span class="text">
     <span class="name">
       {{ current.name | localize }}

@@ -25,6 +25,11 @@
     <time [attr.datetime]="current.eatenAt">{{ current.eatenAt | relativeDate }}</time>
   </span>
 </div>
+@if (current.photoUrl) {
+  <div class="photo">
+    <img [ngSrc]="current.photoUrl" fill [alt]="t.photo" />
+  </div>
+}
 @if (current.text) {
   <p class="text">{{ current.text }}</p>
 }
