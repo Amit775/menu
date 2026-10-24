@@ -216,6 +216,34 @@ describe('EntriesLogPage', () => {
     });
   });
 
+  it('starts clean for another item even when it opens with the same price', async () => {
+    const other = '8b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    const forItem = vi.fn((id: string) =>
+      Promise.resolve(
+        id === other
+          ? { ...sheet, item: { ...sheet.item, id: other, listPrice: 6250 }, mine: [] }
+          : { ...sheet, item: { ...sheet.item, listPrice: 6250 }, mine: [] },
+      ),
+    );
+    const create = vi.fn().mockResolvedValue({ ...entry, itemId: other });
+    const { harness, field } = await open(`/log/${ITEM_ID}`, { forItem, create });
+    const note = field('textarea') as HTMLTextAreaElement;
+    note.value = 'טעים';
+    note.dispatchEvent(new Event('input'));
+    const price = field('input[type="number"]') as HTMLInputElement;
+    price.value = '70';
+    price.dispatchEvent(new Event('input'));
+    await harness.navigateByUrl(`/log/${other}`, EntriesLogPage);
+    await harness.fixture.whenStable();
+    expect((field('textarea') as HTMLTextAreaElement).value).toBe('');
+    (field('button.save') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+    expect(create).toHaveBeenCalledWith(
+      other,
+      expect.objectContaining({ text: '', pricePaid: 6250 }),
+    );
+  });
+
   it('says so when the item no longer takes entries', async () => {
     const create = vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 403 }));
     const { harness, field } = await open(`/log/${ITEM_ID}`, { create });
