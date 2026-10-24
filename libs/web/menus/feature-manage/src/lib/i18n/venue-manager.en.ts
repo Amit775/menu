@@ -14,7 +14,8 @@ export const en = {
   pendingIntro:
     'Diners added items that are not on the menu. You see the item only, not who added it or what they wrote.',
   noPending: 'Nothing waits for approval.',
-  facts: 'tags: {tags}',
+  facts:
+    '{section}{price, select, none {} other { · {price}}}{tags, select, none {} other { · tags: {tags}}}',
   approve: 'Approve',
   merge: 'Merge into an item',
   mergeInto: 'Which item?',
