@@ -12,9 +12,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
-import { type Entry } from '@menu/shared/contracts';
+import { type Entry, type PublicEntry } from '@menu/shared/contracts';
 import { ItemEntriesStore } from '@menu/web/entries/data-access';
 import { EntryCard } from '@menu/web/entries/ui';
+import { Roles } from '@menu/web/shared/util-auth';
 import { DeviceShare } from '@menu/web/shared/util-device';
 import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { sheetMessages } from '../sheet.messages';
@@ -47,6 +48,7 @@ export class EntriesSheetPage {
   private readonly deviceShare = inject(DeviceShare);
   private readonly i18n = inject(I18n);
   protected readonly t = injectMessages(sheetMessages);
+  protected readonly roles = inject(Roles);
 
   /** The item's `:id` route parameter. */
   readonly id = input.required<string>();
@@ -55,6 +57,8 @@ export class EntriesSheetPage {
   protected readonly busy = signal<string | null>(null);
   /** The entry whose "make public" waits for a second tap. */
   protected readonly confirmingPublic = signal<string | null>(null);
+  /** Admin: the public entry whose "hide" waits for a second tap. */
+  protected readonly confirmingHide = signal<string | null>(null);
 
   constructor() {
     effect(() => {
@@ -85,6 +89,23 @@ export class EntriesSheetPage {
     this.notice.set(null);
     try {
       await this.store.update(entry.id, { visibility: 'public' });
+    } catch {
+      this.notice.set('update-failed');
+    } finally {
+      this.busy.set(null);
+    }
+  }
+
+  protected async hide(entry: PublicEntry): Promise<void> {
+    if (this.confirmingHide() !== entry.id) {
+      this.confirmingHide.set(entry.id);
+      return;
+    }
+    this.confirmingHide.set(null);
+    this.busy.set(entry.id);
+    this.notice.set(null);
+    try {
+      await this.store.hide(entry.id);
     } catch {
       this.notice.set('update-failed');
     } finally {

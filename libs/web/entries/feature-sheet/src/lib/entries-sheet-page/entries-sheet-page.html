@@ -82,7 +82,28 @@
         } @else {
           <ul class="others">
             @for (entry of store.others(); track entry.id) {
-              <li><menu-entry-card [entry]="entry" /></li>
+              <li>
+                @if (roles.isAdmin()) {
+                  <menu-entry-card [entry]="entry">
+                    <button
+                      mat-button
+                      type="button"
+                      class="hide"
+                      [disabled]="busy() === entry.id"
+                      (click)="hide(entry)"
+                    >
+                      {{ confirmingHide() === entry.id ? t().confirmHide : t().hide }}
+                    </button>
+                  </menu-entry-card>
+                  <p class="confirm" role="status">
+                    @if (confirmingHide() === entry.id) {
+                      {{ t().hideHint }}
+                    }
+                  </p>
+                } @else {
+                  <menu-entry-card [entry]="entry" />
+                }
+              </li>
             }
           </ul>
         }
