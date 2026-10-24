@@ -1,0 +1,77 @@
+<a mat-button class="back" [routerLink]="['/manage/venues', venueId()]">
+  <mat-icon aria-hidden="true">{{ backIcon() }}</mat-icon
+  >{{ t().toVenue }}
+</a>
+<h1>{{ t().ownersTitle }}</h1>
+<p class="intro">{{ t().ownersIntro }}</p>
+
+@switch (store.status()) {
+  @case ('loading') {
+    <div class="state" role="status">
+      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+    </div>
+  }
+  @case ('loaded') {
+    @if (failed()) {
+      <p class="error" role="alert">{{ t().saveFailed }}</p>
+    }
+    @if (store.owners().length === 0) {
+      <p class="empty">{{ t().noOwners }}</p>
+    } @else {
+      <ul>
+        @for (owner of store.owners(); track owner.accountId) {
+          <li [attr.data-id]="owner.accountId">
+            <span class="names">
+              <span class="name">{{ name(owner) }}</span>
+              <span class="meta">{{ t().since(owner.grantedAt | relativeDate) }}</span>
+            </span>
+            <button
+              mat-button
+              type="button"
+              class="revoke"
+              [disabled]="busy()"
+              (click)="revoke(owner)"
+            >
+              {{ confirming() === owner.accountId ? t().confirmRevoke : t().revoke }}
+            </button>
+            <p class="hint" role="status">
+              @if (confirming() === owner.accountId) {
+                {{ t().revokeHint(name(owner)) }}
+              }
+            </p>
+          </li>
+        }
+      </ul>
+    }
+    <h2>{{ t().addOwner }}</h2>
+    @if (candidates().length === 0) {
+      <p class="empty">{{ t().noCandidates }}</p>
+    } @else {
+      <div class="grant">
+        <mat-form-field appearance="outline">
+          <mat-label>{{ t().pickAccount }}</mat-label>
+          <mat-select [formControl]="account">
+            @for (candidate of candidates(); track candidate.id) {
+              <mat-option [value]="candidate.id">{{ candidate.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <button
+          mat-flat-button
+          type="button"
+          class="grant-button"
+          [disabled]="!account.value || busy()"
+          (click)="grant()"
+        >
+          {{ t().grant }}
+        </button>
+      </div>
+    }
+  }
+  @default {
+    <div class="state" role="alert">
+      {{ t().loadFailed }}
+      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+    </div>
+  }
+}
