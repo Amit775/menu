@@ -93,12 +93,13 @@ describe('AccountStore', () => {
     const me = vi.fn(() => new Promise<typeof account>((resolve) => answers.push(resolve)));
     const { store, backend } = setup({ me });
     backend.signIn();
-    const first = store.load();
-    const second = store.load();
+    const newest = store.load();
+    expect(me).toHaveBeenCalledTimes(2);
     expect(TestBed.inject(Roles).known()).toBe(false);
     answers[1]?.({ ...account, isAdmin: true });
     answers[0]?.(account);
-    await Promise.all([first, second]);
+    await newest;
+    await new Promise((resolve) => setTimeout(resolve));
     expect(TestBed.inject(Roles).isAdmin()).toBe(true);
   });
 

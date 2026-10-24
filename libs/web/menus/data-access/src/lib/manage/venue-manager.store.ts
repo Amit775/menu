@@ -1,4 +1,4 @@
-import { computed, inject } from '@angular/core';
+import { computed, inject, linkedSignal, resource, signal } from '@angular/core';
 import {
   type Item,
   type ItemDecision,
@@ -10,44 +10,63 @@ import {
   type Venue,
   type VenueInsights,
 } from '@menu/shared/contracts';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
-import { MenuApiClient, type NewItem } from '../menu/menu.api-client';
-import { failure, type ManageStatus } from './manage-status';
+import { loadStatus } from '@menu/web/shared/util-data';
+import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
+import { MenuApiClient, type NewItem, type NewVenue } from '../menu/menu.api-client';
 
-/** One menu section with its approved items, in menu order. */
 export interface MenuSectionView {
   section: MenuSection;
   items: Item[];
 }
 
-interface VenueManagerState {
-  venue: Venue | null;
+interface ManagedVenue {
+  venue: Venue;
   sections: MenuSection[];
   items: Item[];
   tags: Tag[];
-  insights: VenueInsights | null;
-  status: ManageStatus;
 }
 
 const byPosition = (a: { position: number }, b: { position: number }): number =>
   a.position - b.position;
 
-/**
- * J6: one venue as its Owner or an Admin manages it: the pending queue, the
- * menu editor and insights. Provide it in the routed page.
- */
 export const VenueManagerStore = signalStore(
-  withState<VenueManagerState>({
-    venue: null,
-    sections: [],
-    items: [],
-    tags: [],
-    insights: null,
-    status: 'loading',
+  withProps((_, api = inject(MenuApiClient)) => {
+    const id = signal<() => string | undefined>(() => undefined);
+    return {
+      _id: id,
+      _managed: resource({
+        params: () => id()(),
+        loader: async ({ params }): Promise<ManagedVenue> => {
+          const [venue, sections, items, tags] = await Promise.all([
+            api.venue(params),
+            api.sections(params),
+            api.items(params),
+            api.tags(),
+          ]);
+          return { venue, sections, items, tags };
+        },
+      }),
+    };
   }),
-  withComputed(({ sections, items, tags }) => ({
+  withComputed(({ _managed }) => {
+    const managed = computed(() => (_managed.hasValue() ? _managed.value() : null));
+    return {
+      status: loadStatus(_managed),
+      venue: computed(() => managed()?.venue ?? null),
+      sections: computed(() => managed()?.sections ?? []),
+      items: computed(() => managed()?.items ?? []),
+      tags: computed(() => managed()?.tags ?? []),
+    };
+  }),
+  withProps(({ venue }) => ({
+    _insights: linkedSignal<string | undefined, VenueInsights | null>({
+      source: () => venue()?.id,
+      computation: () => null,
+    }),
+  })),
+  withComputed(({ sections, items, tags, _insights }) => ({
+    insights: computed(() => _insights()),
     pending: computed(() => items().filter((item) => item.state === 'pending')),
-    /** Approved items: the menu as everyone sees it, and the targets of a merge. */
     approved: computed(() => items().filter((item) => item.state === 'approved')),
     menu: computed<MenuSectionView[]>(() =>
       [...sections()].sort(byPosition).map((section) => ({
@@ -61,14 +80,19 @@ export const VenueManagerStore = signalStore(
     sectionsById: computed(() => new Map(sections().map((section) => [section.id, section]))),
   })),
   withMethods((store, api = inject(MenuApiClient)) => {
-    let request = 0;
+    function patch(change: (managed: ManagedVenue) => Partial<ManagedVenue>): void {
+      if (store._managed.hasValue()) {
+        const managed = store._managed.value();
+        store._managed.set({ ...managed, ...change(managed) });
+      }
+    }
 
     function replace(item: Item): void {
-      patchState(store, {
-        items: store.items().some((current) => current.id === item.id)
-          ? store.items().map((current) => (current.id === item.id ? item : current))
-          : [...store.items(), item],
-      });
+      patch(({ items }) => ({
+        items: items.some((current) => current.id === item.id)
+          ? items.map((current) => (current.id === item.id ? item : current))
+          : [...items, item],
+      }));
     }
 
     function venueId(): string {
@@ -80,48 +104,29 @@ export const VenueManagerStore = signalStore(
     }
 
     return {
-      async load(id: string): Promise<void> {
-        const current = ++request;
-        patchState(store, { status: 'loading', insights: null });
-        try {
-          const [venue, sections, items, tags] = await Promise.all([
-            api.venue(id),
-            api.sections(id),
-            api.items(id),
-            api.tags(),
-          ]);
-          if (current === request) {
-            patchState(store, { venue, sections, items, tags, status: 'loaded' });
-          }
-        } catch (error) {
-          if (current === request) {
-            patchState(store, { status: failure(error) });
-          }
-        }
+      load(id: () => string | undefined): void {
+        store._id.set(id);
       },
-      /** Loads once per venue; a failure leaves it empty for the page to say so. */
+      reload(): void {
+        store._managed.reload();
+      },
       async loadInsights(): Promise<void> {
         const venue = store.venue();
-        const current = request;
         if (venue && !store.insights()) {
           const insights = await api.insights(venue.id);
-          // Another venue loaded meanwhile: these numbers are not its.
-          if (current === request) {
-            patchState(store, { insights });
+          if (store.venue()?.id === venue.id) {
+            store._insights.set(insights);
           }
         }
       },
-      /** Approve or reject a pending item, or archive one from the menu. Rejects when refused. */
       async decide(id: string, decision: ItemDecision): Promise<void> {
         replace(await api.decide(id, decision));
-        // The menu changed, so the insights reload when next shown.
-        patchState(store, { insights: null });
+        store._insights.set(null);
       },
       async merge(id: string, intoItemId: string): Promise<void> {
         replace(await api.merge(id, intoItemId));
-        patchState(store, { insights: null });
+        store._insights.set(null);
       },
-      /** A new item from the Owner or an Admin is approved at once. */
       async addItem(input: NewItem): Promise<Item> {
         const item = await api.addItem(venueId(), input);
         replace(item);
@@ -134,15 +139,14 @@ export const VenueManagerStore = signalStore(
       },
       async addSection(name: LocalizedText): Promise<void> {
         const section = await api.addSection(venueId(), { name });
-        patchState(store, { sections: [...store.sections(), section] });
+        patch(({ sections }) => ({ sections: [...sections, section] }));
       },
       async renameSection(id: string, name: LocalizedText): Promise<void> {
         const renamed = await api.renameSection(venueId(), id, { name });
-        patchState(store, {
-          sections: store.sections().map((section) => (section.id === id ? renamed : section)),
-        });
+        patch(({ sections }) => ({
+          sections: sections.map((section) => (section.id === id ? renamed : section)),
+        }));
       },
-      /** Moves a section one place up (-1) or down (+1). */
       async moveSection(id: string, step: -1 | 1): Promise<void> {
         const ids = [...store.sections()].sort(byPosition).map((section) => section.id);
         const from = ids.indexOf(id);
@@ -151,11 +155,15 @@ export const VenueManagerStore = signalStore(
           return;
         }
         [ids[from], ids[to]] = [ids[to] ?? id, id];
-        patchState(store, { sections: await api.reorderSections(venueId(), ids) });
+        const sections = await api.reorderSections(venueId(), ids);
+        patch(() => ({ sections }));
+      },
+      createVenue(input: NewVenue): Promise<Venue> {
+        return api.createVenue(input);
       },
       async updateVenue(changes: UpdateVenue): Promise<Venue> {
         const venue = await api.updateVenue(venueId(), changes);
-        patchState(store, { venue });
+        patch(() => ({ venue }));
         return venue;
       },
     };
