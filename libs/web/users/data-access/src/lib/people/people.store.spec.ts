@@ -85,4 +85,21 @@ describe('PeopleStore', () => {
     expect(revoke).toHaveBeenCalledWith(VENUE_ID, yossi.id);
     expect(store.owners().map((o) => o.accountId)).toEqual([dana.id]);
   });
+
+  it('keeps the owners of the venue loaded last', async () => {
+    const answers = new Map<string, (value: (typeof owner)[]) => void>();
+    const owners = vi.fn(
+      (venueId: string) =>
+        new Promise<(typeof owner)[]>((resolve) => answers.set(venueId, resolve)),
+    );
+    const store = setup({ owners });
+    const OTHER = '8c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
+    const first = store.load(VENUE_ID);
+    const second = store.load(OTHER);
+    answers.get(OTHER)?.([]);
+    answers.get(VENUE_ID)?.([owner]);
+    await Promise.all([first, second]);
+    expect(store.venueId()).toBe(OTHER);
+    expect(store.owners()).toEqual([]);
+  });
 });
