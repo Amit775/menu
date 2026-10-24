@@ -23,7 +23,6 @@ const pin = {
   writtenByMe: false,
 };
 
-/** The API and the outside world, stubbed: this checks the built web app on its own. */
 async function stubBackends(page: Page): Promise<void> {
   await page.route('**/api/discover/feed**', (route) =>
     route.fulfill({ json: { items: [item], nextOffset: null } }),

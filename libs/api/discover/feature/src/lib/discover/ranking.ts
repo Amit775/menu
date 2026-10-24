@@ -1,7 +1,6 @@
 import { SCORE_FLOOR } from '@menu/shared/contracts';
 import { type ItemEntryStats as ItemStats } from '@menu/api/shared/util-ports';
 
-/** An item nobody has written about. */
 export const EMPTY_STATS: ItemStats = {
   ratingCount: 0,
   ratingSum: 0,
@@ -17,7 +16,6 @@ export { type ItemStats };
 
 /** How a score is computed. v1 below; author reliability (v2) and friends first (v3) plug in here. */
 export interface RankingStrategy {
-  /** Null when there are not enough ratings to show a score. */
   score(stats: ItemStats, peerMean: number): number | null;
 }
 
@@ -42,7 +40,6 @@ export class ConfidenceWeightedRanking implements RankingStrategy {
 /** With no ratings anywhere among its peers, an item is compared to the middle of the scale. */
 export const NEUTRAL_MEAN = 3;
 
-/** Mean rating per primary tag ('' for items without tags), over each item's latest ratings. */
 export function peerMeans(
   items: readonly { id: string; tagIds: readonly string[] }[],
   stats: ReadonlyMap<string, ItemStats>,

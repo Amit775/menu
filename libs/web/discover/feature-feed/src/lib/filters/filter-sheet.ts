@@ -11,10 +11,8 @@ import { injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/uti
 import { feedI18n } from '../feed.i18n';
 
 export const RADIUS_OPTIONS = [1, 2, 5, 10, 25];
-/** In agorot. */
 export const PRICE_OPTIONS = [5000, 8000, 12000];
 
-/** The filter sheet (opened as a Material bottom sheet): tags, distance, order and price. */
 @Component({
   selector: 'menu-filter-sheet',
   imports: [

@@ -8,7 +8,6 @@ import {
   WEB_APP_ROUTES,
 } from '../utils/workspace';
 
-/** An empty Nx tree with the files our generators read and update. */
 export function createMenuTree(domains: string[] = []): Tree {
   const tree = createTreeWithEmptyWorkspace();
   tree.write('.prettierrc', JSON.stringify({ singleQuote: true }));

@@ -3,7 +3,6 @@ import { OwnershipRepository } from '@menu/api/users/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { type GrantOwnership, type Ownership } from '@menu/shared/contracts';
 
-/** Admins make accounts the Owners of venues. Callers are Admins (checked by the controller). */
 @Injectable()
 export class OwnershipService {
   constructor(private readonly repository: OwnershipRepository) {}

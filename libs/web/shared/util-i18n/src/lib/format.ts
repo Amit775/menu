@@ -1,11 +1,9 @@
 import { type Agorot, type Language } from '@menu/shared/contracts';
 
-/** Prices are stored in agorot and shown as whole shekels: 6800 -> "₪68". */
 export function formatShekels(agorot: Agorot): string {
   return `₪${String(Math.round(agorot / 100))}`;
 }
 
-/** 350 -> "350 m", 1234 -> "1.2 km" (Hebrew units in Hebrew). */
 export function formatDistance(meters: number, language: Language): string {
   if (meters < 1000) {
     return `${String(Math.round(meters))} ${language === 'he' ? 'מ׳' : 'm'}`;
@@ -15,7 +13,6 @@ export function formatDistance(meters: number, language: Language): string {
 
 const DAY = 24 * 60 * 60 * 1000;
 
-/** "yesterday", "3 days ago", "2 weeks ago", "5 months ago", in the given language. */
 export function formatRelativeDate(iso: string, language: Language, now = new Date()): string {
   const days = Math.round((new Date(iso).getTime() - now.getTime()) / DAY);
   const format = new Intl.RelativeTimeFormat(language, { numeric: 'auto' });

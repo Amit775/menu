@@ -8,11 +8,6 @@ import { Roles } from '@menu/web/shared/util-auth';
 import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { venuesI18n } from '../venues.i18n';
 
-/**
- * J6/J7: "my venues" (`/manage`). An Owner's venues, or every venue for an
- * Admin, those with items waiting for approval first. Admins also reach new
- * venues, the tag vocabulary and people from here.
- */
 @Component({
   selector: 'menu-menus-manage-page',
   imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, LocalizePipe],

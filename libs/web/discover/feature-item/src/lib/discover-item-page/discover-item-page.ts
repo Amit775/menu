@@ -11,7 +11,6 @@ import { ItemRow, PriceHistory, ScoreBadge } from '@menu/web/discover/ui';
 import { I18n, injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
 import { itemI18n } from '../item.i18n';
 
-/** An item's page: score and numbers, price history, and what else is good at the venue. */
 @Component({
   selector: 'menu-discover-item-page',
   imports: [
@@ -40,7 +39,6 @@ export class DiscoverItemPage {
   private readonly i18n = inject(I18n);
   protected readonly t = injectTranslate(itemI18n);
 
-  /** The `:id` route parameter. */
   readonly id = input.required<string>();
   protected readonly copied = signal(false);
 
@@ -48,12 +46,10 @@ export class DiscoverItemPage {
     this.store.load(this.id);
   }
 
-  /** The back arrow points where the user came from: right in Hebrew, left in English. */
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );
 
-  /** Back in the app, or to discover when the page was opened from a shared link. */
   protected back(): void {
     if (this.router.lastSuccessfulNavigation()?.previousNavigation) {
       this.location.back();

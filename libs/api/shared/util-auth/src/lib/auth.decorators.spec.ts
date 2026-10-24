@@ -5,7 +5,6 @@ import { type Principal } from './principal';
 
 type Factory = (data: unknown, context: ExecutionContext) => unknown;
 
-/** The function behind a Nest param decorator. */
 function factoryOf(decorator: () => ParameterDecorator): Factory {
   class Probe {
     handler(): void {

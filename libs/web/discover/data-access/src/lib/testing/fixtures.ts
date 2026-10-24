@@ -1,4 +1,3 @@
-/** Sample data for this lib's specs. */
 export const VENUE_ID = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
 export const ITEM_ID = '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10';
 export const SECTION_ID = '5c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10';

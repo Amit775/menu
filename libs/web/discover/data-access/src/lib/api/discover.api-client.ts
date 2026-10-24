@@ -21,7 +21,6 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { z } from 'zod';
 
-/** What the feed can be asked for (`FeedQuerySchema`); the API fills in the defaults. */
 export interface FeedRequest {
   near: GeoPoint | null;
   radiusKm?: FeedQuery['radiusKm'];
@@ -49,7 +48,6 @@ function nearParams(near: GeoPoint | null): Record<string, ParamValue> {
   return { lat: near?.lat, lng: near?.lng };
 }
 
-/** HTTP access to `/api/discover` (and the tag vocabulary). Every response is validated against the shared contract. */
 @Service()
 export class DiscoverApiClient {
   private readonly http = inject(HttpClient);
@@ -65,7 +63,6 @@ export class DiscoverApiClient {
     return FeedSchema.parse(await this.get(`${this.baseUrl}/feed`, query));
   }
 
-  /** One pin per venue with matching items, for the map. */
   async map(request: Pick<FeedRequest, 'near' | 'radiusKm' | 'tagIds'>): Promise<MapPin[]> {
     const query = params({
       ...nearParams(request.near),
@@ -89,7 +86,6 @@ export class DiscoverApiClient {
     return SearchResultsSchema.parse(await this.get(`${this.baseUrl}/search`, params({ q: text })));
   }
 
-  /** The tag vocabulary, for the filter. */
   async tags(): Promise<Tag[]> {
     return z.array(TagSchema).parse(await this.get(`/api/${tagPath}`));
   }

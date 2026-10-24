@@ -8,7 +8,6 @@ import type * as Leaflet from 'leaflet';
  */
 export const LEAFLET_STYLESHEET = 'leaflet-1.9.4.css';
 
-/** Loads Leaflet and its stylesheet on first use, keeping both out of every other screen. */
 @Service()
 export class LeafletLoader {
   private readonly document = inject(DOCUMENT);

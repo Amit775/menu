@@ -8,7 +8,6 @@ import { EntryStats } from './entry-stats';
 import { EntryController, ItemEntriesController, SharedEntryController } from './entry.controller';
 import { EntryService } from './entry.service';
 
-/** Needs `ITEM_CATALOG` and `AUTHOR_DIRECTORY` from the app's ports module. */
 @Module({
   controllers: [
     ItemEntriesController,
@@ -23,7 +22,6 @@ import { EntryService } from './entry.service';
     EntryMergeListener,
     EntryStats,
     PhotoService,
-    // PHOTO_DIR (local, e2e) or the Firebase Storage bucket (ADR 0011).
     { provide: PHOTO_STORAGE, useFactory: () => photoStorageFromEnv(firebaseProjectId()) },
   ],
   exports: [EntryMergeListener, EntryStats],

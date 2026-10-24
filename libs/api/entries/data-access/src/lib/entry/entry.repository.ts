@@ -12,14 +12,12 @@ import {
   type UpdateEntry,
 } from '@menu/shared/contracts';
 
-/** An entry as the API sees it internally: the author's view plus who wrote it and its photo. */
 export type EntryRecord = Entry & {
   authorId: string;
   photoId: string | null;
   photoType: PhotoType | null;
 };
 
-/** A photo's capability id and stored type (ADR 0011). */
 export interface PhotoRef {
   photoId: string;
   photoType: PhotoType;
@@ -38,7 +36,6 @@ export interface NewEntry {
   shareToken: string | null;
 }
 
-/** One unhidden entry, reduced to what aggregates need. Never leaves the entries domain. */
 export interface EntryFact {
   itemId: string;
   authorId: string;
@@ -74,7 +71,6 @@ interface EntryRow {
 
 const newestFirst = [{ eatenAt: 'desc' }, { createdAt: 'desc' }] as const;
 
-/** Maps between Prisma rows and records. The only code that touches `prisma.entry`. */
 @Injectable()
 export class EntryRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -96,7 +92,6 @@ export class EntryRepository {
     return row ? toRecord(row) : null;
   }
 
-  /** Sets or removes the photo. Null when the entry is gone or not this author's. */
   async setPhoto(
     id: string,
     authorId: string,
@@ -114,7 +109,6 @@ export class EntryRepository {
     return row ? toRecord(row) : null;
   }
 
-  /** A diary, newest first, optionally for one venue or one item. */
   async listByAuthor(authorId: string, filter: DiaryQuery = {}): Promise<EntryRecord[]> {
     const rows = await this.prisma.entry.findMany({
       where: { authorId, ...withoutUndefined(filter) },
@@ -123,7 +117,6 @@ export class EntryRepository {
     return rows.map(toRecord);
   }
 
-  /** Everyone else's public, unhidden entries on an item, newest first. */
   async listPublicByItem(itemId: string, exceptAuthorId: string | null): Promise<EntryRecord[]> {
     const rows = await this.prisma.entry.findMany({
       where: {
@@ -138,7 +131,6 @@ export class EntryRepository {
     return rows.map(toRecord);
   }
 
-  /** Null when the entry is gone or not this author's. */
   async update(id: string, authorId: string, changes: EntryChanges): Promise<EntryRecord | null> {
     const { eatenAt, ...rest } = changes;
     const { count } = await this.prisma.entry.updateMany({
@@ -151,7 +143,6 @@ export class EntryRepository {
     return count === 0 ? null : this.findById(id);
   }
 
-  /** False when the entry is gone or not this author's. */
   async delete(id: string, authorId: string): Promise<boolean> {
     const { count } = await this.prisma.entry.deleteMany({ where: { id, authorId } });
     return count > 0;

@@ -19,7 +19,6 @@ import {
 } from '@menu/shared/contracts';
 import { AccountService } from './account.service';
 
-/** `/api/accounts`: HTTP only. Validation via the shared contract, logic in the service. */
 @Controller(accountPath)
 export class AccountController {
   constructor(private readonly service: AccountService) {}

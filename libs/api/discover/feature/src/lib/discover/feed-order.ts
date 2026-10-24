@@ -20,7 +20,6 @@ function byPrice(a: DiscoverItem, b: DiscoverItem): number {
   return (a.latestPrice ?? Infinity) - (b.latestPrice ?? Infinity) || byDistance(a, b);
 }
 
-/** Orders filtered items for the feed or the list. */
 export function orderFeed(
   items: readonly DiscoverItem[],
   query: Pick<FeedQuery, 'mode' | 'sort'>,

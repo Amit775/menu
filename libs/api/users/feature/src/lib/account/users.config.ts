@@ -1,4 +1,3 @@
-/** Configuration for the users domain. Read from the environment in this one place. */
 export interface UsersConfig {
   /**
    * Firebase uids whose account is created as an Admin on first sign-in, so the

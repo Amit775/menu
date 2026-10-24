@@ -19,7 +19,6 @@ import {
 } from '@menu/shared/contracts';
 import { MenuSectionService } from './menu-section.service';
 
-/** `/api/venues/:venueId/sections`: HTTP only. */
 @Controller(menuSectionRoute)
 export class MenuSectionController {
   constructor(private readonly service: MenuSectionService) {}

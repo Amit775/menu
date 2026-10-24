@@ -3,7 +3,6 @@ import { type PricePoint } from '@menu/shared/contracts';
 import { formatMonth, I18n, injectTranslate, ShekelsPipe } from '@menu/web/shared/util-i18n';
 import { uiI18n } from '../ui.i18n';
 
-/** Average price per month as bars, oldest first; the latest month is highlighted. */
 @Component({
   selector: 'menu-price-history',
   imports: [ShekelsPipe],
