@@ -9,10 +9,6 @@ import { AccountStore, PeopleStore } from '@menu/web/users/data-access';
 import { I18n, injectTranslate, RelativeDatePipe } from '@menu/web/shared/util-i18n';
 import { peopleI18n } from '../people.i18n';
 
-/**
- * J7 (Admin, `/manage/people`): every account, named ones first, with a switch
- * for the Admin role. Owners are granted per venue, from the venue's page.
- */
 @Component({
   selector: 'menu-users-people-page',
   imports: [

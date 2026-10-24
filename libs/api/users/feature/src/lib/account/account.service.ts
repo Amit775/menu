@@ -8,7 +8,6 @@ import {
 import { type Account, type AccountSummary, type UpdateAccount } from '@menu/shared/contracts';
 import { USERS_CONFIG, type UsersConfig } from './users.config';
 
-/** Accounts and roles. Also resolves the caller of every request for `AuthGuard`. */
 @Injectable()
 export class AccountService implements PrincipalResolver {
   constructor(

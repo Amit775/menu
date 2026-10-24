@@ -14,10 +14,6 @@ import { sheetI18n } from '../sheet.i18n';
 
 type Notice = 'copied' | 'share-failed' | 'update-failed';
 
-/**
- * What people wrote about an item (`/items/:id/entries`): the user's own
- * entries on top, marked private or public, then public ones newest first.
- */
 @Component({
   selector: 'menu-entries-sheet-page',
   imports: [
@@ -42,14 +38,11 @@ export class EntriesSheetPage {
   protected readonly t = injectTranslate(sheetI18n);
   protected readonly roles = inject(Roles);
 
-  /** The item's `:id` route parameter. */
   readonly id = input.required<string>();
 
   protected readonly notice = signal<Notice | null>(null);
   protected readonly busy = signal<string | null>(null);
-  /** The entry whose "make public" waits for a second tap. */
   protected readonly confirmingPublic = signal<string | null>(null);
-  /** Admin: the public entry whose "hide" waits for a second tap. */
   protected readonly confirmingHide = signal<string | null>(null);
 
   constructor() {

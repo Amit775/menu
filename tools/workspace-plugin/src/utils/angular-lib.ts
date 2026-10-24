@@ -8,11 +8,9 @@ export interface AngularLibOptions {
   projectName: string;
   importPath: string;
   tags: string;
-  /** Add a lazy route for this lib to the given routes file. */
   parentRoutes?: string;
 }
 
-/** True when the Nx project already exists in the tree. */
 export function projectExists(tree: Tree, projectName: string): boolean {
   try {
     readProjectConfiguration(tree, projectName);
@@ -22,10 +20,6 @@ export function projectExists(tree: Tree, projectName: string): boolean {
   }
 }
 
-/**
- * Creates an Angular library with Nx, then normalizes it to workspace conventions:
- * shared ESLint config, strict Angular compiler options, and an empty src/lib.
- */
 export async function createAngularLib(tree: Tree, options: AngularLibOptions): Promise<void> {
   await libraryGenerator(tree, {
     directory: options.directory,
@@ -38,7 +32,6 @@ export async function createAngularLib(tree: Tree, options: AngularLibOptions): 
     // Without it @nx/angular records `strict: false` as a workspace default in nx.json.
     strict: true,
     skipModule: true,
-    // Non-buildable libs use the AnalogJS Vitest setup.
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment -- @nx/angular does not export its UnitTestRunner enum
     unitTestRunner: 'vitest-analog' as NonNullable<LibrarySchema['unitTestRunner']>,
     linter: 'eslint',

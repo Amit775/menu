@@ -15,13 +15,8 @@ import { type GeoPoint } from '@menu/shared/contracts';
 import { LeafletLoader, OSM_ATTRIBUTION, OSM_TILES, TEL_AVIV } from '@menu/web/shared/util-map';
 import type * as Leaflet from 'leaflet';
 
-/** Close enough to tell one building from the next. */
 const PIN_ZOOM = 17;
 
-/**
- * Where the venue is: tap the map or drag the pin. The form's latitude and
- * longitude fields are the keyboard way to set it, and move the pin too.
- */
 @Component({
   selector: 'menu-pin-picker',
   template:

@@ -1,9 +1,5 @@
 import nx from '@nx/eslint-plugin';
 
-/**
- * Shared ESLint config for every Angular project (apps/web, libs/web/**).
- * Encodes .claude/rules/angular.md as lint rules wherever a rule exists.
- */
 export function angularConfig({ prefix = 'menu' } = {}) {
   return [
     ...nx.configs['flat/angular'],

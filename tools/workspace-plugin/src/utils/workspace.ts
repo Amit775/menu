@@ -13,7 +13,6 @@ interface Boundaries {
   domains: string[];
 }
 
-/** kebab-case, validated: lowercase letters, digits and dashes, starting with a letter. */
 export function toKebab(value: string, label: string): string {
   const kebab = names(value).fileName;
   if (!/^[a-z][a-z0-9-]*$/.test(kebab)) {
@@ -48,7 +47,6 @@ export function tagsFor(platform: Platform, domain: string, type: LibType): stri
   return [`platform:${platform}`, `scope:${domain}`, `type:${type}`].join(',');
 }
 
-/** Appends `export * from '<from>';` to a barrel once. */
 export function addExport(tree: Tree, indexPath: string, from: string): void {
   const line = `export * from '${from}';`;
   const current = tree.exists(indexPath) ? (tree.read(indexPath, 'utf-8') ?? '') : '';

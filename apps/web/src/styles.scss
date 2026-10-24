@@ -1,8 +1,5 @@
 @use '@angular/material' as mat;
 
-// Look from the approved mockups: Heebo for both scripts, white ground,
-// near-black score chips, one warm accent for the primary action.
-// Components use these --mat-sys-* tokens, never raw colors.
 html {
   color-scheme: light;
   @include mat.theme(

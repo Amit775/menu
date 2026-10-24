@@ -6,7 +6,6 @@ function radians(degrees: number): number {
   return (degrees * Math.PI) / 180;
 }
 
-/** Great-circle (haversine) distance, rounded to the meter. */
 export function distanceMeters(from: GeoPoint, to: GeoPoint): number {
   const dLat = radians(to.lat - from.lat);
   const dLng = radians(to.lng - from.lng);

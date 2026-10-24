@@ -8,7 +8,6 @@ import {
   type Venue,
 } from '@menu/shared/contracts';
 
-/** An approved or archived item of an active venue, with what discovery needs about its venue. */
 export interface CatalogItem {
   id: string;
   name: LocalizedText;
@@ -56,7 +55,6 @@ export class DiscoverRepository {
     }));
   }
 
-  /** An active venue; hidden ones are not part of discovery. */
   async findActiveVenue(id: string): Promise<Venue | null> {
     const row = await this.prisma.venue.findFirst({ where: { id, status: 'active' } });
     if (!row) {

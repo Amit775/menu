@@ -4,10 +4,6 @@ import { PrismaClient } from '../generated/prisma/client';
 
 export const DEFAULT_DATABASE_URL = 'postgresql://menu:menu@localhost:5432/menu';
 
-/**
- * The only PrismaClient in the API. Repositories in `libs/api/<domain>/data-access`
- * inject this service; nothing else talks to the database.
- */
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
   constructor() {

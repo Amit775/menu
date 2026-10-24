@@ -8,7 +8,6 @@ import { LeafletLoader } from '@menu/web/shared/util-map';
 import { menuApi, venue, VENUE_ID } from '../testing/manage-fixtures';
 import { VenueFormPage } from './venue-form-page';
 
-/** Just enough of Leaflet to tap the map and see where the pin is. */
 function fakeLeaflet() {
   const seen: {
     tap?: (event: { latlng: GeoPoint }) => void;

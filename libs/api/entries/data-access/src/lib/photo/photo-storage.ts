@@ -2,24 +2,19 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { type PhotoType, PhotoTypeSchema } from '@menu/shared/contracts';
 
-/** The bytes of one stored photo. */
 export interface StoredPhoto {
   bytes: Buffer;
   type: PhotoType;
 }
 
-/** Where entry photos live (ADR 0011). Keys look like `entries/<entryId>`. */
 export interface PhotoStorage {
   put(key: string, photo: StoredPhoto): Promise<void>;
-  /** Null when nothing is stored under the key. */
   get(key: string): Promise<StoredPhoto | null>;
-  /** Removing a missing photo is not an error. */
   delete(key: string): Promise<void>;
 }
 
 export const PHOTO_STORAGE = Symbol('PHOTO_STORAGE');
 
-/** Specs: keeps photos in memory. */
 export class MemoryPhotoStorage implements PhotoStorage {
   readonly photos = new Map<string, StoredPhoto>();
 
@@ -38,7 +33,6 @@ export class MemoryPhotoStorage implements PhotoStorage {
   }
 }
 
-/** Local development and e2e (`PHOTO_DIR`): one file per photo, its type beside it. */
 export class DiskPhotoStorage implements PhotoStorage {
   constructor(private readonly dir: string) {}
 
@@ -77,7 +71,6 @@ export class DiskPhotoStorage implements PhotoStorage {
   }
 }
 
-/** The part of a Cloud Storage bucket the API uses (`firebase-admin/storage`). */
 export interface PhotoBucket {
   file(name: string): {
     save(data: Buffer, options: { contentType: string; resumable: boolean }): Promise<unknown>;
@@ -87,7 +80,6 @@ export interface PhotoBucket {
   };
 }
 
-/** Production: the Firebase Storage bucket, reached with the API's service account. */
 export class CloudPhotoStorage implements PhotoStorage {
   private connected: Promise<PhotoBucket> | undefined;
 

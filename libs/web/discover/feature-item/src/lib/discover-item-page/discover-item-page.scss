@@ -19,7 +19,6 @@
     var(--mat-sys-inverse-surface);
   --mat-icon-button-icon-color: var(--mat-sys-inverse-on-surface);
 
-  // The item's newest public photo, darkened at the top so the buttons stay visible.
   &.photo {
     height: 280px;
     background: linear-gradient(rgb(0 0 0 / 45%), transparent 40%);

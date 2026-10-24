@@ -7,10 +7,6 @@ import { type UtilLibGeneratorSchema } from './schema';
 
 const PLATFORMS: readonly Platform[] = ['web', 'api', 'shared'];
 
-/**
- * Helpers with no UI and no I/O of their own: pure functions, value types,
- * injectable wrappers. Several per domain are allowed, each named by purpose.
- */
 export async function utilLibGenerator(tree: Tree, options: UtilLibGeneratorSchema): Promise<void> {
   const { platform } = options;
   if (!PLATFORMS.includes(platform)) {
