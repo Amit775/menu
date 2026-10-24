@@ -5,21 +5,12 @@ import {
   Component,
   computed,
   DestroyRef,
-  effect,
-  ElementRef,
   inject,
   input,
+  linkedSignal,
   signal,
-  untracked,
 } from '@angular/core';
-import {
-  type AbstractControl,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  type ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { disabled, form, FormField, max, maxLength, min, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -35,12 +26,17 @@ import { fromLocalInput, toLocalInput } from './local-time';
 
 const MAX_SHEKELS = 100_000;
 
-function notInFuture(control: AbstractControl<string>): ValidationErrors | null {
-  const iso = fromLocalInput(control.value);
-  if (iso === null) {
-    return { date: true };
-  }
-  return Date.parse(iso) > Date.now() + 60_000 ? { future: true } : null;
+interface LogModel {
+  rating: number | null;
+  wouldOrderAgain: boolean | null;
+  price: number | null;
+  eatenAt: string;
+  text: string;
+  visibility: EntryVisibility;
+}
+
+function toShekels(agorot: number | null): number | null {
+  return agorot === null ? null : Math.round(agorot / 100);
 }
 
 type SaveError = 'failed' | 'closed' | 'photoRejected' | 'photoFailed';
@@ -59,7 +55,7 @@ type PhotoChange =
 @Component({
   selector: 'menu-entries-log-page',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     RouterLink,
     MatButtonModule,
     MatButtonToggleModule,
@@ -80,7 +76,6 @@ export class EntriesLogPage {
   private readonly lastVisibility = inject(LastVisibility);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly shrinker = inject(PhotoShrinker);
   protected readonly t = injectMessages(logMessages);
 
@@ -89,43 +84,28 @@ export class EntriesLogPage {
   /** The `:entryId` route parameter, when editing. */
   readonly entryId = input<string>();
 
-  protected readonly rating = signal<number | null>(null);
-  protected readonly wouldOrderAgain = signal<boolean | null>(null);
-  protected readonly price = new FormControl<number | null>(null, [
-    Validators.min(0),
-    Validators.max(MAX_SHEKELS),
-    Validators.pattern(/^\d+$/),
-  ]);
-  protected readonly eatenAt = new FormControl(toLocalInput(new Date()), {
-    nonNullable: true,
-    validators: [notInFuture],
-  });
-  protected readonly text = new FormControl('', {
-    nonNullable: true,
-    validators: [Validators.maxLength(2000)],
-  });
-  protected readonly visibility = new FormControl<EntryVisibility>(this.lastVisibility.get(), {
-    nonNullable: true,
-  });
-  protected readonly form = new FormGroup({
-    price: this.price,
-    eatenAt: this.eatenAt,
-    text: this.text,
-    visibility: this.visibility,
-  });
   protected readonly maxDate = toLocalInput(new Date());
 
   protected readonly saving = signal(false);
-  protected readonly saveError = signal<SaveError | null>(null);
-  protected readonly confirmingDelete = signal(false);
-  protected readonly photoChange = signal<PhotoChange>({ kind: 'keep' });
+  protected readonly saveError = linkedSignal<string, SaveError | null>({
+    source: this.itemId,
+    computation: () => null,
+  });
+  protected readonly confirmingDelete = linkedSignal({
+    source: this.itemId,
+    computation: () => false,
+  });
+  protected readonly photoChange = linkedSignal<string, PhotoChange>({
+    source: this.itemId,
+    computation: () => ({ kind: 'keep' }),
+  });
   /** A picked photo is being made smaller. */
   protected readonly preparingPhoto = signal(false);
   /** The entry this form logged, when its photo then failed: trying again edits it. */
-  private readonly created = signal<string | undefined>(undefined);
-  private filled = false;
-  /** The price the form opened with, in agorot: sent as is unless the user changes it. */
-  private prefilled: number | null = null;
+  private readonly created = linkedSignal<string, string | undefined>({
+    source: this.itemId,
+    computation: () => undefined,
+  });
 
   /** The entry being edited, once the sheet is here; undefined for a new one. */
   protected readonly editing = computed<Entry | null | undefined>(() => {
@@ -134,6 +114,51 @@ export class EntriesLogPage {
       ? undefined
       : (this.store.mine().find((entry) => entry.id === id) ?? null);
   });
+
+  /** The price the form opened with, in agorot: sent as is unless the user changes it. */
+  private readonly prefilled = computed(() => {
+    const editing = this.editing();
+    return editing
+      ? editing.pricePaid
+      : (this.store.lastPaid() ?? this.store.sheet()?.item.listPrice ?? null);
+  });
+
+  protected readonly model = linkedSignal<LogModel>(() => {
+    const editing = this.editing();
+    return {
+      rating: editing?.rating ?? null,
+      wouldOrderAgain: editing?.wouldOrderAgain ?? null,
+      price: toShekels(this.prefilled()),
+      eatenAt: toLocalInput(editing ? new Date(editing.eatenAt) : new Date()),
+      text: editing?.text ?? '',
+      visibility: editing?.visibility ?? this.lastVisibility.get(),
+    };
+  });
+
+  protected readonly form = form(this.model, (path) => {
+    disabled(path.rating, { when: () => this.saving() });
+    min(path.price, 0);
+    max(path.price, MAX_SHEKELS);
+    validate(path.price, ({ value }) => {
+      const price = value();
+      return price === null || Number.isInteger(price) ? null : { kind: 'whole' };
+    });
+    validate(path.eatenAt, ({ value }) => {
+      const iso = fromLocalInput(value());
+      if (iso === null) {
+        return { kind: 'date' };
+      }
+      return Date.parse(iso) > Date.now() + 60_000 ? { kind: 'future' } : null;
+    });
+    maxLength(path.text, 2000);
+  });
+
+  protected readonly eatenAtFuture = computed(() =>
+    this.form
+      .eatenAt()
+      .errors()
+      .some((error) => error.kind === 'future'),
+  );
 
   /** What the photo box shows: the picked photo, the saved one, or nothing. */
   protected readonly photoPreview = computed(() => {
@@ -165,33 +190,11 @@ export class EntriesLogPage {
     inject(DestroyRef).onDestroy(() => {
       this.changePhoto({ kind: 'keep' });
     });
-    effect(() => {
-      const itemId = this.itemId();
-      untracked(() => {
-        this.reset();
-        void this.store.load(itemId);
-      });
-    });
-    // Fill the form once, when the item (and the entry being edited) is here.
-    effect(() => {
-      const sheet = this.store.sheet();
-      const editing = this.editing();
-      if (!sheet || editing === null || this.filled) {
-        return;
-      }
-      this.filled = true;
-      untracked(() => {
-        if (editing) {
-          this.fill(editing);
-        } else {
-          this.prefill(this.store.lastPaid() ?? sheet.item.listPrice);
-        }
-      });
-    });
+    this.store.load(this.itemId);
   }
 
   protected toggleOrderAgain(value: boolean): void {
-    this.wouldOrderAgain.update((current) => (current === value ? null : value));
+    this.form.wouldOrderAgain().value.update((current) => (current === value ? null : value));
   }
 
   protected cancel(): void {
@@ -223,38 +226,39 @@ export class EntriesLogPage {
   }
 
   protected retry(): void {
-    void this.store.load(this.itemId());
+    this.store.reload();
   }
 
   protected async save(): Promise<void> {
     if (this.saving() || this.preparingPhoto()) {
       return;
     }
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      const first = Object.entries(this.form.controls).find(([, control]) => control.invalid);
-      this.host.nativeElement
-        .querySelector<HTMLElement>(`[formcontrolname="${first?.[0] ?? ''}"]`)
-        ?.focus();
+    if (this.form().invalid()) {
+      this.form().markAsTouched();
+      const first = [this.form.price, this.form.eatenAt, this.form.text].find((field) =>
+        field().invalid(),
+      );
+      first?.().focusBoundControl();
       return;
     }
     this.saving.set(true);
     this.saveError.set(null);
+    const model = this.model();
     const input: UpdateEntry = {
-      rating: this.rating(),
-      wouldOrderAgain: this.wouldOrderAgain(),
-      pricePaid: this.price.dirty
-        ? this.price.value === null
+      rating: model.rating,
+      wouldOrderAgain: model.wouldOrderAgain,
+      pricePaid: this.form.price().dirty()
+        ? model.price === null
           ? null
-          : this.price.value * 100
-        : this.prefilled,
-      text: this.text.value.trim(),
-      visibility: this.visibility.value,
+          : model.price * 100
+        : this.prefilled(),
+      text: model.text.trim(),
+      visibility: model.visibility,
     };
     const editing = this.editing();
     // Editing keeps the date unless the user changed it.
-    const eatenAt = fromLocalInput(this.eatenAt.value);
-    if (eatenAt !== null && (!editing || this.eatenAt.dirty)) {
+    const eatenAt = fromLocalInput(model.eatenAt);
+    if (eatenAt !== null && (!editing || this.form.eatenAt().dirty())) {
       input.eatenAt = eatenAt;
     }
     let saved: Entry;
@@ -323,39 +327,5 @@ export class EntriesLogPage {
       URL.revokeObjectURL(previous.preview);
     }
     this.photoChange.set(change);
-  }
-
-  private fill(entry: Entry): void {
-    this.rating.set(entry.rating);
-    this.wouldOrderAgain.set(entry.wouldOrderAgain);
-    this.form.reset({
-      eatenAt: toLocalInput(new Date(entry.eatenAt)),
-      text: entry.text,
-      visibility: entry.visibility,
-    });
-    this.prefill(entry.pricePaid);
-  }
-
-  /** Shows a price in whole shekels while keeping its agorot for an untouched save. */
-  private prefill(agorot: number | null): void {
-    this.prefilled = agorot;
-    this.price.reset(agorot === null ? null : Math.round(agorot / 100));
-  }
-
-  /** A fresh form, for the first item and for another one in the same page. */
-  private reset(): void {
-    this.filled = false;
-    this.rating.set(null);
-    this.wouldOrderAgain.set(null);
-    this.saveError.set(null);
-    this.confirmingDelete.set(false);
-    this.changePhoto({ kind: 'keep' });
-    this.created.set(undefined);
-    this.form.reset({
-      price: null,
-      eatenAt: toLocalInput(new Date()),
-      text: '',
-      visibility: this.lastVisibility.get(),
-    });
   }
 }

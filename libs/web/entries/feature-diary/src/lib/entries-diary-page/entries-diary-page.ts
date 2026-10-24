@@ -1,12 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -53,17 +45,13 @@ export class EntriesDiaryPage {
   );
 
   constructor() {
-    effect(() => {
+    this.store.load(() => {
       const venueId = this.venueId();
-      untracked(() => void this.load(venueId));
+      return venueId ? { venueId } : {};
     });
   }
 
   protected retry(): void {
-    void this.load(this.venueId());
-  }
-
-  private load(venueId: string | undefined): Promise<void> {
-    return this.store.load(venueId ? { venueId } : {});
+    this.store.reload();
   }
 }

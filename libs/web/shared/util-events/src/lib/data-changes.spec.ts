@@ -2,25 +2,23 @@ import { TestBed } from '@angular/core/testing';
 import { DataChanges } from './data-changes';
 
 describe('DataChanges', () => {
-  it('counts each change to a topic', () => {
+  it('tells every listener of a topic about each change', () => {
     const changes = TestBed.inject(DataChanges);
-    const entries = changes.version('entries');
-    expect(entries()).toBe(0);
+    const first = vi.fn();
+    const second = vi.fn();
+    changes.on('entries').subscribe(first);
+    changes.on('entries').subscribe(second);
     changes.notify('entries');
     changes.notify('entries');
-    expect(entries()).toBe(2);
+    expect(first).toHaveBeenCalledTimes(2);
+    expect(second).toHaveBeenCalledTimes(2);
   });
 
-  it('gives every reader the same version', () => {
+  it('does not replay changes made before a listener joined', () => {
     const changes = TestBed.inject(DataChanges);
     changes.notify('entries');
-    expect(changes.version('entries')()).toBe(1);
-  });
-
-  it('lets readers watch without changing the version', () => {
-    const changes = TestBed.inject(DataChanges);
-    expect(() => {
-      (changes.version('entries') as unknown as { set(value: number): void }).set(5);
-    }).toThrow();
+    const late = vi.fn();
+    changes.on('entries').subscribe(late);
+    expect(late).not.toHaveBeenCalled();
   });
 });

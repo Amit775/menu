@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { Roles } from '@menu/web/shared/util-auth';
 import { MenuApiClient } from '../menu/menu.api-client';
-import { item, venue, VENUE_ID } from '../testing/fixtures';
+import { item, venue, VENUE_ID, settle } from '../testing/fixtures';
 import { ManagedVenuesStore } from './managed-venues.store';
 
 describe('ManagedVenuesStore', () => {
@@ -19,7 +19,7 @@ describe('ManagedVenuesStore', () => {
   it('lists an Owner’s venues with how many items wait at each', async () => {
     const venues = vi.fn().mockResolvedValue([venue]);
     const store = setup({ venues, pending: vi.fn().mockResolvedValue([item, item]) });
-    await store.load();
+    await settle();
     expect(venues).toHaveBeenCalledWith(true);
     expect(store.status()).toBe('loaded');
     expect(store.rows()).toEqual([{ venue, pending: 2 }]);
@@ -28,7 +28,7 @@ describe('ManagedVenuesStore', () => {
   it('lists every venue for an Admin, those with waiting items first', async () => {
     const venues = vi.fn().mockResolvedValue([other, venue]);
     const store = setup({ venues, pending: vi.fn().mockResolvedValue([item]) }, true);
-    await store.load();
+    await settle();
     expect(venues).toHaveBeenCalledWith(false);
     expect(store.rows().map((row) => row.venue.id)).toEqual([VENUE_ID, other.id]);
     expect(store.pendingTotal()).toBe(1);
@@ -39,7 +39,7 @@ describe('ManagedVenuesStore', () => {
       venues: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 500 })),
       pending: vi.fn().mockResolvedValue([]),
     });
-    await store.load();
+    await settle();
     expect(store.status()).toBe('error');
   });
 
@@ -53,7 +53,7 @@ describe('ManagedVenuesStore', () => {
       },
       true,
     );
-    await store.load();
+    await settle();
     const input = { name: other.name, address: other.address, location: other.location };
     await expect(store.create(input)).resolves.toEqual(other);
     expect(createVenue).toHaveBeenCalledWith(input);
@@ -69,7 +69,7 @@ describe('ManagedVenuesStore', () => {
       },
       true,
     );
-    await store.load();
+    await settle();
     const input = { name: other.name, address: other.address, location: other.location };
     await expect(store.create(input)).rejects.toBeInstanceOf(HttpErrorResponse);
     expect(store.rows().map((row) => row.venue.id)).toEqual([VENUE_ID]);

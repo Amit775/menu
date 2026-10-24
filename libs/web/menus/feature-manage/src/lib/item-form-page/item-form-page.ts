@@ -2,19 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
+  linkedSignal,
   signal,
-  untracked,
 } from '@angular/core';
-import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  type ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { form, FormField, max, maxLength, min, required, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -26,11 +19,13 @@ import { VenueManagerStore } from '@menu/web/menus/data-access';
 import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { itemFormMessages } from '../item-form.messages';
 
-/** Required, and more than spaces: the API trims names. */
-const notBlank: ValidatorFn = (control) =>
-  typeof control.value === 'string' && control.value.trim() === ''
-    ? { required: true }
-    : Validators.required(control);
+interface ItemModel {
+  nameHe: string;
+  nameEn: string;
+  section: string | null;
+  price: number | null;
+  tags: string[];
+}
 
 /**
  * J6: add an item to the menu (`/manage/venues/:id/items/new?sectionId=`) or
@@ -40,7 +35,7 @@ const notBlank: ValidatorFn = (control) =>
 @Component({
   selector: 'menu-item-form-page',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     RouterLink,
     MatButtonModule,
     MatFormFieldModule,
@@ -66,35 +61,8 @@ export class ItemFormPage {
   private readonly router = inject(Router);
   protected readonly t = injectMessages(itemFormMessages);
 
-  protected readonly nameHe = new FormControl('', {
-    nonNullable: true,
-    validators: [notBlank, Validators.maxLength(200)],
-  });
-  protected readonly nameEn = new FormControl('', {
-    nonNullable: true,
-    validators: [Validators.maxLength(200)],
-  });
-  protected readonly section = new FormControl<string | null>(null, (control) =>
-    Validators.required(control),
-  );
-  protected readonly price = new FormControl<number | null>(null, [
-    Validators.min(0),
-    Validators.max(100_000),
-    Validators.pattern(/^\d+$/),
-  ]);
-  protected readonly tags = new FormControl<string[]>([], { nonNullable: true });
-  protected readonly form = new FormGroup({
-    nameHe: this.nameHe,
-    nameEn: this.nameEn,
-    section: this.section,
-    price: this.price,
-    tags: this.tags,
-  });
-
   protected readonly saving = signal(false);
   protected readonly failed = signal(false);
-  /** The price the form opened with, in agorot: sent as is unless the user changes it. */
-  private prefilled: number | null = null;
 
   /** The item being edited; undefined for a new one, null when it is not this venue's. */
   protected readonly editing = computed<Item | null | undefined>(() => {
@@ -108,47 +76,67 @@ export class ItemFormPage {
     this.store.status() === 'loaded' && this.editing() === null ? 'not-found' : this.store.status(),
   );
 
-  constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
-    effect(() => {
-      if (this.store.status() !== 'loaded') {
-        return;
-      }
-      const editing = this.editing();
-      const sectionId = this.sectionId();
-      untracked(() => {
-        this.fill(editing ?? undefined, sectionId);
+  protected readonly model = linkedSignal<ItemModel>(() => {
+    const item = this.editing() ?? undefined;
+    const sectionId = item?.sectionId ?? this.sectionId();
+    const listPrice = item?.listPrice ?? null;
+    return {
+      nameHe: item?.name.he ?? '',
+      nameEn: item?.name.en ?? '',
+      section:
+        sectionId !== undefined && this.store.sectionsById().has(sectionId) ? sectionId : null,
+      price: listPrice === null ? null : Math.round(listPrice / 100),
+      tags: item?.tagIds ?? [],
+    };
+  });
+
+  protected readonly form = form(
+    this.model,
+    (path) => {
+      required(path.nameHe);
+      validate(path.nameHe, ({ value }) => (value().trim() === '' ? { kind: 'required' } : null));
+      maxLength(path.nameHe, 200);
+      maxLength(path.nameEn, 200);
+      required(path.section);
+      min(path.price, 0);
+      max(path.price, 100_000);
+      validate(path.price, ({ value }) => {
+        const price = value();
+        return price === null || Number.isInteger(price) ? null : { kind: 'whole' };
       });
-    });
+    },
+    { name: 'item' },
+  );
+
+  constructor() {
+    this.store.load(this.id);
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 
   protected async save(): Promise<void> {
-    const sectionId = this.section.value;
-    if (this.form.invalid || sectionId === null || this.saving()) {
-      this.form.markAllAsTouched();
+    const model = this.model();
+    const sectionId = model.section;
+    if (this.form().invalid() || sectionId === null || this.saving()) {
+      this.form().markAsTouched();
       return;
     }
     this.saving.set(true);
     this.failed.set(false);
+    const editing = this.editing();
     const input = {
       sectionId,
-      name: this.localizedName(),
-      listPrice: this.price.dirty
-        ? this.price.value === null
+      name: this.localizedName(model),
+      listPrice: this.form.price().dirty()
+        ? model.price === null
           ? null
-          : this.price.value * 100
-        : this.prefilled,
-      tagIds: this.tags.value,
+          : model.price * 100
+        : (editing?.listPrice ?? null),
+      tagIds: model.tags,
     };
     try {
-      const editing = this.editing();
       await (editing ? this.store.updateItem(editing.id, input) : this.store.addItem(input));
       void this.router.navigate(['/manage/venues', this.id()], { replaceUrl: true });
     } catch {
@@ -158,22 +146,9 @@ export class ItemFormPage {
     }
   }
 
-  private fill(item: Item | undefined, sectionId: string | undefined): void {
-    const known = (id: string | undefined): string | null =>
-      id !== undefined && this.store.sectionsById().has(id) ? id : null;
-    this.prefilled = item?.listPrice ?? null;
-    this.form.reset({
-      nameHe: item?.name.he ?? '',
-      nameEn: item?.name.en ?? '',
-      section: known(item?.sectionId ?? sectionId),
-      price: this.prefilled === null ? null : Math.round(this.prefilled / 100),
-      tags: item?.tagIds ?? [],
-    });
-  }
-
-  private localizedName(): LocalizedText {
-    const he = this.nameHe.value.trim();
-    const en = this.nameEn.value.trim();
+  private localizedName(model: ItemModel): LocalizedText {
+    const he = model.nameHe.trim();
+    const en = model.nameEn.trim();
     return en ? { he, en } : { he };
   }
 }
