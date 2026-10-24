@@ -1,6 +1,5 @@
-import { randomBytes } from 'node:crypto';
 import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { EntryRepository } from '@menu/api/entries/data-access';
+import { EntryRepository, PHOTO_STORAGE, type PhotoStorage } from '@menu/api/entries/data-access';
 import { withoutUndefined } from '@menu/api/shared/util';
 import { type Principal } from '@menu/api/shared/util-auth';
 import {
@@ -19,12 +18,9 @@ import {
   type SharedEntryView,
   type UpdateEntry,
 } from '@menu/shared/contracts';
+import { entryPhotoKey } from '../photo/photo-bytes';
+import { newCapabilityId } from './capability-id';
 import { DiaryEntry } from './diary-entry';
-
-/** 16 random bytes: 22 URL-safe characters, unguessable. */
-function newShareToken(): string {
-  return randomBytes(16).toString('base64url');
-}
 
 /**
  * Diary entries. Items are looked up through the menus catalog port and author
@@ -38,6 +34,7 @@ export class EntryService {
     private readonly repository: EntryRepository,
     @Inject(ITEM_CATALOG) private readonly catalog: ItemCatalog,
     @Inject(AUTHOR_DIRECTORY) private readonly authors: AuthorDirectory,
+    @Inject(PHOTO_STORAGE) private readonly photos: PhotoStorage,
   ) {}
 
   /** The entries sheet: the caller's own entries, then other people's public ones. */
@@ -74,7 +71,7 @@ export class EntryService {
       authorId: principal.accountId,
       itemId: item.id,
       venueId: item.venueId,
-      shareToken: input.visibility === 'private' ? null : newShareToken(),
+      shareToken: input.visibility === 'private' ? null : newCapabilityId(),
     });
     return new DiaryEntry(record).toContract();
   }
@@ -103,7 +100,10 @@ export class EntryService {
     const next = new DiaryEntry({ ...entry.record, ...withoutUndefined(input) });
     const record = await this.repository.update(id, principal.accountId, {
       ...input,
-      ...(next.needsShareToken() ? { shareToken: newShareToken() } : {}),
+      ...(next.needsShareToken() ? { shareToken: newCapabilityId() } : {}),
+      ...(input.visibility && entry.narrowsTo(input.visibility)
+        ? { photoId: newCapabilityId() }
+        : {}),
     });
     if (!record) {
       throw new NotFoundException('Entry not found.');
@@ -115,6 +115,7 @@ export class EntryService {
     if (!(await this.repository.delete(id, principal.accountId))) {
       throw new NotFoundException('Entry not found.');
     }
+    await this.photos.delete(entryPhotoKey(id));
   }
 
   /**
@@ -122,7 +123,7 @@ export class EntryService {
    * so an Admin learns nothing about a private or missing entry.
    */
   setHidden(id: string, hidden: boolean): Promise<void> {
-    return this.repository.setHidden(id, hidden);
+    return this.repository.setHidden(id, hidden, newCapabilityId());
   }
 
   /** What a share link shows to anyone holding it. An unknown token reads as removed. */

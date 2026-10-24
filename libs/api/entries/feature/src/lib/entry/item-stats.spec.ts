@@ -10,6 +10,7 @@ describe('summarizeEntries', () => {
       wouldOrderAgain: null,
       pricePaid: null,
       visibility: 'private',
+      photoId: null,
       eatenAt: new Date('2026-10-10T12:00:00.000Z'),
       createdAt: new Date('2026-10-10T12:00:00.000Z'),
       ...overrides,
@@ -19,6 +20,23 @@ describe('summarizeEntries', () => {
     Array.from({ length: n }, (_, index) =>
       fact({ authorId: `${overrides.visibility ?? 'p'}${index}`, ...overrides }),
     );
+
+  it('shows the photo of the newest public entry that has one, never a private one', () => {
+    const stats = summarizeEntries([
+      fact({
+        visibility: 'public',
+        photoId: 'olderPhotoolderPhoto00',
+        eatenAt: new Date('2026-09-01T00:00:00.000Z'),
+      }),
+      fact({ visibility: 'public', photoId: 'newerPhotonewerPhoto00' }),
+      fact({ visibility: 'public', eatenAt: new Date('2026-11-01T00:00:00.000Z') }),
+      fact({ photoId: 'privatePhotoprivatePh0', eatenAt: new Date('2026-12-01T00:00:00.000Z') }),
+    ]);
+    expect(stats.latestPublicPhotoUrl).toBe('/api/photos/newerPhotonewerPhoto00');
+    expect(
+      summarizeEntries([fact({ photoId: 'privatePhotoprivatePh0' })]).latestPublicPhotoUrl,
+    ).toBeNull();
+  });
 
   it('counts only each author’s latest rating', () => {
     const stats = summarizeEntries([
