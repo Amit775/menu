@@ -25,6 +25,8 @@ Run tasks through `pnpm nx`, never the underlying tool. `typecheck` uses `ngc` f
 5. Write the failing test first. Done means `pnpm nx affected -t lint typecheck test` passes (the Stop hook enforces it).
 6. Do not add dependencies or choose libraries. The stack is fixed in `docs/decisions/0001-stack-and-architecture.md`.
 7. Commits follow Conventional Commits with an Nx project as scope (`feat(api): ...`); commitlint enforces it.
+8. No comments that restate the code: names and types say what it does. Comment only a non-obvious reason (a privacy rule, a race, a platform quirk, a tooling constraint), in one or two lines. No JSDoc on obvious members, no section-header comments.
+9. Angular: `@Service()` for root services, no `effect()` without the user's approval, Transloco through `injectTranslate` for every UI string. Details and the replacements in `.claude/rules/angular.md`.
 
 ## Generators (`tools/workspace-plugin`)
 
