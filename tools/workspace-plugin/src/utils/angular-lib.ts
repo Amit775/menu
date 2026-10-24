@@ -86,6 +86,19 @@ export async function createAngularLib(tree: Tree, options: AngularLibOptions): 
     );
   }
 
+  tree.write(
+    joinPathFragments(root, 'src/test-setup.ts'),
+    [
+      "import '@angular/compiler';",
+      "import '@analogjs/vitest-angular/setup-snapshots';",
+      "import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';",
+      "import { provideI18n } from '@menu/web/shared/util-i18n';",
+      '',
+      'setupTestBed({ providers: [provideI18n()] });',
+      '',
+    ].join('\n'),
+  );
+
   tree.delete(joinPathFragments(root, 'src/lib'));
   tree.write(joinPathFragments(root, 'src/index.ts'), 'export {};\n');
 }

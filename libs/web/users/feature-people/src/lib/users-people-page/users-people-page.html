@@ -1,14 +1,14 @@
 <a mat-button class="back" routerLink="/manage">
   <mat-icon aria-hidden="true">{{ backIcon() }}</mat-icon
-  >{{ t().back }}
+  >{{ t('back') }}
 </a>
-<h1>{{ t().title }}</h1>
-<p class="intro">{{ t().intro }}</p>
+<h1>{{ t('title') }}</h1>
+<p class="intro">{{ t('intro') }}</p>
 
 @switch (store.status()) {
   @case ('loading') {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   }
   @case ('loaded') {
@@ -18,22 +18,24 @@
           <span class="names">
             <span class="name" [class.muted]="!row.account.displayName">{{ row.name }}</span>
             <span class="meta">
-              {{ row.isMe ? t().you : t().joined(row.account.createdAt | relativeDate) }}
+              {{
+                row.isMe ? t('you') : t('joined', { date: row.account.createdAt | relativeDate })
+              }}
             </span>
           </span>
           <mat-slide-toggle
             [checked]="row.account.isAdmin"
             [disabled]="busy() === row.account.id || (row.isMe && row.account.isAdmin)"
-            [aria-label]="t().makeAdmin(row.name)"
+            [aria-label]="t('makeAdmin', { name: row.name })"
             (change)="toggle(row.account, $event)"
           >
-            {{ t().admin }}
+            {{ t('admin') }}
           </mat-slide-toggle>
           @if (row.isMe && row.account.isAdmin) {
-            <p class="hint">{{ t().selfHint }}</p>
+            <p class="hint">{{ t('selfHint') }}</p>
           }
           @if (failed() === row.account.id) {
-            <p class="error" role="alert">{{ t().saveFailed }}</p>
+            <p class="error" role="alert">{{ t('saveFailed') }}</p>
           }
         </li>
       }
@@ -41,8 +43,8 @@
   }
   @default {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="retry()">{{ t('retry') }}</button>
     </div>
   }
 }

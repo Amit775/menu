@@ -1,75 +1,75 @@
 <header>
-  <a mat-button [routerLink]="['/manage/venues', id()]">{{ t().cancel }}</a>
-  <h1>{{ itemId() ? t().editTitle : t().newTitle }}</h1>
+  <a mat-button [routerLink]="['/manage/venues', id()]">{{ t('cancel') }}</a>
+  <h1>{{ itemId() ? t('editTitle') : t('newTitle') }}</h1>
 </header>
 
 @switch (status()) {
   @case ('loading') {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   }
   @case ('not-found') {
     <div class="state" role="alert">
-      {{ t().notFound }}
-      <a mat-button [routerLink]="['/manage/venues', id()]">{{ t().toVenue }}</a>
+      {{ t('notFound') }}
+      <a mat-button [routerLink]="['/manage/venues', id()]">{{ t('toVenue') }}</a>
     </div>
   }
   @case ('error') {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="retry()">{{ t('retry') }}</button>
     </div>
   }
   @default {
     @if (store.venue(); as venue) {
-      <p class="intro">{{ t().intro(venue.name | localize) }}</p>
+      <p class="intro">{{ t('intro', { venue: venue.name | localize }) }}</p>
     }
     <form novalidate (submit)="$event.preventDefault(); save()">
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().nameHe }}</mat-label>
+        <mat-label>{{ t('nameHe') }}</mat-label>
         <input matInput dir="rtl" lang="he" [formField]="form.nameHe" />
         @if (form.nameHe().invalid()) {
-          <mat-error>{{ t().nameRequired }}</mat-error>
+          <mat-error>{{ t('nameRequired') }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().nameEn }}</mat-label>
+        <mat-label>{{ t('nameEn') }}</mat-label>
         <input matInput dir="ltr" lang="en" [formField]="form.nameEn" />
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().section }}</mat-label>
+        <mat-label>{{ t('section') }}</mat-label>
         <mat-select class="section" [formField]="form.section">
           @for (view of store.menu(); track view.section.id) {
             <mat-option [value]="view.section.id">{{ view.section.name | localize }}</mat-option>
           }
         </mat-select>
         @if (form.section().invalid()) {
-          <mat-error>{{ t().sectionRequired }}</mat-error>
+          <mat-error>{{ t('sectionRequired') }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().price }}</mat-label>
+        <mat-label>{{ t('price') }}</mat-label>
         <input matInput type="number" inputmode="numeric" step="1" [formField]="form.price" />
         <span matTextPrefix>₪&nbsp;</span>
         @if (form.price().invalid()) {
-          <mat-error>{{ t().priceInvalid }}</mat-error>
+          <mat-error>{{ t('priceInvalid') }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().tags }}</mat-label>
+        <mat-label>{{ t('tags') }}</mat-label>
         <mat-select class="tags" multiple [formField]="form.tags">
           @for (tag of store.tags(); track tag.id) {
             <mat-option [value]="tag.id">{{ tag.name | localize }}</mat-option>
           }
         </mat-select>
-        <mat-hint>{{ t().tagsHint }}</mat-hint>
+        <mat-hint>{{ t('tagsHint') }}</mat-hint>
       </mat-form-field>
       @if (failed()) {
-        <p class="error" role="alert">{{ t().saveFailed }}</p>
+        <p class="error" role="alert">{{ t('saveFailed') }}</p>
       }
       <button mat-flat-button class="save" type="submit" [disabled]="saving()">
-        {{ saving() ? t().saving : t().save }}
+        {{ saving() ? t('saving') : t('save') }}
       </button>
     </form>
   }

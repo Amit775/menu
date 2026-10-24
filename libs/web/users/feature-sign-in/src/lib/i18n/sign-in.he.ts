@@ -1,0 +1,16 @@
+export const he = {
+  title: 'כניסה',
+  intro: 'כדי לשמור מה אכלת, איפה וכמה זה עלה.',
+  google: 'כניסה עם Google',
+  or: 'או',
+  phone: 'מספר טלפון',
+  phoneHint: 'נשלח אליך קוד ב-SMS',
+  sendCode: 'שליחת קוד',
+  code: 'הקוד שקיבלת',
+  confirm: 'כניסה',
+  changePhone: 'מספר אחר',
+  errorInvalidPhone: 'המספר לא נראה תקין.',
+  errorInvalidCode: 'הקוד לא נכון. אפשר לנסות שוב.',
+  errorTooMany: 'יותר מדי ניסיונות. אפשר לנסות שוב בעוד כמה דקות.',
+  errorFailed: 'הכניסה לא הצליחה. אפשר לנסות שוב.',
+};

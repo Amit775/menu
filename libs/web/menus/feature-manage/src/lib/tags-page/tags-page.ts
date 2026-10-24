@@ -16,8 +16,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { type LocalizedText, type Tag, type TagKind, TagKindSchema } from '@menu/shared/contracts';
 import { TagsStore } from '@menu/web/menus/data-access';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { tagsMessages } from '../tags.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { tagsI18n } from '../tags.i18n';
 
 const notBlank: ValidatorFn = (control) =>
   typeof control.value === 'string' && control.value.trim() === ''
@@ -63,7 +63,7 @@ function nameForm(tag?: Tag) {
 export class TagsPage {
   protected readonly store = inject(TagsStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(tagsMessages);
+  protected readonly t = injectTranslate(tagsI18n);
   protected readonly kinds = TagKindSchema.options;
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',

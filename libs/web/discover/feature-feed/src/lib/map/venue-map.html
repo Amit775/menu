@@ -1,5 +1,5 @@
 <div class="menu-venue-map">
-  <div #map class="canvas" dir="ltr" role="region" [attr.aria-label]="t().mapLabel"></div>
+  <div #map class="canvas" dir="ltr" role="region" [attr.aria-label]="t('mapLabel')"></div>
   @if (view(); as view) {
     <menu-map-pins
       [leaflet]="view.leaflet"
@@ -10,16 +10,18 @@
     />
   }
   @if (store.status() === 'loaded' && store.pins().length === 0) {
-    <p class="empty" role="status">{{ t().noPins }}</p>
+    <p class="empty" role="status">{{ t('noPins') }}</p>
   }
   @if (selected(); as pin) {
     <aside class="card" [attr.aria-labelledby]="'map-card-title'">
       <div class="text">
         <h2 #heading id="map-card-title" tabindex="-1">{{ pin.venue.name | localize }}</h2>
-        <p>{{ t().pinSummary(pin.itemCount, pin.bestScore) }}</p>
+        <p>
+          {{ t('pinSummary', { count: pin.itemCount, best: pin.bestScore?.toFixed(1) ?? 'none' }) }}
+        </p>
       </div>
-      <a mat-flat-button [routerLink]="['/venues', pin.venue.id]">{{ t().toVenue }}</a>
-      <button mat-icon-button type="button" [attr.aria-label]="t().close" (click)="close()">
+      <a mat-flat-button [routerLink]="['/venues', pin.venue.id]">{{ t('toVenue') }}</a>
+      <button mat-icon-button type="button" [attr.aria-label]="t('close')" (click)="close()">
         <mat-icon aria-hidden="true">close</mat-icon>
       </button>
     </aside>

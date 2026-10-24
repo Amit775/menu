@@ -24,9 +24,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { Auth } from '@menu/web/shared/util-auth';
-import { injectMessages } from '@menu/web/shared/util-i18n';
+import { injectTranslate } from '@menu/web/shared/util-i18n';
 import { safeReturnUrl, toE164 } from '../phone-number';
-import { signInMessages } from '../sign-in.messages';
+import { signInI18n } from '../sign-in.i18n';
 
 type SignInError = 'invalid-phone' | 'invalid-code' | 'too-many' | 'failed';
 
@@ -59,7 +59,7 @@ export class SignInPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
-  protected readonly t = injectMessages(signInMessages);
+  protected readonly t = injectTranslate(signInI18n);
 
   /** `?returnUrl=`: where to go once signed in. */
   readonly returnUrl = input<string>();
@@ -68,16 +68,15 @@ export class SignInPage implements OnInit {
   protected readonly busy = signal(false);
   protected readonly error = signal<SignInError | null>(null);
   protected readonly errorText = computed(() => {
-    const messages = this.t();
     switch (this.error()) {
       case 'invalid-phone':
-        return messages.errorInvalidPhone;
+        return this.t('errorInvalidPhone');
       case 'invalid-code':
-        return messages.errorInvalidCode;
+        return this.t('errorInvalidCode');
       case 'too-many':
-        return messages.errorTooMany;
+        return this.t('errorTooMany');
       case 'failed':
-        return messages.errorFailed;
+        return this.t('errorFailed');
       default:
         return null;
     }

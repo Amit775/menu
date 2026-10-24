@@ -6,8 +6,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { VenuePageStore } from '@menu/web/discover/data-access';
 import { ItemRow } from '@menu/web/discover/ui';
-import { DistancePipe, I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { venueMessages } from '../venue.messages';
+import { DistancePipe, I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { venueI18n } from '../venue.i18n';
 
 /** A venue's page: how to get there, what is good, and the whole menu by section. */
 @Component({
@@ -31,7 +31,7 @@ export class DiscoverVenuePage {
   private readonly location = inject(Location);
   private readonly router = inject(Router);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(venueMessages);
+  protected readonly t = injectTranslate(venueI18n);
 
   /** The `:id` route parameter. */
   readonly id = input.required<string>();

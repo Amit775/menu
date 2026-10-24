@@ -7,8 +7,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { DEFAULT_FILTERS, FeedStore, type FeedSort } from '@menu/web/discover/data-access';
-import { injectMessages, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
-import { feedMessages } from '../feed.messages';
+import { injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
+import { feedI18n } from '../feed.i18n';
 
 export const RADIUS_OPTIONS = [1, 2, 5, 10, 25];
 /** In agorot. */
@@ -33,7 +33,7 @@ export const PRICE_OPTIONS = [5000, 8000, 12000];
 })
 export class FilterSheet {
   protected readonly store = inject(FeedStore);
-  protected readonly t = injectMessages(feedMessages);
+  protected readonly t = injectTranslate(feedI18n);
   protected readonly radiusOptions = RADIUS_OPTIONS;
   protected readonly priceOptions = PRICE_OPTIONS;
 
