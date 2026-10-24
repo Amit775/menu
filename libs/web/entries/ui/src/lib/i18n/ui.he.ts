@@ -1,0 +1,15 @@
+export const he = {
+  yourEntry: 'הרשומה שלך',
+  anonymous: 'משתמש',
+  rating: 'דירוג {rating} מתוך 5',
+  wouldOrderAgain: 'יזמין שוב',
+  wouldNotOrderAgain: 'לא יזמין שוב',
+  paid: 'שולם {price}',
+  hidden: 'הוסתרה על ידי מנהל. רק את/ה רואה אותה.',
+  photo: 'תמונה מהרשומה',
+  ratingLegend: 'דירוג',
+  optional: '(לא חובה)',
+  clearRating: 'ניקוי הדירוג',
+  stars: '{count, plural, =1 {כוכב אחד} other {# כוכבים}}',
+  visibilityName: '{visibility, select, private {פרטית} shared {בקישור} other {ציבורית}}',
+};

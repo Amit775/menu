@@ -17,11 +17,11 @@ import { ScoreBadge } from '@menu/web/discover/ui';
 import {
   DistancePipe,
   I18n,
-  injectMessages,
+  injectTranslate,
   LocalizePipe,
   ShekelsPipe,
 } from '@menu/web/shared/util-i18n';
-import { feedMessages } from '../feed.messages';
+import { feedI18n } from '../feed.i18n';
 
 /** How far a swipe must travel, in pixels, to count. */
 const SWIPE = 60;
@@ -53,7 +53,7 @@ export class ReelCard {
   private readonly router = inject(Router);
   private readonly shareLink = inject(DeviceShare);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(feedMessages);
+  protected readonly t = injectTranslate(feedI18n);
 
   /** The item the feed placed here. */
   readonly item = input.required<DiscoverItem>();

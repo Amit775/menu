@@ -15,8 +15,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { AddItemStore } from '@menu/web/menus/data-access';
 import { type LocalizedText } from '@menu/shared/contracts';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { addItemMessages } from '../add-item.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { addItemI18n } from '../add-item.i18n';
 
 /** Required, and more than spaces: the API trims the name. */
 const notBlank: ValidatorFn = (control) =>
@@ -51,7 +51,7 @@ export class MenusAddItemPage {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(addItemMessages);
+  protected readonly t = injectTranslate(addItemI18n);
 
   /** The venue's `:id` route parameter. */
   readonly id = input.required<string>();

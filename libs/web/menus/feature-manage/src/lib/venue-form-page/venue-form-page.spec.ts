@@ -70,6 +70,7 @@ describe('VenueFormPage', () => {
     });
     TestBed.inject(I18n).setLanguage('he');
     const harness = await RouterTestingHarness.create(url);
+    await harness.fixture.whenStable();
     await vi.waitFor(() => {
       harness.detectChanges();
       expect(harness.routeNativeElement?.querySelector('mat-spinner')).toBeNull();

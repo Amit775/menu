@@ -1,0 +1,22 @@
+export const he = {
+  back: 'חזרה',
+  loading: 'טוען…',
+  share: 'שיתוף',
+  copied: 'הקישור הועתק',
+  loadFailed: 'לא הצלחנו לטעון את הפריט.',
+  retry: 'לנסות שוב',
+  notFound: 'הפריט הזה לא נמצא.',
+  toFeed: 'לגילוי',
+  archived: 'הפריט כבר לא בתפריט.',
+  entries: '{count, plural, =1 {רשומה אחת} other {# רשומות}}',
+  noScore:
+    '{count, plural, =0 {עדיין אין דירוגים. היו הראשונים.} other {עדיין אין מספיק דירוגים לציון.}}',
+  wouldOrderAgain: 'יזמינו שוב',
+  percent: '{value}%',
+  latestPrice: 'מחיר אחרון',
+  ratings: 'דירוגים',
+  alsoGoodAt: 'עוד טעים ב{venue}',
+  whatPeopleSay: 'מה אומרים',
+  allEntries: 'לכל הרשומות',
+  logIt: 'אכלתי את זה',
+};

@@ -7,8 +7,8 @@ import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { type Item, type LocalizedText, type MenuSection } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
-import { formatShekels, I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { venueManagerMessages } from '../venue-manager.messages';
+import { formatShekels, I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { venueManagerI18n } from '../venue-manager.i18n';
 
 const nameValidators = [Validators.required.bind(Validators), Validators.maxLength(80)];
 
@@ -34,7 +34,7 @@ const nameValidators = [Validators.required.bind(Validators), Validators.maxLeng
 export class MenuEditor {
   protected readonly store = inject(VenueManagerStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(venueManagerMessages);
+  protected readonly t = injectTranslate(venueManagerI18n);
 
   protected readonly busy = signal(false);
   protected readonly failed = signal(false);
@@ -124,7 +124,7 @@ export class MenuEditor {
       .filter((tag) => tag !== undefined)
       .map((tag) => this.i18n.pick(tag.name));
     return [
-      item.listPrice === null ? this.t().noPrice : formatShekels(item.listPrice),
+      item.listPrice === null ? this.t('noPrice') : formatShekels(item.listPrice),
       ...tags,
     ].join(' · ');
   }

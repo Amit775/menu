@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MessagesPipe } from '@menu/web/shared/util-i18n';
-import { discoverUiMessages } from '../ui.messages';
+import { injectTranslate } from '@menu/web/shared/util-i18n';
+import { uiI18n } from '../ui.i18n';
 
 /**
  * An item's score on a near-black chip ("4.6"), with the entry count beneath.
@@ -8,21 +8,21 @@ import { discoverUiMessages } from '../ui.messages';
  */
 @Component({
   selector: 'menu-score-badge',
-  imports: [MessagesPipe],
+
   template: `
-    @let t = messages | messages;
     @if (formatted(); as value) {
       <span class="score"
         ><span aria-hidden="true">{{ value }}</span
-        ><span class="visually-hidden">{{ t.scoreLabel(value) }}</span></span
+        ><span class="visually-hidden">{{ t('scoreLabel', { score: value }) }}</span></span
       >
     } @else {
       <span class="score none"
-        ><span aria-hidden="true">–</span><span class="visually-hidden">{{ t.noScore }}</span></span
+        ><span aria-hidden="true">–</span
+        ><span class="visually-hidden">{{ t('noScore') }}</span></span
       >
     }
     @if (showCount()) {
-      <span class="count">{{ t.entries(count()) }}</span>
+      <span class="count">{{ t('entries', { count: count() }) }}</span>
     }
   `,
   styleUrl: './score-badge.scss',
@@ -36,7 +36,7 @@ export class ScoreBadge {
   readonly tone = input<'dark' | 'light'>('dark');
   readonly size = input<'small' | 'large'>('small');
 
-  protected readonly messages = discoverUiMessages;
+  protected readonly t = injectTranslate(uiI18n);
   protected readonly formatted = computed(() => {
     const score = this.score();
     return score === null ? null : score.toFixed(1);
