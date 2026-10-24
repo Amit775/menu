@@ -65,6 +65,18 @@ h1 {
   text-decoration: none;
 }
 
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container);
+
+  img {
+    object-fit: cover;
+  }
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

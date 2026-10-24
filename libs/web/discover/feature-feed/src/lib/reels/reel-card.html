@@ -5,6 +5,11 @@
   (pointerup)="pointerUp($event)"
   (pointercancel)="pointerCancel()"
 >
+  @if (current.photoUrl) {
+    <div class="backdrop">
+      <img [ngSrc]="current.photoUrl" fill [priority]="lead()" alt="" />
+    </div>
+  }
   @if (siblings().length > 1) {
     <div class="dots" aria-hidden="true">
       @for (sibling of siblings(); track sibling.id; let index = $index) {

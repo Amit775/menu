@@ -82,6 +82,33 @@ describe('EntryApiClient', () => {
     await expect(hide).resolves.toBeUndefined();
   });
 
+  it('uploads a photo as the raw request body', async () => {
+    const photo = new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: 'image/jpeg' });
+    const withPhoto = { ...entry, photoUrl: `/api/photos/${'p'.repeat(22)}` };
+    const upload = client.setPhoto(entry.id, photo);
+    const request = http.expectOne(`/api/entries/${entry.id}/photo`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toBe(photo);
+    request.flush(withPhoto);
+    await expect(upload).resolves.toEqual(withPhoto);
+  });
+
+  it('rejects a photo url that is not one of ours', async () => {
+    const upload = client.setPhoto(entry.id, new Blob([]));
+    http
+      .expectOne(`/api/entries/${entry.id}/photo`)
+      .flush({ ...entry, photoUrl: 'https://example.com/x.jpg' });
+    await expect(upload).rejects.toThrow();
+  });
+
+  it('removes a photo', async () => {
+    const removal = client.removePhoto(entry.id);
+    const request = http.expectOne(`/api/entries/${entry.id}/photo`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(entry);
+    await expect(removal).resolves.toEqual(entry);
+  });
+
   it('rejects an edited entry that breaks the contract', async () => {
     const edit = client.update(entry.id, { rating: 3 });
     http.expectOne(`/api/entries/${entry.id}`).flush({ ...entry, rating: 9 });

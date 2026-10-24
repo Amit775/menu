@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -29,12 +30,20 @@ const COPIED_NOTICE_MS = 3000;
 
 /**
  * One full-screen card in the reels feed. Tapping the edges steps through the
- * venue's other items; swiping up opens the venue. Without a photo (photos come
- * later) the card is typographic.
+ * venue's other items; swiping up opens the venue. The item's newest public
+ * photo fills it; without one the card is typographic.
  */
 @Component({
   selector: 'menu-reel-card',
-  imports: [MatIconModule, RouterLink, ScoreBadge, LocalizePipe, DistancePipe, ShekelsPipe],
+  imports: [
+    NgOptimizedImage,
+    MatIconModule,
+    RouterLink,
+    ScoreBadge,
+    LocalizePipe,
+    DistancePipe,
+    ShekelsPipe,
+  ],
   templateUrl: './reel-card.html',
   styleUrl: './reel-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,6 +57,8 @@ export class ReelCard {
 
   /** The item the feed placed here. */
   readonly item = input.required<DiscoverItem>();
+  /** The first card on screen: its photo loads first. */
+  readonly lead = input(false);
 
   /** The venue's item shown instead, after an edge tap. */
   private readonly stepped = signal<DiscoverItem | null>(null);

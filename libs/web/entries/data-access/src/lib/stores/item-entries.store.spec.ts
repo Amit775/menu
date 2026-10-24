@@ -163,4 +163,40 @@ describe('ItemEntriesStore', () => {
     expect(store.others()).toEqual([publicEntry]);
     expect(version()).toBe(0);
   });
+
+  it('puts a photo on one of the caller’s entries', async () => {
+    const withPhoto = { ...entry, photoUrl: `/api/photos/${'p'.repeat(22)}` };
+    const setPhoto = vi.fn().mockResolvedValue(withPhoto);
+    const { store, version } = setup({ forItem: vi.fn().mockResolvedValue(sheet), setPhoto });
+    await store.load(ITEM_ID);
+    const photo = new Blob(['x'], { type: 'image/jpeg' });
+    await store.setPhoto(entry.id, photo);
+    expect(setPhoto).toHaveBeenCalledWith(entry.id, photo);
+    expect(store.mine()).toEqual([withPhoto]);
+    expect(version()).toBe(1);
+  });
+
+  it('keeps the entry as it was when the photo is refused', async () => {
+    const { store, version } = setup({
+      forItem: vi.fn().mockResolvedValue(sheet),
+      setPhoto: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 415 })),
+    });
+    await store.load(ITEM_ID);
+    await expect(store.setPhoto(entry.id, new Blob([]))).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.mine()).toEqual([entry]);
+    expect(version()).toBe(0);
+  });
+
+  it('removes a photo', async () => {
+    const withPhoto = { ...entry, photoUrl: `/api/photos/${'p'.repeat(22)}` };
+    const removePhoto = vi.fn().mockResolvedValue(entry);
+    const { store } = setup({
+      forItem: vi.fn().mockResolvedValue({ ...sheet, mine: [withPhoto] }),
+      removePhoto,
+    });
+    await store.load(ITEM_ID);
+    await store.removePhoto(entry.id);
+    expect(removePhoto).toHaveBeenCalledWith(entry.id);
+    expect(store.mine()).toEqual([entry]);
+  });
 });
