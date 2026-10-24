@@ -93,7 +93,6 @@ export const ItemEntriesStore = signalStore(
           replaceMine(store.mine().filter((entry) => entry.id !== id));
           changes.notify('entries');
         },
-        /** Admin: takes someone else's entry off public view (it leaves the sheet). */
         async hide(id: string): Promise<void> {
           await api.setHidden(id, true);
           patchSheet((sheet) => ({

@@ -31,7 +31,6 @@ export const RANKING_STRATEGY = Symbol('RANKING_STRATEGY');
 const SEARCH_LIMIT = 5;
 const TOP_ITEMS = 3;
 
-/** Everything one request ranks against: the catalog, its entry stats and the caller's flags. */
 interface Snapshot {
   catalog: CatalogItem[];
   stats: ReadonlyMap<string, ItemStats>;
@@ -160,7 +159,6 @@ export class DiscoverService {
     };
   }
 
-  /** Items, venues and tags whose names contain the query, Hebrew-folded (see `foldForSearch`). */
   async search(principal: Principal | null, q: string): Promise<SearchResults> {
     const needle = foldForSearch(q);
     if (needle === '') {
@@ -188,7 +186,6 @@ export class DiscoverService {
     };
   }
 
-  /** Per item: score, public entries, and the other entries only as a count from the floor up. */
   async insights(principal: Principal, venueId: string): Promise<VenueInsights> {
     if (!canEditVenue(principal, venueId)) {
       throw new ForbiddenException('Only the venue’s Owner or an Admin sees its insights.');
@@ -225,7 +222,6 @@ export class DiscoverService {
     return { catalog, stats, means: peerMeans(catalog, stats), writtenByMe };
   }
 
-  /** Approved items matching the shared feed and map filters: radius (with a location) and tags. */
   private filter(snapshot: Snapshot, query: MapQuery): DiscoverItem[] {
     const point = pointOf(query);
     return snapshot.catalog

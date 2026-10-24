@@ -10,7 +10,6 @@ interface MenuSectionRow {
   position: number;
 }
 
-/** Maps between Prisma rows and the shared contract. The only code that touches `prisma.menuSection`. */
 @Injectable()
 export class MenuSectionRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -27,7 +26,6 @@ export class MenuSectionRepository {
     return (await this.prisma.menuSection.count({ where: { id: sectionId, venueId } })) > 0;
   }
 
-  /** Appends a section at the end of the venue's menu. */
   async create(venueId: string, name: LocalizedText): Promise<MenuSection> {
     const row = await this.prisma.$transaction(async (tx) => {
       const last = await tx.menuSection.aggregate({ where: { venueId }, _max: { position: true } });
@@ -49,7 +47,6 @@ export class MenuSectionRepository {
     return toContract(await this.prisma.menuSection.findUniqueOrThrow({ where: { id } }));
   }
 
-  /** Sets every section's position from the given order, atomically. */
   async reorder(venueId: string, sectionIds: readonly string[]): Promise<MenuSection[]> {
     await this.prisma.$transaction(
       sectionIds.map((id, position) =>

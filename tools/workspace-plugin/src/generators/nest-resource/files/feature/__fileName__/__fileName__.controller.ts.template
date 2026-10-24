@@ -8,7 +8,6 @@ import {
 } from '@menu/shared/contracts';
 import { <%= className %>Service } from './<%= fileName %>.service';
 
-/** `/api/<%= fileName %>`: HTTP only. Validation via the shared contract, logic in the service. */
 @Controller(<%= propertyName %>Path)
 export class <%= className %>Controller {
   constructor(private readonly service: <%= className %>Service) {}

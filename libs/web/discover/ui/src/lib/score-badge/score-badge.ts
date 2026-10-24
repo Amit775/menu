@@ -2,10 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { injectTranslate } from '@menu/web/shared/util-i18n';
 import { uiI18n } from '../ui.i18n';
 
-/**
- * An item's score on a near-black chip ("4.6"), with the entry count beneath.
- * Below the floor the API sends no score, and the chip says so.
- */
 @Component({
   selector: 'menu-score-badge',
 

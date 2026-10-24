@@ -27,11 +27,6 @@ interface ItemModel {
   tags: string[];
 }
 
-/**
- * J6: add an item to the menu (`/manage/venues/:id/items/new?sectionId=`) or
- * edit one (`/manage/venues/:id/items/:itemId`): names, section, menu price
- * and tags. The Owner's or an Admin's items are approved at once.
- */
 @Component({
   selector: 'menu-item-form-page',
   imports: [
@@ -50,11 +45,8 @@ interface ItemModel {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ItemFormPage {
-  /** The venue's `:id` route parameter. */
   readonly id = input.required<string>();
-  /** `:itemId` when editing; absent on `items/new`. */
   readonly itemId = input<string>();
-  /** `?sectionId=`: the section a new item starts in. */
   readonly sectionId = input<string>();
 
   protected readonly store = inject(VenueManagerStore);
@@ -64,7 +56,6 @@ export class ItemFormPage {
   protected readonly saving = signal(false);
   protected readonly failed = signal(false);
 
-  /** The item being edited; undefined for a new one, null when it is not this venue's. */
   protected readonly editing = computed<Item | null | undefined>(() => {
     const id = this.itemId();
     return id === undefined

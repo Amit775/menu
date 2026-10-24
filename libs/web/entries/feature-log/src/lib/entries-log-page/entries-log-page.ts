@@ -41,17 +41,11 @@ function toShekels(agorot: number | null): number | null {
 
 type SaveError = 'failed' | 'closed' | 'photoRejected' | 'photoFailed';
 
-/** What the form will do to the entry's photo on save. */
 type PhotoChange =
   | { kind: 'keep' }
   | { kind: 'set'; photo: Blob; preview: string }
   | { kind: 'remove' };
 
-/**
- * J3: log what I ate, or edit an entry (`/log/:itemId[/:entryId]`). One screen:
- * rating, would order again, price paid (prefilled), when, a note, a photo and
- * who sees it. The photo goes up after the entry is saved (ADR 0011).
- */
 @Component({
   selector: 'menu-entries-log-page',
   imports: [
@@ -79,9 +73,7 @@ export class EntriesLogPage {
   private readonly shrinker = inject(PhotoShrinker);
   protected readonly t = injectTranslate(logI18n);
 
-  /** The `:itemId` route parameter. */
   readonly itemId = input.required<string>();
-  /** The `:entryId` route parameter, when editing. */
   readonly entryId = input<string>();
 
   protected readonly maxDate = toLocalInput(new Date());
@@ -99,15 +91,12 @@ export class EntriesLogPage {
     source: this.itemId,
     computation: () => ({ kind: 'keep' }),
   });
-  /** A picked photo is being made smaller. */
   protected readonly preparingPhoto = signal(false);
-  /** The entry this form logged, when its photo then failed: trying again edits it. */
   private readonly created = linkedSignal<string, string | undefined>({
     source: this.itemId,
     computation: () => undefined,
   });
 
-  /** The entry being edited, once the sheet is here; undefined for a new one. */
   protected readonly editing = computed<Entry | null | undefined>(() => {
     const id = this.entryId() ?? this.created();
     return id === undefined
@@ -160,7 +149,6 @@ export class EntriesLogPage {
       .some((error) => error.kind === 'future'),
   );
 
-  /** What the photo box shows: the picked photo, the saved one, or nothing. */
   protected readonly photoPreview = computed(() => {
     const change = this.photoChange();
     if (change.kind === 'set') {
@@ -319,7 +307,6 @@ export class EntriesLogPage {
     this.changePhoto({ kind: 'keep' });
   }
 
-  /** Swaps the pending photo change, letting go of the old preview. */
   private changePhoto(change: PhotoChange): void {
     const previous = this.photoChange();
     if (previous.kind === 'set') {

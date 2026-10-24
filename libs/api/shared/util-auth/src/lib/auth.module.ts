@@ -9,13 +9,11 @@ import {
 } from './ports';
 
 export interface AuthModuleOptions {
-  /** Module that provides and exports the resolver (the users domain). */
   resolverModule: Type;
   resolver: Type<PrincipalResolver>;
   verifier: Type<TokenVerifier>;
 }
 
-/** Registers `AuthGuard` globally with the app's verifier and resolver. Wired in `apps/api`. */
 @Module({})
 export class AuthModule {
   static forRoot(options: AuthModuleOptions): DynamicModule {

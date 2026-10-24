@@ -1,4 +1,3 @@
-/** Optional fields with `undefined` removed from their type. */
 export type Defined<T> = { [K in keyof T]?: Exclude<T[K], undefined> };
 
 /**

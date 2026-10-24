@@ -22,7 +22,6 @@ export interface FeedFilters {
   tagIds: string[];
   radiusKm: number;
   sort: FeedSort;
-  /** In agorot; null for any price. */
   maxPrice: number | null;
 }
 
@@ -42,13 +41,9 @@ interface FeedState {
   nextOffset: number | null;
   status: 'idle' | 'loading' | 'loaded' | 'error';
   tags: Tag[];
-  /** Other items at a venue, for tapping through them in reels. */
   venueItems: Record<string, DiscoverItem[]>;
-  /** The reels card on screen, restored when the user comes back to the feed. */
   reelIndex: number;
-  /** The map view: one pin per venue with matching items. */
   pins: MapPin[];
-  /** Where the user is, when they shared it; the map centres on it. */
   near: GeoPoint | null;
 }
 
@@ -65,15 +60,10 @@ const initialState: FeedState = {
   near: null,
 };
 
-/**
- * The discover feed: reels or list, with the filters the user picked. App-wide
- * so the feed is where they left it after visiting an item or a venue.
- */
 export const FeedStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withComputed(({ items, filters, tags }) => ({
-    /** Items with a score; the list puts the rest after a divider. */
     ranked: computed(() => items().filter((item) => item.score !== null)),
     unranked: computed(() => items().filter((item) => item.score === null)),
     filterCount: computed(() => {
@@ -85,7 +75,6 @@ export const FeedStore = signalStore(
         (current.maxPrice === null ? 0 : 1)
       );
     }),
-    /** The first chosen tag, named on the filter button. */
     primaryTag: computed(() => tags().find((tag) => tag.id === filters().tagIds[0]) ?? null),
   })),
   withMethods((store, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
@@ -93,7 +82,6 @@ export const FeedStore = signalStore(
     /** Set by a refresh that should leave the user on the reel they were watching. */
     let keepReel = false;
 
-    /** `keep` leaves the user on their reel; any other fetch forgets an earlier ask to. */
     async function fetchPage(offset: number, keep = false): Promise<void> {
       const current = ++request;
       keepReel = false;
@@ -135,7 +123,6 @@ export const FeedStore = signalStore(
     }
 
     return {
-      /** The first page, unless it is already here. */
       async load(): Promise<void> {
         if (store.status() === 'idle' || store.status() === 'error') {
           await fetchPage(0, keepReel);
@@ -158,7 +145,6 @@ export const FeedStore = signalStore(
         patchState(store, { filters: DEFAULT_FILTERS });
         await fetchPage(0);
       },
-      /** Reels interleave unranked items, the list puts them last, the map groups by venue. */
       async setView(view: FeedView): Promise<void> {
         if (view !== store.view()) {
           patchState(store, { view });

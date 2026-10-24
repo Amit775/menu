@@ -7,7 +7,6 @@ interface <%= className %>Row {
   createdAt: Date;
 }
 
-/** Maps between Prisma rows and the shared contract. The only code that touches `prisma.<%= propertyName %>`. */
 @Injectable()
 export class <%= className %>Repository {
   constructor(private readonly prisma: PrismaService) {}

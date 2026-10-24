@@ -58,11 +58,6 @@ const sectionLines = (text: string): string[] =>
     .map((line) => line.trim())
     .filter((line) => line !== '');
 
-/**
- * J7 (Admin): create a venue (`/manage/venues/new`) or edit one
- * (`/manage/venues/:id/edit`): names, address, a pin on the map, phone,
- * reservation link and, when editing, whether it is hidden.
- */
 @Component({
   selector: 'menu-venue-form-page',
   imports: [
@@ -81,7 +76,6 @@ const sectionLines = (text: string): string[] =>
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VenueFormPage {
-  /** The venue's `:id` when editing; absent on `venues/new`. */
   readonly id = input<string>();
 
   protected readonly store = inject(VenueManagerStore);
@@ -138,7 +132,6 @@ export class VenueFormPage {
   });
 
   protected readonly editing = computed(() => this.id() !== undefined);
-  /** Ready to show the form: always for a new venue, once loaded when editing. */
   protected readonly state = computed(() => (this.editing() ? this.store.status() : 'loaded'));
   protected readonly saving = signal(false);
   protected readonly failed = signal(false);

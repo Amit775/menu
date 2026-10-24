@@ -17,10 +17,6 @@ import { DiaryEntry } from '../entry/diary-entry';
 import { deletePhoto, entryPhotoKey, photoTypeOf } from './photo-bytes';
 import { withoutMetadata } from './photo-metadata';
 
-/**
- * An entry's one photo (ADR 0011): the author sets or removes it; anyone
- * holding its id reads it. Every new photo gets a new id.
- */
 @Injectable()
 export class PhotoService {
   constructor(
@@ -51,7 +47,6 @@ export class PhotoService {
     return entry;
   }
 
-  /** The photo behind an id, for anyone holding it. An old or unknown id reads as missing. */
   async read(photoId: string): Promise<StoredPhoto> {
     const record = await this.repository.findByPhotoId(photoId);
     const photo = record ? await this.storage.get(entryPhotoKey(record.id)) : null;
