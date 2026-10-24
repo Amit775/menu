@@ -16,18 +16,28 @@ export class AccountService implements PrincipalResolver {
     @Inject(USERS_CONFIG) private readonly config: UsersConfig,
   ) {}
 
+  /**
+   * A uid in `ADMIN_FIREBASE_UIDS` is an Admin, also when its account was made
+   * before it was listed (the uid is only known after the first sign-in).
+   */
   async resolve(identity: VerifiedIdentity): Promise<Principal> {
+    const listed = this.config.bootstrapAdminUids.includes(identity.uid);
     const account = await this.repository.findOrCreateByFirebaseUid({
       firebaseUid: identity.uid,
       displayName: identity.name?.trim().slice(0, 60) ?? '',
-      isAdmin: this.config.bootstrapAdminUids.includes(identity.uid),
+      isAdmin: listed,
     });
+    const isAdmin = account.isAdmin || (listed && (await this.promote(account.id)));
     return {
       accountId: account.id,
-      isAdmin: account.isAdmin,
+      isAdmin,
       language: account.language,
       ownedVenueIds: account.ownedVenueIds,
     };
+  }
+
+  private async promote(accountId: string): Promise<boolean> {
+    return (await this.repository.setAdmin(accountId, true))?.isAdmin ?? false;
   }
 
   async get(id: string): Promise<Account> {
