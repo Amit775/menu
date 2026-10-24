@@ -1,4 +1,8 @@
-import { GrantOwnershipSchema, OwnershipListQuerySchema, OwnershipSchema } from './ownership.contract';
+import {
+  GrantOwnershipSchema,
+  OwnershipListQuerySchema,
+  OwnershipSchema,
+} from './ownership.contract';
 
 describe('Ownership contract', () => {
   const valid = {

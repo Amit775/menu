@@ -3,7 +3,9 @@ import { OwnershipController } from './ownership.controller';
 import { OwnershipService } from './ownership.service';
 
 describe('OwnershipController', () => {
-  async function setup(service: Partial<Record<keyof OwnershipService, unknown>>): Promise<OwnershipController> {
+  async function setup(
+    service: Partial<Record<keyof OwnershipService, unknown>>,
+  ): Promise<OwnershipController> {
     const moduleRef = await Test.createTestingModule({
       controllers: [OwnershipController],
       providers: [{ provide: OwnershipService, useValue: service }],

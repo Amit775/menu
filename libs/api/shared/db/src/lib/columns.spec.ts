@@ -2,7 +2,10 @@ import { fromLocalized, isPrismaError, PrismaErrorCode, toLocalized } from './co
 
 describe('localized columns', () => {
   it('round-trips a name with and without English', () => {
-    expect(toLocalized(fromLocalized({ he: 'סלט', en: 'Salad' }))).toEqual({ he: 'סלט', en: 'Salad' });
+    expect(toLocalized(fromLocalized({ he: 'סלט', en: 'Salad' }))).toEqual({
+      he: 'סלט',
+      en: 'Salad',
+    });
     expect(fromLocalized({ he: 'סלט' })).toEqual({ nameHe: 'סלט', nameEn: null });
     expect(toLocalized({ nameHe: 'סלט', nameEn: null })).toEqual({ he: 'סלט' });
   });
