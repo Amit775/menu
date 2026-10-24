@@ -32,3 +32,12 @@ Every project has exactly one `platform:*`, one `scope:*` and one `type:*` tag. 
 - Cross-domain needs go through a `shared` lib or an API call, and get an ADR. Why: domain isolation is what keeps features independently changeable.
 - Record architectural decisions with `pnpm nx g @menu/workspace-plugin:adr "<title>"`. Read `docs/decisions/` before proposing a change that touches architecture.
 - Do not add dependencies (`pnpm add`) without the user's approval. The stack is fixed in ADR 0001.
+
+## Value types (planned, under review)
+
+Agreed with the user on 2026-10-24, to land with the data-model review before more features build on the current shapes:
+
+- `Text`: `{ he: string; en: string | null }`, for every user-facing name and description (venues, items, sections, tags). Hebrew is required; English falls back to Hebrew. Stored as one `jsonb` column validated by the same Zod schema, not as `<name>_he` / `<name>_en` columns.
+- `Price`: `{ value: number; currency: Currency }`, `Currency` an enum (`ILS` now, `USD` later). The value is in the major unit (shekels, not agorot), stored as `numeric(10,2)` plus a currency column.
+
+Until that modeling PR merges, the code still uses `LocalizedText` and prices in agorot. Do not add new fields in the old shapes; ask first.
