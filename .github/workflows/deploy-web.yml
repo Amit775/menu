@@ -110,11 +110,22 @@ jobs:
           hosting=https://firebasehosting.googleapis.com/v1beta1
           config="https://identitytoolkit.googleapis.com/admin/v2/projects/$PROJECT/config"
 
+          # curl that prints the URL and the API's error body when a call fails.
+          call() {
+            local out
+            if ! out=$(curl -sS --fail-with-body "${api[@]}" "$@"); then
+              echo "Request failed: ${*: -1}" >&2
+              echo "$out" >&2
+              return 1
+            fi
+            printf '%s\n' "$out"
+          }
+
           # Every channel of the default site, one JSON object per line.
           channels() {
             local token='' page
             while :; do
-              page=$(curl -fsS "${api[@]}" "$hosting/sites/$PROJECT/channels?pageSize=100&pageToken=$token")
+              page=$(call "$hosting/sites/$PROJECT/channels?pageSize=100&pageToken=$token")
               jq -c '.channels // [] | .[]' <<<"$page"
               token=$(jq -r '.nextPageToken // empty' <<<"$page")
               [ -n "$token" ] || break
@@ -125,7 +136,7 @@ jobs:
           if [ -n "$CLOSED_PR" ]; then
             closing=$(channels | jq -r --arg prefix "pr$CLOSED_PR-" 'select(.name | split("/") | last | startswith($prefix)) | .name')
             for name in $closing; do
-              curl -fsS -X DELETE "${api[@]}" "$hosting/$name" >/dev/null
+              call -X DELETE "$hosting/$name" >/dev/null
               echo "Deleted channel $name"
             done
           fi
@@ -134,7 +145,7 @@ jobs:
           previews=$(channels | jq -r --arg closed "${CLOSED_PR:+pr$CLOSED_PR-}" \
             'select((.name | endswith("/channels/live")) or ($closed != "" and (.name | split("/") | last | startswith($closed))) | not) | .url | ltrimstr("https://")' |
             jq -cRn '[inputs | select(. != "")]')
-          current=$(curl -fsS "${api[@]}" "$config" | jq -c '.authorizedDomains // []')
+          current=$(call "$config" | jq -c '.authorizedDomains // []')
           # Keep every domain that is not a preview (<project>--*.web.app), then add the existing channels' ones.
           desired=$(jq -cn --argjson current "$current" --argjson previews "$previews" --arg prefix "$PROJECT--" \
             '[$current[] | select((startswith($prefix) and endswith(".web.app")) | not)] + ($previews | sort)')
@@ -146,4 +157,4 @@ jobs:
           echo "Adding: $(jq -cn --argjson a "$desired" --argjson b "$current" '$a - $b')"
           echo "Removing: $(jq -cn --argjson a "$current" --argjson b "$desired" '$a - $b')"
           jq -n --argjson domains "$desired" '{authorizedDomains: $domains}' |
-            curl -fsS -X PATCH "${api[@]}" --data @- "$config?updateMask=authorizedDomains" >/dev/null
+            call -X PATCH --data @- "$config?updateMask=authorizedDomains" >/dev/null
