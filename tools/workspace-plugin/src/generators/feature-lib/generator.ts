@@ -33,6 +33,7 @@ export async function featureLibGenerator(
     name,
     fileName: feature.fileName,
     className: feature.className,
+    propertyName: feature.propertyName,
     title: `${names(domain).className} ${name.replace(/-/g, ' ')}`,
     routesName,
     template: '',
