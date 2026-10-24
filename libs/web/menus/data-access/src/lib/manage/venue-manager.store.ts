@@ -102,16 +102,24 @@ export const VenueManagerStore = signalStore(
       /** Loads once per venue; a failure leaves it empty for the page to say so. */
       async loadInsights(): Promise<void> {
         const venue = store.venue();
+        const current = request;
         if (venue && !store.insights()) {
-          patchState(store, { insights: await api.insights(venue.id) });
+          const insights = await api.insights(venue.id);
+          // Another venue loaded meanwhile: these numbers are not its.
+          if (current === request) {
+            patchState(store, { insights });
+          }
         }
       },
       /** Approve or reject a pending item, or archive one from the menu. Rejects when refused. */
       async decide(id: string, decision: ItemDecision): Promise<void> {
         replace(await api.decide(id, decision));
+        // The menu changed, so the insights reload when next shown.
+        patchState(store, { insights: null });
       },
       async merge(id: string, intoItemId: string): Promise<void> {
         replace(await api.merge(id, intoItemId));
+        patchState(store, { insights: null });
       },
       /** A new item from the Owner or an Admin is approved at once. */
       async addItem(input: NewItem): Promise<Item> {

@@ -145,4 +145,40 @@ describe('VenueManagerStore', () => {
     expect(insightsCall).toHaveBeenCalledTimes(1);
     expect(store.insights()).toEqual(insights);
   });
+
+  it('rejects when insights fail, leaving none', async () => {
+    const store = setup({
+      insights: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 500 })),
+    });
+    await store.load(VENUE_ID);
+    await expect(store.loadInsights()).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.insights()).toBeNull();
+  });
+
+  it('drops insights that arrive after another venue loaded', async () => {
+    let answer: (value: typeof insights) => void = () => undefined;
+    const store = setup({
+      insights: vi.fn(() => new Promise<typeof insights>((resolve) => (answer = resolve))),
+    });
+    await store.load(VENUE_ID);
+    const loading = store.loadInsights();
+    await store.load(VENUE_ID);
+    answer(insights);
+    await loading;
+    expect(store.insights()).toBeNull();
+  });
+
+  it('reloads insights after a decision changes the menu', async () => {
+    const insightsCall = vi.fn().mockResolvedValue(insights);
+    const store = setup({
+      insights: insightsCall,
+      decide: vi.fn().mockResolvedValue({ ...item, state: 'approved' }),
+    });
+    await store.load(VENUE_ID);
+    await store.loadInsights();
+    await store.decide(item.id, 'approve');
+    expect(store.insights()).toBeNull();
+    await store.loadInsights();
+    expect(insightsCall).toHaveBeenCalledTimes(2);
+  });
 });
