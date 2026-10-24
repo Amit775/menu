@@ -1,5 +1,6 @@
 import '@angular/compiler';
 import '@analogjs/vitest-angular/setup-snapshots';
 import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
+import { provideI18n } from '@menu/web/shared/util-i18n';
 
-setupTestBed();
+setupTestBed({ providers: [provideI18n()] });

@@ -1,69 +1,71 @@
 <a mat-button class="back" routerLink="/manage">
   <mat-icon aria-hidden="true">{{ backIcon() }}</mat-icon
-  >{{ t().back }}
+  >{{ t('back') }}
 </a>
-<h1>{{ t().title }}</h1>
-<p class="intro">{{ t().intro }}</p>
+<h1>{{ t('title') }}</h1>
+<p class="intro">{{ t('intro') }}</p>
 
 @switch (store.status()) {
   @case ('loading') {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   }
   @case ('loaded') {
     @if (failed(); as failure) {
-      <p class="error" role="alert">{{ t()[failure] }}</p>
+      <p class="error" role="alert">{{ t(failure) }}</p>
     }
     @if (store.tags().length === 0) {
-      <p class="empty">{{ t().empty }}</p>
+      <p class="empty">{{ t('empty') }}</p>
     }
     @for (group of groups(); track group.kind) {
       @if (group.tags.length > 0) {
-        <section [attr.aria-label]="t().kinds[group.kind]">
-          <h2>{{ t().kinds[group.kind] }}</h2>
+        <section [attr.aria-label]="t('kindName', { kind: group.kind })">
+          <h2>{{ t('kindName', { kind: group.kind }) }}</h2>
           <ul>
             @for (tag of group.tags; track tag.id) {
               <li [attr.data-slug]="tag.slug">
                 @if (editing() === tag.id) {
                   <form class="edit" [formGroup]="editForm" (ngSubmit)="save(tag)">
                     <mat-form-field appearance="outline">
-                      <mat-label>{{ t().nameHe }}</mat-label>
+                      <mat-label>{{ t('nameHe') }}</mat-label>
                       <input matInput dir="rtl" lang="he" maxlength="80" formControlName="nameHe" />
                       @if (editForm.controls.nameHe.invalid) {
-                        <mat-error>{{ t().nameRequired }}</mat-error>
+                        <mat-error>{{ t('nameRequired') }}</mat-error>
                       }
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>{{ t().nameEn }}</mat-label>
+                      <mat-label>{{ t('nameEn') }}</mat-label>
                       <input matInput dir="ltr" lang="en" maxlength="80" formControlName="nameEn" />
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>{{ t().kind }}</mat-label>
+                      <mat-label>{{ t('kind') }}</mat-label>
                       <mat-select formControlName="kind">
                         @for (kind of kinds; track kind) {
-                          <mat-option [value]="kind">{{ t().kinds[kind] }}</mat-option>
+                          <mat-option [value]="kind">{{ t('kindName', { kind }) }}</mat-option>
                         }
                       </mat-select>
                     </mat-form-field>
                     <div class="actions">
                       <button mat-flat-button type="submit" [disabled]="busy()">
-                        {{ t().save }}
+                        {{ t('save') }}
                       </button>
-                      <button mat-button type="button" (click)="cancel()">{{ t().cancel }}</button>
+                      <button mat-button type="button" (click)="cancel()">{{ t('cancel') }}</button>
                     </div>
                   </form>
                 } @else if (merging() === tag.id) {
                   <div class="merge">
                     <mat-form-field appearance="outline">
-                      <mat-label>{{ t().mergeInto }}</mat-label>
+                      <mat-label>{{ t('mergeInto') }}</mat-label>
                       <mat-select [formControl]="mergeTarget">
                         @for (other of others(tag); track other.id) {
                           <mat-option [value]="other.id">{{ other.name | localize }}</mat-option>
                         }
                       </mat-select>
                     </mat-form-field>
-                    <p class="hint" role="status">{{ t().mergeHint(tag.name | localize) }}</p>
+                    <p class="hint" role="status">
+                      {{ t('mergeHint', { name: tag.name | localize }) }}
+                    </p>
                     <div class="actions">
                       <button
                         mat-flat-button
@@ -72,9 +74,9 @@
                         [disabled]="!mergeTarget.value || busy()"
                         (click)="merge(tag)"
                       >
-                        {{ t().confirmMerge }}
+                        {{ t('confirmMerge') }}
                       </button>
-                      <button mat-button type="button" (click)="cancel()">{{ t().cancel }}</button>
+                      <button mat-button type="button" (click)="cancel()">{{ t('cancel') }}</button>
                     </div>
                   </div>
                 } @else {
@@ -83,7 +85,7 @@
                     <span class="slug" dir="ltr">{{ tag.slug }}</span>
                   </span>
                   <button mat-button type="button" class="edit-start" (click)="startEdit(tag)">
-                    {{ t().edit }}
+                    {{ t('edit') }}
                   </button>
                   <button
                     mat-button
@@ -92,7 +94,7 @@
                     [disabled]="store.tags().length < 2"
                     (click)="startMerge(tag)"
                   >
-                    {{ t().merge }}
+                    {{ t('merge') }}
                   </button>
                 }
               </li>
@@ -103,43 +105,43 @@
     }
 
     <form class="add" [formGroup]="addForm" (ngSubmit)="add()">
-      <h2>{{ t().newTag }}</h2>
+      <h2>{{ t('newTag') }}</h2>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().slug }}</mat-label>
+        <mat-label>{{ t('slug') }}</mat-label>
         <input matInput dir="ltr" maxlength="41" autocapitalize="off" formControlName="slug" />
-        <mat-hint>{{ t().slugHint }}</mat-hint>
+        <mat-hint>{{ t('slugHint') }}</mat-hint>
         @if (slug.invalid) {
-          <mat-error>{{ t().slugInvalid }}</mat-error>
+          <mat-error>{{ t('slugInvalid') }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().nameHe }}</mat-label>
+        <mat-label>{{ t('nameHe') }}</mat-label>
         <input matInput dir="rtl" lang="he" maxlength="80" formControlName="nameHe" />
         @if (addForm.controls.nameHe.invalid) {
-          <mat-error>{{ t().nameRequired }}</mat-error>
+          <mat-error>{{ t('nameRequired') }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().nameEn }}</mat-label>
+        <mat-label>{{ t('nameEn') }}</mat-label>
         <input matInput dir="ltr" lang="en" maxlength="80" formControlName="nameEn" />
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().kind }}</mat-label>
+        <mat-label>{{ t('kind') }}</mat-label>
         <mat-select formControlName="kind">
           @for (kind of kinds; track kind) {
-            <mat-option [value]="kind">{{ t().kinds[kind] }}</mat-option>
+            <mat-option [value]="kind">{{ t('kindName', { kind }) }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
       <button mat-stroked-button type="submit" class="add-tag" [disabled]="busy()">
-        {{ t().add }}
+        {{ t('add') }}
       </button>
     </form>
   }
   @default {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="retry()">{{ t('retry') }}</button>
     </div>
   }
 }

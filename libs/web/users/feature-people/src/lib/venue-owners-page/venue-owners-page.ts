@@ -8,8 +8,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { type Ownership } from '@menu/shared/contracts';
 import { PeopleStore } from '@menu/web/users/data-access';
-import { I18n, injectMessages, RelativeDatePipe } from '@menu/web/shared/util-i18n';
-import { peopleMessages } from '../people.messages';
+import { I18n, injectTranslate, RelativeDatePipe } from '@menu/web/shared/util-i18n';
+import { peopleI18n } from '../people.i18n';
 
 /**
  * J7 (Admin, `/manage/people/owners/:venueId`): who owns one venue. Grant an
@@ -39,7 +39,7 @@ export class VenueOwnersPage {
 
   protected readonly store = inject(PeopleStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(peopleMessages);
+  protected readonly t = injectTranslate(peopleI18n);
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );
@@ -47,7 +47,7 @@ export class VenueOwnersPage {
   protected readonly candidates = computed(() =>
     this.store.candidates().map((account) => ({
       id: account.id,
-      name: account.displayName || this.t().noName,
+      name: account.displayName || this.t('noName'),
     })),
   );
   protected readonly account = new FormControl<string | null>(null);
@@ -64,7 +64,7 @@ export class VenueOwnersPage {
   }
 
   protected name(owner: Ownership): string {
-    return owner.displayName || this.t().noName;
+    return owner.displayName || this.t('noName');
   }
 
   protected async grant(): Promise<void> {

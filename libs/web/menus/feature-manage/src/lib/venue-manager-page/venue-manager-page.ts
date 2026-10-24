@@ -14,8 +14,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { RouterLink } from '@angular/router';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
 import { Roles } from '@menu/web/shared/util-auth';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { venueManagerMessages } from '../venue-manager.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { venueManagerI18n } from '../venue-manager.i18n';
 import { InsightsTable } from '../venue-manager/insights-table';
 import { MenuEditor } from '../venue-manager/menu-editor';
 import { PendingQueue } from '../venue-manager/pending-queue';
@@ -48,7 +48,7 @@ export class VenueManagerPage {
   protected readonly store = inject(VenueManagerStore);
   protected readonly roles = inject(Roles);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(venueManagerMessages);
+  protected readonly t = injectTranslate(venueManagerI18n);
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );

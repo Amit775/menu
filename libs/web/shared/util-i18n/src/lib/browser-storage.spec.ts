@@ -11,7 +11,12 @@ describe('BrowserStorage', () => {
 
   it('returns null when storage is unavailable', () => {
     TestBed.configureTestingModule({
-      providers: [{ provide: DOCUMENT, useValue: { defaultView: null } }],
+      providers: [
+        {
+          provide: DOCUMENT,
+          useValue: { defaultView: null, documentElement: {} },
+        },
+      ],
     });
     const storage = TestBed.inject(BrowserStorage);
     storage.set('menu.test', 'en');

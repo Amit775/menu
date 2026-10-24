@@ -40,6 +40,12 @@ describe('feature-lib generator', () => {
     );
   });
 
+  it('provides translations to its specs', () => {
+    expect(tree.read('libs/web/reviews/feature-browse/src/test-setup.ts', 'utf-8')).toContain(
+      'setupTestBed({ providers: [provideI18n()] });',
+    );
+  });
+
   it('refuses an unregistered domain', async () => {
     await expect(featureLibGenerator(tree, { domain: 'nope', name: 'x' })).rejects.toThrow(
       /Register it first/,

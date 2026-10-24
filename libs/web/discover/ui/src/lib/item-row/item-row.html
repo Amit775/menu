@@ -1,4 +1,3 @@
-@let t = messages | messages;
 @let current = item();
 <a [routerLink]="['/items', current.id]">
   @if (current.photoUrl) {
@@ -8,8 +7,8 @@
     <span class="name">
       {{ current.name | localize }}
       @if (current.writtenByMe) {
-        <span class="flag" aria-hidden="true" [title]="t.writtenByMe"></span>
-        <span class="visually-hidden">{{ t.writtenByMe }}</span>
+        <span class="flag" aria-hidden="true" [title]="t('writtenByMe')"></span>
+        <span class="visually-hidden">{{ t('writtenByMe') }}</span>
       }
     </span>
     <span class="meta">
@@ -24,9 +23,11 @@
       }
     </span>
     @if (current.wouldOrderAgainPercent !== null) {
-      <span class="ratio">{{ t.wouldOrderAgain(current.wouldOrderAgainPercent) }}</span>
+      <span class="ratio">{{
+        t('wouldOrderAgain', { percent: current.wouldOrderAgainPercent })
+      }}</span>
     } @else if (current.score === null && current.ratingCount === 0) {
-      <span class="ratio">{{ t.beFirst }}</span>
+      <span class="ratio">{{ t('beFirst') }}</span>
     }
   </span>
   <menu-score-badge [score]="current.score" [count]="current.ratingCount" />

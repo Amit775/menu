@@ -1,4 +1,4 @@
-import { formatDistance, formatRelativeDate, formatShekels } from './format';
+import { formatDistance, formatMonth, formatRelativeDate, formatShekels } from './format';
 
 describe('formatShekels', () => {
   it('shows whole shekels', () => {
@@ -32,5 +32,11 @@ describe('formatRelativeDate', () => {
 
   it('counts weeks after a week', () => {
     expect(formatRelativeDate('2026-10-09T12:00:00.000Z', 'en', now)).toBe('2 weeks ago');
+  });
+});
+
+describe('formatMonth', () => {
+  it('names the month in the given language', () => {
+    expect(formatMonth('2026-03', 'en')).toBe('Mar');
   });
 });

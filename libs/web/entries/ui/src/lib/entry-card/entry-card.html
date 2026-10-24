@@ -1,25 +1,26 @@
-@let t = messages | messages;
 @let current = entry();
 <div class="head">
   @if (own(); as mine) {
-    <span class="who"> {{ t.yourEntry }} · {{ t.visibility[mine.visibility] }} </span>
+    <span class="who">
+      {{ t('yourEntry') }} · {{ t('visibilityName', { visibility: mine.visibility }) }}
+    </span>
   } @else {
-    <span class="who">{{ author() || t.anonymous }}</span>
+    <span class="who">{{ author() || t('anonymous') }}</span>
   }
   <span class="facts">
     @if (current.rating !== null) {
       <span>
         <span aria-hidden="true">★ {{ current.rating }}</span>
-        <span class="visually-hidden">{{ t.rating(current.rating) }}</span>
+        <span class="visually-hidden">{{ t('rating', { rating: current.rating }) }}</span>
       </span>
     }
     @if (current.wouldOrderAgain !== null) {
-      <span>{{ current.wouldOrderAgain ? t.wouldOrderAgain : t.wouldNotOrderAgain }}</span>
+      <span>{{ current.wouldOrderAgain ? t('wouldOrderAgain') : t('wouldNotOrderAgain') }}</span>
     }
     @if (current.pricePaid !== null) {
       <span>
         <span aria-hidden="true">{{ current.pricePaid | shekels }}</span>
-        <span class="visually-hidden">{{ t.paid(current.pricePaid | shekels) }}</span>
+        <span class="visually-hidden">{{ t('paid', { price: current.pricePaid | shekels }) }}</span>
       </span>
     }
     <time [attr.datetime]="current.eatenAt">{{ current.eatenAt | relativeDate }}</time>
@@ -27,13 +28,13 @@
 </div>
 @if (current.photoUrl) {
   <div class="photo">
-    <img [ngSrc]="current.photoUrl" fill [alt]="t.photo" />
+    <img [ngSrc]="current.photoUrl" fill [alt]="t('photo')" />
   </div>
 }
 @if (current.text) {
   <p class="text">{{ current.text }}</p>
 }
 @if (own()?.hidden) {
-  <p class="hidden" role="note">{{ t.hidden }}</p>
+  <p class="hidden" role="note">{{ t('hidden') }}</p>
 }
 <div class="actions"><ng-content /></div>

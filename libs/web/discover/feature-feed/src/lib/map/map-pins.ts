@@ -8,9 +8,9 @@ import {
   output,
 } from '@angular/core';
 import { type GeoPoint, type MapPin } from '@menu/shared/contracts';
-import { I18n, injectMessages } from '@menu/web/shared/util-i18n';
+import { I18n, injectTranslate } from '@menu/web/shared/util-i18n';
 import type * as Leaflet from 'leaflet';
-import { feedMessages } from '../feed.messages';
+import { feedI18n } from '../feed.i18n';
 
 const FIT_MAX_ZOOM = 15;
 
@@ -27,7 +27,7 @@ export class MapPins implements OnChanges, OnDestroy {
   readonly opened = output<MapPin>();
 
   private readonly i18n = inject(I18n);
-  private readonly t = injectMessages(feedMessages);
+  private readonly t = injectTranslate(feedI18n);
   private layer: Leaflet.LayerGroup | undefined;
   private me: Leaflet.CircleMarker | undefined;
   private readonly markers = new Map<string, HTMLElement>();
@@ -53,7 +53,7 @@ export class MapPins implements OnChanges, OnDestroy {
     }
     this.me = this.leaflet()
       .circleMarker(near, { radius: 7, className: 'menu-map-me' })
-      .bindTooltip(() => this.t().youAreHere)
+      .bindTooltip(() => this.t('youAreHere'))
       .addTo(this.map());
   }
 
@@ -102,8 +102,10 @@ export class MapPins implements OnChanges, OnDestroy {
   }
 
   private label(pin: MapPin): string {
-    const t = this.t();
-    const parts = [this.i18n.pick(pin.venue.name), t.pinSummary(pin.itemCount, pin.bestScore)];
-    return (pin.writtenByMe ? [...parts, t.writtenByMe] : parts).join(', ');
+    const parts = [
+      this.i18n.pick(pin.venue.name),
+      this.t('pinSummary', { count: pin.itemCount, best: pin.bestScore?.toFixed(1) ?? 'none' }),
+    ];
+    return (pin.writtenByMe ? [...parts, this.t('writtenByMe')] : parts).join(', ');
   }
 }

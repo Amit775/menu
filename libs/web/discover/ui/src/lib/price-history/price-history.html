@@ -1,12 +1,11 @@
-@let t = messages | messages;
 <figure>
-  <figcaption>{{ t.priceHistory }}</figcaption>
+  <figcaption>{{ t('priceHistory') }}</figcaption>
   <ol>
     @for (bar of bars(); track bar.month) {
       <li [class.latest]="bar.latest">
         <span class="price">{{ bar.averagePrice | shekels }}</span>
         <span class="track"><span class="bar" [style.height.%]="bar.height"></span></span>
-        <span class="month">{{ t.month(bar.month) }}</span>
+        <span class="month">{{ bar.label }}</span>
       </li>
     }
   </ol>

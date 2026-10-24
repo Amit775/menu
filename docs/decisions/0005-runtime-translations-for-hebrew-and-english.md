@@ -1,6 +1,6 @@
 # 0005. Runtime translations for Hebrew and English
 
-- Status: accepted
+- Status: superseded by 0012
 - Date: 2026-10-23
 
 ## Context

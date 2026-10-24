@@ -20,8 +20,8 @@ import { Router, RouterLink } from '@angular/router';
 import { type Entry, type EntryVisibility, type UpdateEntry } from '@menu/shared/contracts';
 import { ItemEntriesStore, LastVisibility, PhotoShrinker } from '@menu/web/entries/data-access';
 import { RatingInput } from '@menu/web/entries/ui';
-import { injectMessages, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
-import { logMessages } from '../log.messages';
+import { injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
+import { logI18n } from '../log.i18n';
 import { fromLocalInput, toLocalInput } from './local-time';
 
 const MAX_SHEKELS = 100_000;
@@ -77,7 +77,7 @@ export class EntriesLogPage {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly shrinker = inject(PhotoShrinker);
-  protected readonly t = injectMessages(logMessages);
+  protected readonly t = injectTranslate(logI18n);
 
   /** The `:itemId` route parameter. */
   readonly itemId = input.required<string>();
@@ -175,11 +175,10 @@ export class EntriesLogPage {
   });
 
   protected readonly pickLabel = computed(() => {
-    const t = this.t();
     if (this.preparingPhoto()) {
-      return t.preparingPhoto;
+      return this.t('preparingPhoto');
     }
-    return this.photoPreview() === null ? t.addPhoto : t.changePhoto;
+    return this.t(this.photoPreview() === null ? 'addPhoto' : 'changePhoto');
   });
 
   protected readonly status = computed(() =>
