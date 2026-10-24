@@ -92,12 +92,8 @@ export class TagsPage {
   protected readonly busy = signal(false);
   protected readonly failed = signal<'saveFailed' | 'slugTaken' | null>(null);
 
-  constructor() {
-    void this.store.load();
-  }
-
   protected retry(): void {
-    void this.store.load();
+    this.store.reload();
   }
 
   protected others(tag: Tag): Tag[] {

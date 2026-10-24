@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { PeopleApiClient } from './people.api-client';
 import { PeopleStore } from './people.store';
@@ -20,6 +21,8 @@ const owner = {
 };
 
 describe('PeopleStore', () => {
+  const settle = () => TestBed.inject(ApplicationRef).whenStable();
+
   function setup(api: Partial<PeopleApiClient>) {
     TestBed.configureTestingModule({
       providers: [
@@ -39,28 +42,32 @@ describe('PeopleStore', () => {
 
   it('lists named accounts by name, unnamed ones last', async () => {
     const store = setup({});
-    await store.load();
+    store.load(() => null);
+    await settle();
     expect(store.sorted().map((account) => account.id)).toEqual([dana.id, yossi.id, phone.id]);
     expect(store.owners()).toEqual([]);
   });
 
   it('loads a venue’s Owners and offers only the others as new ones', async () => {
     const store = setup({});
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     expect(store.owners()).toEqual([owner]);
     expect(store.candidates().map((account) => account.id)).toEqual([phone.id, dana.id]);
   });
 
   it('records a failed load', async () => {
     const store = setup({ accounts: vi.fn().mockRejectedValue(new Error('offline')) });
-    await store.load();
+    store.load(() => null);
+    await settle();
     expect(store.status()).toBe('error');
   });
 
   it('makes an account an Admin', async () => {
     const setAdmin = vi.fn().mockResolvedValue({ ...dana, isAdmin: true });
     const store = setup({ setAdmin });
-    await store.load();
+    store.load(() => null);
+    await settle();
     await store.setAdmin(dana.id, true);
     expect(store.sorted()[0]?.isAdmin).toBe(true);
   });
@@ -69,7 +76,8 @@ describe('PeopleStore', () => {
     const store = setup({
       setAdmin: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 400 })),
     });
-    await store.load();
+    store.load(() => null);
+    await settle();
     await expect(store.setAdmin(dana.id, true)).rejects.toBeInstanceOf(HttpErrorResponse);
     expect(store.sorted()[0]?.isAdmin).toBe(false);
   });
@@ -78,7 +86,8 @@ describe('PeopleStore', () => {
     const grant = vi.fn().mockResolvedValue({ ...owner, accountId: dana.id, displayName: 'Dana' });
     const revoke = vi.fn().mockResolvedValue(undefined);
     const store = setup({ grant, revoke });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.grant(dana.id);
     expect(grant).toHaveBeenCalledWith(VENUE_ID, dana.id);
     await store.revoke(yossi.id);
@@ -94,11 +103,17 @@ describe('PeopleStore', () => {
     );
     const store = setup({ owners });
     const OTHER = '8c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
-    const first = store.load(VENUE_ID);
-    const second = store.load(OTHER);
+    const venueId = signal(VENUE_ID);
+    store.load(venueId);
+    TestBed.tick();
+    venueId.set(OTHER);
+    TestBed.tick();
+    await vi.waitFor(() => {
+      expect(answers.has(OTHER)).toBe(true);
+    });
     answers.get(OTHER)?.([]);
     answers.get(VENUE_ID)?.([owner]);
-    await Promise.all([first, second]);
+    await settle();
     expect(store.venueId()).toBe(OTHER);
     expect(store.owners()).toEqual([]);
   });

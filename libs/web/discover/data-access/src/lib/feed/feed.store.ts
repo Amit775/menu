@@ -1,4 +1,5 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type DiscoverItem, type GeoPoint, type MapPin, type Tag } from '@menu/shared/contracts';
 import { Auth } from '@menu/web/shared/util-auth';
 import { DataChanges } from '@menu/web/shared/util-events';
@@ -10,6 +11,7 @@ import {
   withMethods,
   withState,
 } from '@ngrx/signals';
+import { skip } from 'rxjs';
 import { DiscoverApiClient } from '../api/discover.api-client';
 import { DeviceLocation } from '@menu/web/shared/util-device';
 
@@ -199,31 +201,21 @@ export const FeedStore = signalStore(
     };
   }),
   withHooks({
-    onInit(store, auth = inject(Auth), changes = inject(DataChanges)) {
-      let account: string | null | undefined;
-      effect(() => {
-        const uid = auth.status() === 'loading' ? undefined : (auth.user()?.uid ?? null);
-        untracked(() => {
-          if (uid === undefined) {
-            return;
-          }
-          if (account !== undefined && account !== uid) {
-            store.invalidate();
-          }
-          account = uid;
+    onInit(
+      store,
+      auth = inject(Auth),
+      changes = inject(DataChanges),
+      destroyRef = inject(DestroyRef),
+    ) {
+      auth.userChanges.pipe(skip(1), takeUntilDestroyed(destroyRef)).subscribe(() => {
+        store.invalidate();
+      });
+      changes
+        .on('entries')
+        .pipe(takeUntilDestroyed(destroyRef))
+        .subscribe(() => {
+          store.invalidate({ keepReel: true });
         });
-      });
-      const entries = changes.version('entries');
-      let seen = entries();
-      effect(() => {
-        const version = entries();
-        if (version !== seen) {
-          seen = version;
-          untracked(() => {
-            store.invalidate({ keepReel: true });
-          });
-        }
-      });
     },
   }),
 );

@@ -50,11 +50,11 @@ export class UsersPeoplePage {
   protected readonly failed = signal<string | null>(null);
 
   constructor() {
-    void this.store.load();
+    this.store.load(() => null);
   }
 
   protected retry(): void {
-    void this.store.load();
+    this.store.reload();
   }
 
   protected async toggle(account: AccountSummary, change: MatSlideToggleChange): Promise<void> {

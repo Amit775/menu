@@ -18,12 +18,16 @@
       @if (store.error() === 'load-failed') {
         <p class="error" role="alert">{{ t().loadFailed }}</p>
       }
-      <form [formGroup]="nameForm" (ngSubmit)="saveName()">
+      <form novalidate (submit)="$event.preventDefault(); saveName()">
         <mat-form-field appearance="outline">
           <mat-label>{{ t().name }}</mat-label>
-          <input matInput autocomplete="nickname" maxlength="60" formControlName="name" />
+          <input matInput autocomplete="nickname" [formField]="nameField" />
         </mat-form-field>
-        <button mat-stroked-button type="submit" [disabled]="name.invalid || !store.account()">
+        <button
+          mat-stroked-button
+          type="submit"
+          [disabled]="nameField().invalid() || !store.account()"
+        >
           {{ t().save }}
         </button>
         @if (saved()) {

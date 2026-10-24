@@ -36,7 +36,7 @@ describe('ItemFormPage', () => {
   }
 
   function field(element: HTMLElement, name: string): HTMLInputElement {
-    const input = element.querySelector<HTMLInputElement>(`[formcontrolname="${name}"]`);
+    const input = element.querySelector<HTMLInputElement>(`[name="item.${name}"]`);
     if (!input) {
       throw new Error(`No ${name}`);
     }
@@ -62,9 +62,7 @@ describe('ItemFormPage', () => {
     );
     TestBed.tick();
     expect(element.querySelector('h1')?.textContent).toBe('פריט חדש');
-    expect(element.querySelector('mat-select[formcontrolname="section"]')?.textContent).toContain(
-      'שתייה',
-    );
+    expect(element.querySelector('mat-select.section')?.textContent).toContain('שתייה');
     type(field(element, 'nameHe'), ' לימונדה ');
     type(field(element, 'nameEn'), 'Lemonade');
     type(field(element, 'price'), '18');
@@ -102,9 +100,7 @@ describe('ItemFormPage', () => {
     expect(element.querySelector('h1')?.textContent).toBe('עריכת פריט');
     expect(field(element, 'nameHe').value).toBe('קלאסי');
     expect(field(element, 'price').value).toBe('63');
-    element
-      .querySelector<HTMLElement>('mat-select[formcontrolname="tags"] .mat-mdc-select-trigger')
-      ?.click();
+    element.querySelector<HTMLElement>('mat-select.tags .mat-mdc-select-trigger')?.click();
     TestBed.tick();
     const option = TestBed.inject(DOCUMENT).querySelector<HTMLElement>('mat-option');
     expect(option?.textContent.trim()).toBe(burgerTag.name.he);

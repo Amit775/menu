@@ -85,7 +85,7 @@ describe('VenueFormPage', () => {
   }
 
   function field(element: HTMLElement, name: string): HTMLInputElement {
-    const input = element.querySelector<HTMLInputElement>(`[formcontrolname="${name}"]`);
+    const input = element.querySelector<HTMLInputElement>(`[name="venue.${name}"]`);
     if (!input) {
       throw new Error(`No ${name}`);
     }
@@ -173,10 +173,8 @@ describe('VenueFormPage', () => {
     TestBed.tick();
     expect(seen.pin).toEqual({ lat: 32.09, lng: venue.location.lng });
     expect(seen.center).toEqual({ lat: 32.09, lng: venue.location.lng });
-    expect(element.querySelector('[formcontrolname="sections"]')).toBeNull();
-    element
-      .querySelector<HTMLElement>('mat-select[formcontrolname="status"] .mat-mdc-select-trigger')
-      ?.click();
+    expect(element.querySelector('[name="venue.sections"]')).toBeNull();
+    element.querySelector<HTMLElement>('mat-select.status .mat-mdc-select-trigger')?.click();
     TestBed.tick();
     const hidden = [...element.ownerDocument.querySelectorAll<HTMLElement>('mat-option')].find(
       (option) => option.textContent.trim() === 'מוסתר',

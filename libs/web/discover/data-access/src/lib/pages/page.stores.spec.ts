@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ITEM_ID, item, VENUE_ID } from '../testing/fixtures';
 import { DiscoverApiClient } from '../api/discover.api-client';
@@ -6,6 +7,8 @@ import { DeviceLocation } from '@menu/web/shared/util-device';
 import { ItemPageStore, VenuePageStore } from './page.stores';
 
 describe('page stores', () => {
+  const settle = () => TestBed.inject(ApplicationRef).whenStable();
+
   function setup(api: Partial<DiscoverApiClient>) {
     TestBed.configureTestingModule({
       providers: [
@@ -21,7 +24,8 @@ describe('page stores', () => {
   it('loads an item page', async () => {
     const page = { item, archived: false, tags: [], priceHistory: [], alsoGoodHere: [] };
     const { items } = setup({ item: vi.fn().mockResolvedValue(page) });
-    await items.load(ITEM_ID);
+    items.load(() => ITEM_ID);
+    await settle();
     expect(items.page()).toEqual(page);
     expect(items.status()).toBe('loaded');
   });
@@ -33,9 +37,11 @@ describe('page stores', () => {
         .mockRejectedValueOnce(new HttpErrorResponse({ status: 404 }))
         .mockRejectedValueOnce(new Error('offline')),
     });
-    await items.load(ITEM_ID);
+    items.load(() => ITEM_ID);
+    await settle();
     expect(items.status()).toBe('not-found');
-    await items.load(ITEM_ID);
+    items.reload();
+    await settle();
     expect(items.status()).toBe('error');
   });
 
@@ -43,7 +49,8 @@ describe('page stores', () => {
     const { items } = setup({
       item: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 400 })),
     });
-    await items.load('foo');
+    items.load(() => 'foo');
+    await settle();
     expect(items.status()).toBe('not-found');
   });
 
@@ -55,16 +62,20 @@ describe('page stores', () => {
       .mockImplementationOnce(() => new Promise((resolve) => (slow = resolve)))
       .mockResolvedValueOnce(other);
     const { items } = setup({ item: load });
-    const first = items.load(ITEM_ID);
-    await items.load('other');
+    const id = signal(ITEM_ID);
+    items.load(id);
+    TestBed.tick();
+    id.set('other');
+    await settle();
     slow({ item });
-    await first;
+    await settle();
     expect(items.page()).toEqual(other);
   });
 
   it('reports a venue that failed to load', async () => {
     const { venues } = setup({ venue: vi.fn().mockRejectedValue(new Error('offline')) });
-    await venues.load(VENUE_ID);
+    venues.load(() => VENUE_ID);
+    await settle();
     expect(venues.status()).toBe('error');
   });
 
@@ -74,9 +85,11 @@ describe('page stores', () => {
       .mockResolvedValueOnce({ venue: { id: VENUE_ID } })
       .mockRejectedValueOnce(new HttpErrorResponse({ status: 404 }));
     const { venues } = setup({ venue });
-    await venues.load(VENUE_ID);
+    venues.load(() => VENUE_ID);
+    await settle();
     expect(venues.status()).toBe('loaded');
-    await venues.load(VENUE_ID);
+    venues.reload();
+    await settle();
     expect(venues.status()).toBe('not-found');
     expect(venues.page()).toBeNull();
   });
