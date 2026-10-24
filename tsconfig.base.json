@@ -57,7 +57,8 @@
       "@menu/web/menus/data-access": ["./libs/web/menus/data-access/src/index.ts"],
       "@menu/web/menus/feature-add-item": ["./libs/web/menus/feature-add-item/src/index.ts"],
       "@menu/web/menus/feature-manage": ["./libs/web/menus/feature-manage/src/index.ts"],
-      "@menu/web/shared/util-map": ["./libs/web/shared/util-map/src/index.ts"]
+      "@menu/web/shared/util-map": ["./libs/web/shared/util-map/src/index.ts"],
+      "@menu/web/users/feature-people": ["./libs/web/users/feature-people/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
