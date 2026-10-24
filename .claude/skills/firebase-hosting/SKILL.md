@@ -38,6 +38,7 @@ The web app is a static build of `apps/web` (`dist/apps/web/browser`) served by 
 ## Troubleshooting
 
 - `Deploy web` skipped: `FIREBASE_PROJECT_ID` is not set yet, or the PR comes from a fork. Not a failure.
+- Sign-in fails on a preview with `auth/unauthorized-domain`: the `auth-domains` job in `Deploy web` did not run or failed. A `403` there means `github-deployer` lacks the `Auth Domains Editor` role (`docs/deployment.md` section 4).
 - 404 on a deep link: the SPA rewrite was removed or shadowed.
 - Old UI after deploy: something is caching `index.html`; check the `headers` order and `Cache-Control`.
 - Hosting deploy fails on the `/api/**` rewrite: the Cloud Run service `menu-api` does not exist yet (`docs/deployment.md` section 5 creates a placeholder).
