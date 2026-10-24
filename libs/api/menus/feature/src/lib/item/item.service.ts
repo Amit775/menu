@@ -29,11 +29,6 @@ const decisionTarget: Record<ItemDecision, ItemState> = {
   archive: 'archived',
 };
 
-/**
- * Items and their lifecycle. Owners and Admins add items straight to the menu;
- * anyone else submits a missing item, which stays pending until an approver
- * approves, rejects or merges it.
- */
 @Injectable()
 export class ItemService {
   constructor(
@@ -44,7 +39,6 @@ export class ItemService {
     @Inject(ITEM_MERGE_LISTENER) private readonly mergeListener: ItemMergeListener,
   ) {}
 
-  /** The menu: approved items, plus pending ones for approvers, plus the caller's own submissions. */
   async listByVenue(principal: Principal | null, venueId: string): Promise<Item[]> {
     await this.assertVenueVisible(principal, venueId);
     const states: ItemState[] = canEditVenue(principal, venueId)
@@ -58,7 +52,6 @@ export class ItemService {
     return records.map((record) => new MenuItem(record).toContract(principal));
   }
 
-  /** Pending submissions the caller can decide on: an Owner's venues, or every venue for an Admin. */
   async listPending(principal: Principal): Promise<Item[]> {
     const records = await this.repository.listPending(
       principal.isAdmin ? null : principal.ownedVenueIds,

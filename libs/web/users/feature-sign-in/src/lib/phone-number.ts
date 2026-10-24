@@ -1,7 +1,3 @@
-/**
- * Turns what people type into E.164: "050-123 4567" becomes "+972501234567".
- * Numbers starting with "+" are taken as international. Null when it cannot be a phone number.
- */
 export function toE164(input: string): string | null {
   const compact = input.replace(/[\s\-().]/g, '');
   const international = compact.startsWith('+')

@@ -17,10 +17,6 @@ interface TagRow {
   kind: TagKind;
 }
 
-/**
- * Maps between Prisma rows and the shared contract. The only code that touches
- * `prisma.tag`; it also re-points `item_tag` links when tags merge.
- */
 @Injectable()
 export class TagRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -34,7 +30,6 @@ export class TagRepository {
     return (await this.prisma.tag.count({ where: { id: { in: [...ids] } } })) === new Set(ids).size;
   }
 
-  /** Null when the slug is taken. */
   async create(input: CreateTag): Promise<Tag | null> {
     try {
       const row = await this.prisma.tag.create({

@@ -3,7 +3,6 @@ import { type Agorot } from '@menu/shared/contracts';
 import { formatDistance, formatRelativeDate, formatShekels } from './format';
 import { I18n } from './i18n';
 
-/** `{{ price | shekels }}`: agorot as whole shekels. */
 @Pipe({ name: 'shekels' })
 export class ShekelsPipe implements PipeTransform {
   transform(agorot: Agorot): string {
@@ -21,7 +20,6 @@ export class DistancePipe implements PipeTransform {
   }
 }
 
-/** `{{ entry.createdAt | relativeDate }}`: "yesterday", "2 weeks ago", in the current language. */
 @Pipe({ name: 'relativeDate', pure: false })
 export class RelativeDatePipe implements PipeTransform {
   private readonly i18n = inject(I18n);

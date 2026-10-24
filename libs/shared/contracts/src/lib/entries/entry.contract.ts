@@ -4,23 +4,18 @@ import { ItemRefSchema } from '../menus/item.contract';
 import { DisplayNameSchema } from '../users/account.contract';
 import { PhotoUrlSchema } from './photo.contract';
 
-/** REST base path: `/api/entries` (the caller's diary, one entry, Admin hide). */
 export const entryPath = 'entries';
 
-/** `/api/items/:itemId/entries`: the entries sheet of an item, and where entries are logged. */
 export function itemEntriesPath(itemId: string): string {
   return `items/${itemId}/entries`;
 }
 
-/** Nest route for the same path. */
 export const itemEntriesRoute = 'items/:itemId/entries';
 
-/** `/api/shared/:token`: what a shared link shows, for anyone holding it. */
 export function sharedEntryPath(token: string): string {
   return `shared/${token}`;
 }
 
-/** Nest route for the same path. */
 export const sharedEntryRoute = 'shared/:token';
 
 /**
@@ -34,7 +29,6 @@ export type EntryVisibility = z.infer<typeof EntryVisibilitySchema>;
 
 export const RatingSchema = z.number().int().min(1).max(5);
 
-/** The random, unguessable part of a share link (`/e/<token>`). */
 export const ShareTokenSchema = z.string().regex(/^[\w-]{22}$/);
 
 /** Allows a day of clock and time-zone skew; a diary line is never about tomorrow. */
@@ -62,7 +56,6 @@ export const EntrySchema = EntryFieldsSchema.extend({
   eatenAt: z.iso.datetime({ offset: true }),
   shareToken: ShareTokenSchema.nullable(),
   hidden: z.boolean(),
-  /** The entry's photo (ADR 0011), or null. */
   photoUrl: PhotoUrlSchema.nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -70,7 +63,6 @@ export const EntrySchema = EntryFieldsSchema.extend({
 
 export type Entry = z.infer<typeof EntrySchema>;
 
-/** `POST /api/items/:itemId/entries`. Everything but the item is optional; `eatenAt` defaults to now. */
 export const CreateEntrySchema = EntryFieldsSchema.extend({
   eatenAt: EatenAtSchema.optional(),
   rating: RatingSchema.nullable().default(null),
@@ -81,15 +73,12 @@ export const CreateEntrySchema = EntryFieldsSchema.extend({
 });
 
 export type CreateEntry = z.infer<typeof CreateEntrySchema>;
-/** What a client sends: every field may be left out for its default. */
 export type CreateEntryInput = z.input<typeof CreateEntrySchema>;
 
-/** `PATCH /api/entries/:id` (author only). */
 export const UpdateEntrySchema = EntryFieldsSchema.partial();
 
 export type UpdateEntry = z.infer<typeof UpdateEntrySchema>;
 
-/** Someone else's public entry, or a shared one opened by its link: never the author's id. */
 export const PublicEntrySchema = EntryFieldsSchema.omit({ visibility: true }).extend({
   id: z.uuid(),
   itemId: z.uuid(),
@@ -102,13 +91,8 @@ export const PublicEntrySchema = EntryFieldsSchema.omit({ visibility: true }).ex
 
 export type PublicEntry = z.infer<typeof PublicEntrySchema>;
 
-/**
- * `GET /api/items/:itemId/entries`: the item, then the caller's own entries on
- * top and public ones below, newest first.
- */
 export const ItemEntriesSchema = z.object({
   item: ItemRefSchema,
-  /** False while the item waits for approval: only its submitter sees it. */
   itemIsPublic: z.boolean(),
   mine: z.array(EntrySchema),
   others: z.array(PublicEntrySchema),
@@ -116,12 +100,10 @@ export const ItemEntriesSchema = z.object({
 
 export type ItemEntries = z.infer<typeof ItemEntriesSchema>;
 
-/** One line of the caller's diary: the entry and what it was about. */
 export const EntryWithItemSchema = EntrySchema.extend({ item: ItemRefSchema });
 
 export type EntryWithItem = z.infer<typeof EntryWithItemSchema>;
 
-/** `GET /api/entries?venueId=&itemId=`: the caller's diary (`EntryWithItem[]`), newest first, optionally for one venue or item. */
 export const DiaryQuerySchema = z.object({
   venueId: z.uuid().optional(),
   itemId: z.uuid().optional(),
@@ -129,7 +111,6 @@ export const DiaryQuerySchema = z.object({
 
 export type DiaryQuery = z.infer<typeof DiaryQuerySchema>;
 
-/** `PUT /api/entries/:id/hidden` (Admin). */
 export const SetEntryHiddenSchema = z.object({ hidden: z.boolean() });
 
 export type SetEntryHidden = z.infer<typeof SetEntryHiddenSchema>;

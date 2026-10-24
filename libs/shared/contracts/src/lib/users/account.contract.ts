@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import { LanguageSchema } from '../common/values.contract';
 
-/** REST base path: `/api/accounts`. Used by the Nest controller and the Angular client. */
 export const accountPath = 'accounts';
 
-/** `/api/accounts/me`: the signed-in account. */
 export const accountMePath = 'me';
 
 export const DisplayNameSchema = z.string().trim().min(1).max(60);
@@ -25,7 +23,6 @@ export const AccountSchema = z.object({
 
 export type Account = z.infer<typeof AccountSchema>;
 
-/** `PATCH /api/accounts/me`: what a user may change about themselves. */
 export const UpdateAccountSchema = z
   .object({
     displayName: DisplayNameSchema,
@@ -35,7 +32,6 @@ export const UpdateAccountSchema = z
 
 export type UpdateAccount = z.infer<typeof UpdateAccountSchema>;
 
-/** `GET /api/accounts` (Admin): one row per account, for assigning Owners and Admins. */
 export const AccountSummarySchema = AccountSchema.pick({
   id: true,
   displayName: true,
@@ -45,7 +41,6 @@ export const AccountSummarySchema = AccountSchema.pick({
 
 export type AccountSummary = z.infer<typeof AccountSummarySchema>;
 
-/** `PUT /api/accounts/:id/admin` (Admin): make another account an Admin, or stop it being one. */
 export const SetAdminSchema = z.object({ isAdmin: z.boolean() });
 
 export type SetAdmin = z.infer<typeof SetAdminSchema>;

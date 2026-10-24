@@ -11,7 +11,6 @@ interface OwnershipRow {
 
 const withAccount = { account: { select: { displayName: true } } } as const;
 
-/** Maps between Prisma rows and the shared contract. The only code that touches `prisma.ownership`. */
 @Injectable()
 export class OwnershipRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -43,7 +42,6 @@ export class OwnershipRepository {
     }
   }
 
-  /** False when there was no such grant. */
   async revoke(accountId: string, venueId: string): Promise<boolean> {
     const { count } = await this.prisma.ownership.deleteMany({ where: { accountId, venueId } });
     return count > 0;

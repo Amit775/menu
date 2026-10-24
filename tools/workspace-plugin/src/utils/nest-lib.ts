@@ -8,10 +8,6 @@ export interface NestLibOptions {
   tags: string;
 }
 
-/**
- * Creates a Nest library with Nx, then normalizes it to workspace conventions:
- * CommonJS for the webpack build, ESM for Vitest, and an empty src/lib.
- */
 export async function createNestLib(tree: Tree, options: NestLibOptions): Promise<void> {
   const { directory } = options;
   await libraryGenerator(tree, {

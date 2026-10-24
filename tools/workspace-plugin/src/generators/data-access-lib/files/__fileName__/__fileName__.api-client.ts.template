@@ -9,7 +9,6 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { z } from 'zod';
 
-/** HTTP access to `/api/<%= fileName %>`. Every response is validated against the shared contract. */
 @Service()
 export class <%= className %>ApiClient {
   private readonly http = inject(HttpClient);

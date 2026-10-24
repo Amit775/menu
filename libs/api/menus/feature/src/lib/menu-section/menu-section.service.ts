@@ -8,7 +8,6 @@ import { MenuSectionRepository, VenueRepository } from '@menu/api/menus/data-acc
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
 import { type LocalizedText, type MenuSection } from '@menu/shared/contracts';
 
-/** A venue's menu headings. Read by anyone; changed by the venue's Owner or an Admin. */
 @Injectable()
 export class MenuSectionService {
   constructor(
@@ -43,7 +42,6 @@ export class MenuSectionService {
     return section;
   }
 
-  /** The new order must name every section of the venue exactly once. */
   async reorder(
     principal: Principal,
     venueId: string,

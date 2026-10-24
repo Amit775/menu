@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { AccountRepository } from '@menu/api/users/data-access';
 import { type AuthorDirectory } from '@menu/api/shared/util-ports';
 
-/** The users side of the `AUTHOR_DIRECTORY` port: names beside public entries. */
 @Injectable()
 export class AccountDirectory implements AuthorDirectory {
   constructor(private readonly repository: AccountRepository) {}

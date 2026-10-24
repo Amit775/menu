@@ -11,11 +11,6 @@ import {
 import { ScoreBadge } from '../score-badge/score-badge';
 import { uiI18n } from '../ui.i18n';
 
-/**
- * One item in a list: name (with the flag when the user wrote about it), venue,
- * distance and price, the reorder ratio, and the score chip. Links to the item.
- * `showVenue` is off on the venue's own page.
- */
 @Component({
   selector: 'menu-item-row',
   imports: [NgOptimizedImage, RouterLink, ScoreBadge, LocalizePipe, DistancePipe, ShekelsPipe],

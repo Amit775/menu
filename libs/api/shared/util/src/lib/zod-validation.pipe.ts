@@ -1,13 +1,6 @@
 import { BadRequestException, type PipeTransform } from '@nestjs/common';
 import { type z } from 'zod';
 
-/**
- * Validates a request body, query or param against a schema from
- * `@menu/shared/contracts` and returns the parsed (typed) value.
- *
- * @example
- *   create(@Body(new ZodValidationPipe(CreateItemSchema)) body: CreateItem)
- */
 export class ZodValidationPipe<TSchema extends z.ZodType>
   implements PipeTransform<unknown, z.output<TSchema>>
 {

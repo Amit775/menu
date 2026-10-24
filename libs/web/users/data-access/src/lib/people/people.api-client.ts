@@ -11,10 +11,6 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { z } from 'zod';
 
-/**
- * HTTP access to the Admin's people endpoints: accounts, the Admin flag and
- * venue ownerships. Every response is validated against the shared contract.
- */
 @Service()
 export class PeopleApiClient {
   private readonly http = inject(HttpClient);

@@ -40,7 +40,6 @@ export const PeopleStore = signalStore(
     };
   }),
   withComputed(({ accounts, owners }) => ({
-    /** Named accounts first, by name; phone sign-ins without a name last. */
     sorted: computed(() =>
       [...accounts()].sort(
         (a, b) =>
@@ -48,7 +47,6 @@ export const PeopleStore = signalStore(
           a.displayName.localeCompare(b.displayName),
       ),
     ),
-    /** Accounts that could become Owners of the venue: not already one. */
     candidates: computed(() => {
       const owning = new Set(owners().map((owner) => owner.accountId));
       return accounts().filter((account) => !owning.has(account.id));
