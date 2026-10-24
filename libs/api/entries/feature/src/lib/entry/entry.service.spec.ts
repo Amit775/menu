@@ -225,6 +225,12 @@ describe('EntryService', () => {
     expect(photos.photos.size).toBe(0);
   });
 
+  it('deletes the entry even when its stored photo cannot be removed', async () => {
+    const service = await setup({ delete: vi.fn().mockResolvedValue(true) });
+    vi.spyOn(photos, 'delete').mockRejectedValueOnce(new Error('bucket down'));
+    await expect(service.remove(author, 'e1')).resolves.toBeUndefined();
+  });
+
   it('hides an entry without saying whether it exists, with a fresh photo id', async () => {
     const setHidden = vi.fn().mockResolvedValue(undefined);
     await expect((await setup({ setHidden })).setHidden('e1', true)).resolves.toBeUndefined();
