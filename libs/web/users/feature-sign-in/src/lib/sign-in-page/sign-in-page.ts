@@ -1,13 +1,15 @@
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, take } from 'rxjs';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
-  effect,
   type ElementRef,
   inject,
+  type OnInit,
   input,
   signal,
-  untracked,
   viewChild,
 } from '@angular/core';
 import {
@@ -53,7 +55,8 @@ const required: ValidatorFn = (control) => Validators.required(control);
   styleUrl: './sign-in-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SignInPage {
+export class SignInPage implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly auth = inject(Auth);
   private readonly router = inject(Router);
   protected readonly t = injectMessages(signInMessages);
@@ -92,13 +95,10 @@ export class SignInPage {
   protected readonly codeForm = new FormGroup({ code: this.code });
   private readonly recaptcha = viewChild.required<ElementRef<HTMLElement>>('recaptcha');
 
-  constructor() {
-    // Signed in, now or already on arrival: go back where the user came from.
-    effect(() => {
-      if (this.auth.signedIn()) {
-        untracked(() => void this.router.navigateByUrl(safeReturnUrl(this.returnUrl())));
-      }
-    });
+  ngOnInit(): void {
+    this.auth.userChanges
+      .pipe(filter(Boolean), take(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => void this.router.navigateByUrl(safeReturnUrl(this.returnUrl())));
   }
 
   protected async google(): Promise<void> {

@@ -1,13 +1,5 @@
 import { NgOptimizedImage } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
@@ -46,10 +38,7 @@ export class EntriesSharedPage {
   readonly token = input.required<string>();
 
   constructor() {
-    effect(() => {
-      const token = this.token();
-      untracked(() => void this.store.load(token));
-    });
+    this.store.load(this.token);
   }
 
   /** When the entry was eaten, in the reader's language. */
@@ -63,6 +52,6 @@ export class EntriesSharedPage {
   });
 
   protected retry(): void {
-    void this.store.load(this.token());
+    this.store.reload();
   }
 }

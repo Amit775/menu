@@ -1,13 +1,5 @@
 import { Location } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  input,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -86,10 +78,7 @@ export class MenusAddItemPage {
   protected readonly failed = signal(false);
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
   protected cancel(): void {
@@ -101,7 +90,7 @@ export class MenusAddItemPage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 
   protected async save(): Promise<void> {

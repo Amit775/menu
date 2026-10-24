@@ -1,5 +1,14 @@
 <div class="menu-venue-map">
   <div #map class="canvas" dir="ltr" role="region" [attr.aria-label]="t().mapLabel"></div>
+  @if (view(); as view) {
+    <menu-map-pins
+      [leaflet]="view.leaflet"
+      [map]="view.map"
+      [pins]="store.pins()"
+      [near]="store.near()"
+      (opened)="open($event)"
+    />
+  }
   @if (store.status() === 'loaded' && store.pins().length === 0) {
     <p class="empty" role="status">{{ t().noPins }}</p>
   }

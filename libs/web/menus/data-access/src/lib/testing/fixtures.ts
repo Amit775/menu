@@ -1,3 +1,5 @@
+import { ApplicationRef } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   type Item,
   type MenuSection,
@@ -61,3 +63,7 @@ export const insights: VenueInsights = {
     },
   ],
 };
+
+export function settle(): Promise<void> {
+  return TestBed.inject(ApplicationRef).whenStable();
+}

@@ -2,27 +2,25 @@ import {
   afterNextRender,
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   type ElementRef,
-  effect,
   inject,
+  Injector,
   signal,
-  untracked,
   viewChild,
   ViewEncapsulation,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
-import { type GeoPoint, type MapPin } from '@menu/shared/contracts';
+import { type MapPin } from '@menu/shared/contracts';
 import { FeedStore } from '@menu/web/discover/data-access';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { LeafletLoader, OSM_ATTRIBUTION, OSM_TILES, TEL_AVIV } from '@menu/web/shared/util-map';
 import type * as Leaflet from 'leaflet';
 import { feedMessages } from '../feed.messages';
-
-/** Never zoom in closer than a few streets when fitting the pins. */
-const FIT_MAX_ZOOM = 15;
+import { MapPins } from './map-pins';
 
 /**
  * The map view: one pin per venue, labelled with its best score (ADR 0008).
@@ -30,7 +28,7 @@ const FIT_MAX_ZOOM = 15;
  */
 @Component({
   selector: 'menu-venue-map',
-  imports: [RouterLink, MatButtonModule, MatIconModule, LocalizePipe],
+  imports: [RouterLink, MatButtonModule, MatIconModule, LocalizePipe, MapPins],
   templateUrl: './venue-map.html',
   styleUrl: './venue-map.scss',
   // Pins are drawn by Leaflet outside this component's view, so its styles are global (scoped by selector).
@@ -41,61 +39,40 @@ const FIT_MAX_ZOOM = 15;
 export class VenueMap {
   protected readonly store = inject(FeedStore);
   private readonly loader = inject(LeafletLoader);
-  private readonly i18n = inject(I18n);
+  private readonly injector = inject(Injector);
   protected readonly t = injectMessages(feedMessages);
 
   private readonly container = viewChild.required<ElementRef<HTMLElement>>('map');
   private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');
-  protected readonly selected = signal<MapPin | null>(null);
+  private readonly pins = viewChild(MapPins);
+  protected readonly view = signal<{ leaflet: typeof Leaflet; map: Leaflet.Map } | null>(null);
+  private readonly selectedId = signal<string | null>(null);
+  protected readonly selected = computed(
+    () => this.store.pins().find((pin) => pin.venue.id === this.selectedId()) ?? null,
+  );
 
-  private leaflet: typeof Leaflet | undefined;
-  private map: Leaflet.Map | undefined;
-  private pins: Leaflet.LayerGroup | undefined;
-  private me: Leaflet.CircleMarker | undefined;
-  private markers = new Map<string, HTMLElement>();
   private destroyed = false;
   private resize: ResizeObserver | undefined;
 
   constructor() {
     afterNextRender(() => void this.init());
-    effect(() => {
-      const pins = this.store.pins();
-      untracked(() => {
-        this.draw(pins);
-      });
-    });
-    effect(() => {
-      const near = this.store.near();
-      untracked(() => {
-        this.showMe(near);
-      });
-    });
-    // A venue the new filters leave out loses its card.
-    effect(() => {
-      const ids = new Set(this.store.pins().map((pin) => pin.venue.id));
-      untracked(() => {
-        const selected = this.selected();
-        if (selected && !ids.has(selected.venue.id)) {
-          this.selected.set(null);
-        }
-      });
-    });
-    // Move focus to the card when it opens, so keyboard users land on it.
-    effect(() => {
-      this.heading()?.nativeElement.focus();
-    });
     inject(DestroyRef).onDestroy(() => {
       this.destroyed = true;
       this.resize?.disconnect();
-      this.map?.remove();
+      this.view()?.map.remove();
     });
   }
 
+  protected open(pin: MapPin): void {
+    this.selectedId.set(pin.venue.id);
+    afterNextRender(() => this.heading()?.nativeElement.focus(), { injector: this.injector });
+  }
+
   protected close(): void {
-    const pin = this.selected();
-    if (pin) {
-      this.selected.set(null);
-      this.markers.get(pin.venue.id)?.focus();
+    const id = this.selectedId();
+    if (id) {
+      this.selectedId.set(null);
+      this.pins()?.focus(id);
     }
   }
 
@@ -105,80 +82,13 @@ export class VenueMap {
       return;
     }
     const element = this.container().nativeElement;
-    this.leaflet = L;
-    this.map = L.map(element).setView(TEL_AVIV, 12);
-    L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(this.map);
-    this.pins = L.layerGroup().addTo(this.map);
+    const map = L.map(element).setView(TEL_AVIV, 12);
+    L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(map);
     if (typeof ResizeObserver === 'function') {
       // Leaflet only follows window resizes; the bars above the map come and go.
-      this.resize = new ResizeObserver(() => this.map?.invalidateSize());
+      this.resize = new ResizeObserver(() => map.invalidateSize());
       this.resize.observe(element);
     }
-    this.showMe(this.store.near());
-    this.draw(this.store.pins());
-  }
-
-  private showMe(near: GeoPoint | null): void {
-    const { leaflet: L, map } = this;
-    if (!L || !map || !near || this.me) {
-      return;
-    }
-    this.me = L.circleMarker(near, { radius: 7, className: 'menu-map-me' })
-      .bindTooltip(() => this.t().youAreHere)
-      .addTo(map);
-    this.fit(this.store.pins());
-  }
-
-  private draw(pins: readonly MapPin[]): void {
-    const { leaflet: L, pins: layer } = this;
-    if (!L || !layer) {
-      return;
-    }
-    layer.clearLayers();
-    this.markers.clear();
-    for (const pin of pins) {
-      const icon = L.divIcon({
-        className: pin.writtenByMe ? 'menu-map-pin mine' : 'menu-map-pin',
-        html: pin.bestScore === null ? '•' : pin.bestScore.toFixed(1),
-        iconSize: [44, 30],
-        iconAnchor: [22, 30],
-      });
-      const open = (): void => {
-        this.selected.set(pin);
-      };
-      const marker = L.marker(pin.location, { icon, keyboard: true })
-        .on('click', open)
-        .addTo(layer);
-      const element = marker.getElement();
-      if (element) {
-        // A divIcon is named by its content (the score), so name it for screen readers here.
-        element.setAttribute('aria-label', this.pinLabel(pin));
-        element.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            open();
-          }
-        });
-        this.markers.set(pin.venue.id, element);
-      }
-    }
-    this.fit(pins);
-  }
-
-  /** Shows every pin, and the user when known, without zooming in past a few streets. */
-  private fit(pins: readonly MapPin[]): void {
-    const { leaflet: L, map } = this;
-    const near = this.store.near();
-    const points = [...pins.map((pin) => pin.location), ...(near ? [near] : [])];
-    if (!L || !map || points.length === 0) {
-      return;
-    }
-    map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: FIT_MAX_ZOOM });
-  }
-
-  private pinLabel(pin: MapPin): string {
-    const t = this.t();
-    const parts = [this.i18n.pick(pin.venue.name), t.pinSummary(pin.itemCount, pin.bestScore)];
-    return (pin.writtenByMe ? [...parts, t.writtenByMe] : parts).join(', ');
+    this.view.set({ leaflet: L, map });
   }
 }

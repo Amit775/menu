@@ -1,13 +1,5 @@
 import { Location } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -60,10 +52,7 @@ export class DiscoverVenuePage {
   );
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
   /** The back arrow points where the user came from: right in Hebrew, left in English. */
@@ -81,6 +70,6 @@ export class DiscoverVenuePage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 }

@@ -1,6 +1,7 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { EntryApiClient } from '../entry/entry.api-client';
-import { itemRef, publicEntry } from '../testing/fixtures';
+import { itemRef, publicEntry, settle } from '../testing/fixtures';
 import { SharedEntryStore } from './shared-entry.store';
 
 describe('SharedEntryStore', () => {
@@ -14,7 +15,8 @@ describe('SharedEntryStore', () => {
   it('loads what the link shows', async () => {
     const view = { status: 'visible' as const, entry: publicEntry, item: itemRef };
     const store = setup(vi.fn().mockResolvedValue(view));
-    await store.load('abcdefghijklmnopqrstuv');
+    store.load(() => 'abcdefghijklmnopqrstuv');
+    await settle();
     expect(store.view()).toEqual(view);
     expect(store.status()).toBe('loaded');
   });
@@ -26,16 +28,20 @@ describe('SharedEntryStore', () => {
       .mockReturnValueOnce(new Promise((resolve) => (answerFirst = resolve)))
       .mockResolvedValueOnce({ status: 'removed' });
     const store = setup(shared);
-    const first = store.load('first-token-aaaaaaaaaaa');
-    await store.load('second-token-aaaaaaaaaa');
+    const token = signal('first-token-aaaaaaaaaaa');
+    store.load(token);
+    TestBed.tick();
+    token.set('second-token-aaaaaaaaaa');
+    await settle();
     answerFirst({ status: 'private' });
-    await first;
+    await settle();
     expect(store.view()).toEqual({ status: 'removed' });
   });
 
   it('records a failed load', async () => {
     const store = setup(vi.fn().mockRejectedValue(new Error('offline')));
-    await store.load('abcdefghijklmnopqrstuv');
+    store.load(() => 'abcdefghijklmnopqrstuv');
+    await settle();
     expect(store.status()).toBe('error');
   });
 });
