@@ -2,7 +2,7 @@ import { inject, PendingTasks } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type Translation, TranslocoService } from '@jsverse/transloco';
 import { type Language } from '@menu/shared/contracts';
-import { finalize, map, switchMap } from 'rxjs';
+import { catchError, EMPTY, finalize, map, switchMap } from 'rxjs';
 
 export interface I18nScope<T extends Translation> {
   readonly name: string;
@@ -34,6 +34,7 @@ export function injectTranslate<T extends Translation>(scope: I18nScope<T>): Tra
         const loading = pendingTasks.add();
         return transloco.load(`${scope.name}/${lang}`, { inlineLoader }).pipe(
           map(() => lang),
+          catchError(() => EMPTY),
           finalize(loading),
         );
       }),

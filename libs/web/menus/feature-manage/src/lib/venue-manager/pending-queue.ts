@@ -89,13 +89,11 @@ export class PendingQueue {
       .filter((tag) => tag !== undefined)
       .map((tag) => this.i18n.pick(tag.name))
       .join(', ');
-    return [
-      section ? this.i18n.pick(section.name) : '',
-      item.listPrice === null ? '' : formatShekels(item.listPrice),
-      tags ? this.t('facts', { tags }) : '',
-    ]
-      .filter(Boolean)
-      .join(' · ');
+    return this.t('facts', {
+      section: section ? this.i18n.pick(section.name) : '',
+      price: item.listPrice === null ? 'none' : formatShekels(item.listPrice),
+      tags: tags || 'none',
+    });
   }
 }
 

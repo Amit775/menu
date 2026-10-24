@@ -12,7 +12,8 @@ export const he = {
   pendingIntro:
     'סועדים הוסיפו פריטים שלא בתפריט. אתם רואים את הפריט בלבד, לא מי הוסיף ולא מה כתבו עליו.',
   noPending: 'אין פריטים שממתינים לאישור.',
-  facts: 'תגיות: {tags}',
+  facts:
+    '{section}{price, select, none {} other { · {price}}}{tags, select, none {} other { · תגיות: {tags}}}',
   approve: 'אישור',
   merge: 'מיזוג לפריט קיים',
   mergeInto: 'לאיזה פריט?',

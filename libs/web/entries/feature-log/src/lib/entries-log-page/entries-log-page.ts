@@ -113,6 +113,7 @@ export class EntriesLogPage {
   });
 
   protected readonly model = linkedSignal<LogModel>(() => {
+    this.itemId();
     const editing = this.editing();
     return {
       rating: editing?.rating ?? null,
@@ -234,18 +235,22 @@ export class EntriesLogPage {
     const input: UpdateEntry = {
       rating: model.rating,
       wouldOrderAgain: model.wouldOrderAgain,
-      pricePaid: this.form.price().dirty()
-        ? model.price === null
-          ? null
-          : model.price * 100
-        : this.prefilled(),
+      pricePaid:
+        model.price === toShekels(this.prefilled())
+          ? this.prefilled()
+          : model.price === null
+            ? null
+            : model.price * 100,
       text: model.text.trim(),
       visibility: model.visibility,
     };
     const editing = this.editing();
     // Editing keeps the date unless the user changed it.
     const eatenAt = fromLocalInput(model.eatenAt);
-    if (eatenAt !== null && (!editing || this.form.eatenAt().dirty())) {
+    if (
+      eatenAt !== null &&
+      (!editing || model.eatenAt !== toLocalInput(new Date(editing.eatenAt)))
+    ) {
       input.eatenAt = eatenAt;
     }
     let saved: Entry;
