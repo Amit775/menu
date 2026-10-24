@@ -1,4 +1,5 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type Account, type Language, type UpdateAccount } from '@menu/shared/contracts';
 import { Auth, NO_ROLES, Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
@@ -95,16 +96,13 @@ export const AccountStore = signalStore(
     },
   ),
   withHooks({
-    onInit(store, auth = inject(Auth)) {
-      effect(() => {
-        const signedIn = auth.signedIn();
-        untracked(() => {
-          if (signedIn) {
-            void store.load();
-          } else {
-            store.clear();
-          }
-        });
+    onInit(store, auth = inject(Auth), destroyRef = inject(DestroyRef)) {
+      auth.userChanges.pipe(takeUntilDestroyed(destroyRef)).subscribe((user) => {
+        if (user) {
+          void store.load();
+        } else {
+          store.clear();
+        }
       });
     },
   }),

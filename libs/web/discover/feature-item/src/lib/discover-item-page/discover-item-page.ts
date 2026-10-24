@@ -1,14 +1,5 @@
 import { Location, NgOptimizedImage } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -54,10 +45,7 @@ export class DiscoverItemPage {
   protected readonly copied = signal(false);
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
   /** The back arrow points where the user came from: right in Hebrew, left in English. */
@@ -75,7 +63,7 @@ export class DiscoverItemPage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 
   protected async share(): Promise<void> {

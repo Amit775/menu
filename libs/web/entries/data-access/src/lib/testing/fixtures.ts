@@ -1,3 +1,5 @@
+import { ApplicationRef } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   type Entry,
   type ItemEntries,
@@ -53,3 +55,7 @@ export const sheet: ItemEntries = {
   mine: [entry],
   others: [publicEntry],
 };
+
+export function settle(): Promise<void> {
+  return TestBed.inject(ApplicationRef).whenStable();
+}

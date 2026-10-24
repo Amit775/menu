@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import {
@@ -109,5 +110,6 @@ export async function loadedStore(api: Partial<MenuApiClient>): Promise<void> {
     providers: [provideRouter([]), { provide: MenuApiClient, useValue: api }, VenueManagerStore],
   });
   TestBed.inject(I18n).setLanguage('he');
-  await TestBed.inject(VenueManagerStore).load(VENUE_ID);
+  TestBed.inject(VenueManagerStore).load(() => VENUE_ID);
+  await TestBed.inject(ApplicationRef).whenStable();
 }

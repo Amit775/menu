@@ -2,59 +2,53 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
+  linkedSignal,
   signal,
-  untracked,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  type ValidatorFn,
-  Validators,
-} from '@angular/forms';
+  form,
+  FormField,
+  max,
+  maxLength,
+  min,
+  pattern,
+  required,
+  validate,
+} from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
-import {
-  type GeoPoint,
-  type LocalizedText,
-  type Venue,
-  type VenueStatus,
-} from '@menu/shared/contracts';
-import { ManagedVenuesStore, VenueManagerStore } from '@menu/web/menus/data-access';
+import { type GeoPoint, type LocalizedText, type VenueStatus } from '@menu/shared/contracts';
+import { VenueManagerStore } from '@menu/web/menus/data-access';
 import { injectMessages } from '@menu/web/shared/util-i18n';
 import { venueFormMessages } from '../venue-form.messages';
 import { PinPicker } from './pin-picker';
 
-/** Required, and more than spaces: the API trims names and addresses. */
-const notBlank: ValidatorFn = (control) =>
-  typeof control.value === 'string' && control.value.trim() === ''
-    ? { required: true }
-    : Validators.required(control);
+interface VenueModel {
+  nameHe: string;
+  nameEn: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  phone: string;
+  reservationUrl: string;
+  status: VenueStatus;
+  sections: string;
+}
 
-/** The contract's phone rule (`VenueSchema`). */
-const phonePattern = Validators.pattern(/^\s*\+?[0-9 -]{6,20}\s*$/);
-
-/** An http(s) link, like the contract's `reservationUrl`. */
-const webLink: ValidatorFn = (control) => {
-  const value = typeof control.value === 'string' ? control.value.trim() : '';
-  if (value === '') {
-    return null;
-  }
+function isWebLink(value: string): boolean {
   try {
     const { protocol } = new URL(value);
-    return protocol === 'https:' || protocol === 'http:' ? null : { url: true };
+    return protocol === 'https:' || protocol === 'http:';
   } catch {
-    return { url: true };
+    return false;
   }
-};
+}
 
 const MAX_SECTIONS = 30;
 
@@ -72,7 +66,7 @@ const sectionLines = (text: string): string[] =>
 @Component({
   selector: 'menu-venue-form-page',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     RouterLink,
     MatButtonModule,
     MatFormFieldModule,
@@ -83,7 +77,7 @@ const sectionLines = (text: string): string[] =>
   ],
   templateUrl: './venue-form-page.html',
   styleUrl: './venue-form-page.scss',
-  providers: [VenueManagerStore, ManagedVenuesStore],
+  providers: [VenueManagerStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VenueFormPage {
@@ -91,63 +85,54 @@ export class VenueFormPage {
   readonly id = input<string>();
 
   protected readonly store = inject(VenueManagerStore);
-  private readonly venues = inject(ManagedVenuesStore);
   private readonly router = inject(Router);
   protected readonly t = injectMessages(venueFormMessages);
 
-  protected readonly nameHe = new FormControl('', {
-    nonNullable: true,
-    validators: [notBlank, Validators.maxLength(200)],
-  });
-  protected readonly nameEn = new FormControl('', {
-    nonNullable: true,
-    validators: [Validators.maxLength(200)],
-  });
-  protected readonly address = new FormControl('', {
-    nonNullable: true,
-    validators: [notBlank, Validators.maxLength(200)],
-  });
-  protected readonly lat = new FormControl<number | null>(null, [
-    Validators.required.bind(Validators),
-    Validators.min(-90),
-    Validators.max(90),
-  ]);
-  protected readonly lng = new FormControl<number | null>(null, [
-    Validators.required.bind(Validators),
-    Validators.min(-180),
-    Validators.max(180),
-  ]);
-  protected readonly phone = new FormControl('', { nonNullable: true, validators: [phonePattern] });
-  protected readonly reservationUrl = new FormControl('', {
-    nonNullable: true,
-    validators: [webLink],
-  });
-  protected readonly status = new FormControl<VenueStatus>('active', { nonNullable: true });
-  protected readonly sections = new FormControl('', {
-    nonNullable: true,
-    validators: [
-      (control) =>
-        sectionLines(String(control.value)).length > MAX_SECTIONS ? { tooMany: true } : null,
-    ],
-  });
-  protected readonly form = new FormGroup({
-    nameHe: this.nameHe,
-    nameEn: this.nameEn,
-    address: this.address,
-    lat: this.lat,
-    lng: this.lng,
-    phone: this.phone,
-    reservationUrl: this.reservationUrl,
-    status: this.status,
-    sections: this.sections,
+  protected readonly model = linkedSignal<VenueModel>(() => {
+    const venue = this.store.venue();
+    return {
+      nameHe: venue?.name.he ?? '',
+      nameEn: venue?.name.en ?? '',
+      address: venue?.address ?? '',
+      lat: venue?.location.lat ?? null,
+      lng: venue?.location.lng ?? null,
+      phone: venue?.phone ?? '',
+      reservationUrl: venue?.reservationUrl ?? '',
+      status: venue?.status ?? 'active',
+      sections: '',
+    };
   });
 
-  private readonly coordinates = toSignal(this.form.valueChanges, {
-    initialValue: this.form.value,
-  });
+  protected readonly form = form(
+    this.model,
+    (path) => {
+      for (const text of [path.nameHe, path.address]) {
+        required(text);
+        validate(text, ({ value }) => (value().trim() === '' ? { kind: 'required' } : null));
+        maxLength(text, 200);
+      }
+      maxLength(path.nameEn, 200);
+      required(path.lat);
+      min(path.lat, -90);
+      max(path.lat, 90);
+      required(path.lng);
+      min(path.lng, -180);
+      max(path.lng, 180);
+      pattern(path.phone, /^(\s*\+?[0-9 -]{6,20}\s*)?$/);
+      validate(path.reservationUrl, ({ value }) => {
+        const link = value().trim();
+        return link === '' || isWebLink(link) ? null : { kind: 'url' };
+      });
+      validate(path.sections, ({ value }) =>
+        sectionLines(value()).length > MAX_SECTIONS ? { kind: 'tooMany' } : null,
+      );
+    },
+    { name: 'venue' },
+  );
+
   protected readonly point = computed<GeoPoint | null>(() => {
-    const { lat, lng } = this.coordinates();
-    return typeof lat === 'number' && typeof lng === 'number' && this.lat.valid && this.lng.valid
+    const { lat, lng } = this.model();
+    return lat !== null && lng !== null && this.form.lat().valid() && this.form.lng().valid()
       ? { lat, lng }
       : null;
   });
@@ -159,57 +144,41 @@ export class VenueFormPage {
   protected readonly failed = signal(false);
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      if (id !== undefined) {
-        untracked(() => void this.store.load(id));
-      }
-    });
-    effect(() => {
-      const venue = this.store.venue();
-      if (venue) {
-        untracked(() => {
-          this.fill(venue);
-        });
-      }
-    });
+    this.store.load(this.id);
   }
 
   protected place(point: GeoPoint): void {
-    this.lat.setValue(point.lat);
-    this.lng.setValue(point.lng);
-    this.lat.markAsDirty();
-    this.lng.markAsDirty();
+    this.model.update((model) => ({ ...model, lat: point.lat, lng: point.lng }));
+    this.form.lat().markAsDirty();
+    this.form.lng().markAsDirty();
   }
 
   protected retry(): void {
-    const id = this.id();
-    if (id !== undefined) {
-      void this.store.load(id);
-    }
+    this.store.reload();
   }
 
   protected async save(): Promise<void> {
     const location = this.point();
-    if (this.form.invalid || !location || this.saving()) {
-      this.form.markAllAsTouched();
+    if (this.form().invalid() || !location || this.saving()) {
+      this.form().markAsTouched();
       return;
     }
     this.saving.set(true);
     this.failed.set(false);
+    const model = this.model();
     const details = {
-      name: this.localizedName(),
-      address: this.address.value.trim(),
+      name: this.localizedName(model),
+      address: model.address.trim(),
       location,
-      phone: this.phone.value.trim() || null,
-      reservationUrl: this.reservationUrl.value.trim() || null,
+      phone: model.phone.trim() || null,
+      reservationUrl: model.reservationUrl.trim() || null,
     };
     try {
       const venue = this.editing()
-        ? await this.store.updateVenue({ ...details, status: this.status.value })
-        : await this.venues.create({
+        ? await this.store.updateVenue({ ...details, status: model.status })
+        : await this.store.createVenue({
             ...details,
-            sections: sectionLines(this.sections.value).map((he) => ({ he })),
+            sections: sectionLines(model.sections).map((he) => ({ he })),
           });
       void this.router.navigate(['/manage/venues', venue.id], { replaceUrl: true });
     } catch {
@@ -219,23 +188,9 @@ export class VenueFormPage {
     }
   }
 
-  private fill(venue: Venue): void {
-    this.form.reset({
-      nameHe: venue.name.he,
-      nameEn: venue.name.en ?? '',
-      address: venue.address,
-      lat: venue.location.lat,
-      lng: venue.location.lng,
-      phone: venue.phone ?? '',
-      reservationUrl: venue.reservationUrl ?? '',
-      status: venue.status,
-      sections: '',
-    });
-  }
-
-  private localizedName(): LocalizedText {
-    const he = this.nameHe.value.trim();
-    const en = this.nameEn.value.trim();
+  private localizedName(model: VenueModel): LocalizedText {
+    const he = model.nameHe.trim();
+    const en = model.nameEn.trim();
     return en ? { he, en } : { he };
   }
 }
