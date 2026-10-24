@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { DataChanges } from '@menu/web/shared/util-events';
 import { EntryApiClient } from '../entry/entry.api-client';
 import { LastVisibility } from '../entry/last-visibility';
-import { entry, ITEM_ID, sheet } from '../testing/fixtures';
+import { entry, ITEM_ID, publicEntry, sheet } from '../testing/fixtures';
 import { ItemEntriesStore } from './item-entries.store';
 
 describe('ItemEntriesStore', () => {
@@ -141,5 +141,26 @@ describe('ItemEntriesStore', () => {
     await store.remove(entry.id);
     expect(store.mine()).toEqual([older]);
     expect(version()).toBe(1);
+  });
+
+  it('hides someone else’s entry: it leaves the sheet and discover hears of it', async () => {
+    const setHidden = vi.fn().mockResolvedValue(undefined);
+    const { store, version } = setup({ forItem: vi.fn().mockResolvedValue(sheet), setHidden });
+    await store.load(ITEM_ID);
+    await store.hide(publicEntry.id);
+    expect(setHidden).toHaveBeenCalledWith(publicEntry.id, true);
+    expect(store.others()).toEqual([]);
+    expect(version()).toBe(1);
+  });
+
+  it('keeps the entry when hiding is refused', async () => {
+    const { store, version } = setup({
+      forItem: vi.fn().mockResolvedValue(sheet),
+      setHidden: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 403 })),
+    });
+    await store.load(ITEM_ID);
+    await expect(store.hide(publicEntry.id)).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.others()).toEqual([publicEntry]);
+    expect(version()).toBe(0);
   });
 });
