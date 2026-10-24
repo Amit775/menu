@@ -59,6 +59,13 @@
           "buildTarget": "api:build:production"
         }
       }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/seed-dev.mjs",
+        "cwd": "{workspaceRoot}"
+      }
     }
   }
 }
