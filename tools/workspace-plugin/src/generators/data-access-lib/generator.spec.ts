@@ -25,6 +25,9 @@ describe('data-access-lib generator', () => {
     expect(tree.read(`${lib}/lib/review/review.store.ts`, 'utf-8')).toContain(
       'export const ReviewStore = signalStore(',
     );
+    expect(tree.read(`${lib}/lib/review/review.store.ts`, 'utf-8')).toContain(
+      'status: loadStatus(_items)',
+    );
     expect(tree.read(`${lib}/lib/review/review.api-client.ts`, 'utf-8')).toContain(
       'z.array(ReviewSchema).parse(body)',
     );

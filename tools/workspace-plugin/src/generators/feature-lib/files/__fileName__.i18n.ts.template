@@ -1,0 +1,6 @@
+import { i18nScope } from '@menu/web/shared/util-i18n';
+
+export const <%= propertyName %>I18n = i18nScope('<%= propertyName %>', {
+  he: () => import('./i18n/<%= fileName %>.he').then((strings) => strings.he),
+  en: () => import('./i18n/<%= fileName %>.en').then((strings) => strings.en),
+});
