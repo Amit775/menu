@@ -18,7 +18,7 @@ import {
   type SharedEntryView,
   type UpdateEntry,
 } from '@menu/shared/contracts';
-import { entryPhotoKey } from '../photo/photo-bytes';
+import { deletePhoto } from '../photo/photo-bytes';
 import { newCapabilityId } from './capability-id';
 import { DiaryEntry } from './diary-entry';
 
@@ -115,7 +115,7 @@ export class EntryService {
     if (!(await this.repository.delete(id, principal.accountId))) {
       throw new NotFoundException('Entry not found.');
     }
-    await this.photos.delete(entryPhotoKey(id));
+    await deletePhoto(this.photos, id);
   }
 
   /**

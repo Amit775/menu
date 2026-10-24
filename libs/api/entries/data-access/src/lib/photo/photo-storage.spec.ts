@@ -64,6 +64,23 @@ describe('photo storage', () => {
     expect(connect).toHaveBeenCalledTimes(1);
   });
 
+  it('connects again after a failed connect', async () => {
+    const file = {
+      save: vi.fn().mockResolvedValue(undefined),
+      download: vi.fn(),
+      getMetadata: vi.fn(),
+      delete: vi.fn(),
+    };
+    const connect = vi
+      .fn<() => Promise<PhotoBucket>>()
+      .mockRejectedValueOnce(new Error('no credentials'))
+      .mockResolvedValue({ file: () => file });
+    const storage = new CloudPhotoStorage(connect);
+    await expect(storage.put('entries/a', photo)).rejects.toThrow('no credentials');
+    await storage.put('entries/a', photo);
+    expect(file.save).toHaveBeenCalledTimes(1);
+  });
+
   it('picks the disk when PHOTO_DIR is set, Cloud Storage otherwise', () => {
     expect(photoStorageFromEnv('p', { PHOTO_DIR: '/tmp/x' })).toBeInstanceOf(DiskPhotoStorage);
     expect(photoStorageFromEnv('p', {})).toBeInstanceOf(CloudPhotoStorage);

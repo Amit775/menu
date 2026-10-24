@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Header, Param, Put, Req, StreamableFile } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Put, Req, Res, StreamableFile } from '@nestjs/common';
 import { ZodValidationPipe } from '@menu/api/shared/util';
 import { Authenticated, CurrentPrincipal, type Principal } from '@menu/api/shared/util-auth';
 import { type Entry, entryPath, IdSchema, PhotoIdSchema, photoPath } from '@menu/shared/contracts';
@@ -30,19 +30,26 @@ export class EntryPhotoController {
   }
 }
 
+/** The part of the HTTP response the photo route sets headers on. */
+interface HeaderSink {
+  setHeader(name: string, value: string): unknown;
+}
+
 /** `/api/photos/:photoId`: a photo for anyone holding its id (ADR 0011). */
 @Controller(photoPath)
 export class PhotoController {
   constructor(private readonly photos: PhotoService) {}
 
   @Get(':photoId')
-  // The id changes with the photo and its audience, so a copy never goes stale; only browsers keep it.
-  @Header('Cache-Control', 'private, max-age=31536000, immutable')
-  @Header('X-Content-Type-Options', 'nosniff')
   async read(
     @Param('photoId', new ZodValidationPipe(PhotoIdSchema)) photoId: string,
+    @Res({ passthrough: true }) response: HeaderSink,
   ): Promise<StreamableFile> {
     const photo = await this.photos.read(photoId);
+    // Set only on success, so a missing photo is not cached. The id changes with
+    // the photo and its audience, so a copy never goes stale; only browsers keep it.
+    response.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    response.setHeader('X-Content-Type-Options', 'nosniff');
     return new StreamableFile(photo.bytes, { type: photo.type, length: photo.bytes.length });
   }
 }
