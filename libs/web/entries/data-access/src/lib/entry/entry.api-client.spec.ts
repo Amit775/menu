@@ -73,6 +73,15 @@ describe('EntryApiClient', () => {
     await expect(remove).resolves.toBeUndefined();
   });
 
+  it('hides an entry from public view', async () => {
+    const hide = client.setHidden(entry.id, true);
+    const request = http.expectOne(`/api/entries/${entry.id}/hidden`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ hidden: true });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await expect(hide).resolves.toBeUndefined();
+  });
+
   it('rejects an edited entry that breaks the contract', async () => {
     const edit = client.update(entry.id, { rating: 3 });
     http.expectOne(`/api/entries/${entry.id}`).flush({ ...entry, rating: 9 });
