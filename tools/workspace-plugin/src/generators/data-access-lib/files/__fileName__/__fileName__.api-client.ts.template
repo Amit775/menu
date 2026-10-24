@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
   type Create<%= className %>,
   <%= propertyName %>Path,
@@ -10,7 +10,7 @@ import { firstValueFrom } from 'rxjs';
 import { z } from 'zod';
 
 /** HTTP access to `/api/<%= fileName %>`. Every response is validated against the shared contract. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class <%= className %>ApiClient {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `/api/${<%= propertyName %>Path}`;
