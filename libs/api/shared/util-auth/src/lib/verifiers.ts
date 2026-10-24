@@ -2,14 +2,12 @@ import { Inject, Injectable, Optional, UnauthorizedException } from '@nestjs/com
 import { type TokenVerifier } from './ports';
 import { type VerifiedIdentity } from './principal';
 
-/** The part of `firebase-admin/auth` the verifier uses. */
 export interface IdTokenDecoder {
   verifyIdToken(token: string): Promise<{ uid: string; name?: unknown }>;
 }
 
 export const ID_TOKEN_DECODER = Symbol('ID_TOKEN_DECODER');
 
-/** The Firebase project whose ID tokens are accepted (the Hosting and Cloud Run project, ADR 0002). */
 export const DEFAULT_FIREBASE_PROJECT_ID = 'menu-b29eb';
 
 /** `FIREBASE_PROJECT_ID`, or the default when unset or empty (as `.env.example` ships it). */
@@ -45,7 +43,6 @@ function isTokenError(error: unknown): boolean {
   return typeof code === 'string' && TOKEN_ERRORS.has(code);
 }
 
-/** Checks Firebase Authentication ID tokens (Google and phone sign-in). */
 @Injectable()
 export class FirebaseTokenVerifier implements TokenVerifier {
   private decoder: Promise<IdTokenDecoder> | undefined;
@@ -87,7 +84,6 @@ export class DevTokenVerifier implements TokenVerifier {
   }
 }
 
-/** Firebase, unless `AUTH_DEV_TOKENS=true` outside production. */
 export function verifierFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): typeof FirebaseTokenVerifier | typeof DevTokenVerifier {

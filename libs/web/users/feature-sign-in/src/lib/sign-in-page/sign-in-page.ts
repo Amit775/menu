@@ -30,7 +30,6 @@ import { signInI18n } from '../sign-in.i18n';
 
 type SignInError = 'invalid-phone' | 'invalid-code' | 'too-many' | 'failed';
 
-/** Firebase's answer, when it names the problem; otherwise the step's own error. */
 function signInError(error: unknown, fallback: SignInError): SignInError {
   switch ((error as { code?: unknown } | null)?.code) {
     case 'auth/invalid-phone-number':
@@ -44,8 +43,6 @@ function signInError(error: unknown, fallback: SignInError): SignInError {
       return fallback;
   }
 }
-
-/** Sign-in with Google or a phone number (Firebase Authentication). */
 
 const required: ValidatorFn = (control) => Validators.required(control);
 @Component({
@@ -61,7 +58,6 @@ export class SignInPage implements OnInit {
   private readonly router = inject(Router);
   protected readonly t = injectTranslate(signInI18n);
 
-  /** `?returnUrl=`: where to go once signed in. */
   readonly returnUrl = input<string>();
 
   protected readonly step = signal<'phone' | 'code'>('phone');
@@ -128,7 +124,6 @@ export class SignInPage implements OnInit {
     this.step.set('phone');
   }
 
-  /** Runs one sign-in step and reports how it failed. */
   private async attempt(onError: SignInError, action: () => Promise<void>): Promise<boolean> {
     this.busy.set(true);
     this.error.set(null);

@@ -21,7 +21,6 @@ export class VenueService {
       if (!principal) {
         return Promise.resolve([]);
       }
-      // An Admin's "my venues" is every venue.
       return this.repository.list({
         ...(principal.isAdmin ? {} : { ids: principal.ownedVenueIds }),
         includeHidden: true,

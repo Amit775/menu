@@ -22,7 +22,6 @@ import {
 } from '@menu/shared/contracts';
 import { ItemService } from './item.service';
 
-/** `/api/venues/:venueId/items`: a venue's menu, and where items are added or submitted. */
 @Controller(venueItemsRoute)
 export class VenueItemController {
   constructor(private readonly service: ItemService) {}
@@ -46,7 +45,6 @@ export class VenueItemController {
   }
 }
 
-/** `/api/items`: one item, its edits and decisions, and the pending queue. */
 @Controller(itemPath)
 export class ItemController {
   constructor(private readonly service: ItemService) {}

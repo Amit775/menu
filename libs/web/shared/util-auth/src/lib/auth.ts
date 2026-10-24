@@ -4,10 +4,6 @@ import { AUTH_BACKEND, type AuthUser } from './auth-backend';
 
 export type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
 
-/**
- * Who is signed in, as signals. Starts `loading` until the provider has restored
- * (or not) the previous session. Sign-in itself happens in the sign-in page.
- */
 @Service()
 export class Auth {
   private readonly backend = inject(AUTH_BACKEND);
@@ -26,7 +22,6 @@ export class Auth {
     distinctUntilChanged((previous, next) => previous?.uid === next?.uid),
   );
 
-  /** Resolves once the previous session has been restored or found missing. */
   readonly ready = new Promise<void>((resolve) => {
     this.resolveReady = resolve;
   });

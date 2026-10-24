@@ -18,17 +18,11 @@ import { type LocalizedText } from '@menu/shared/contracts';
 import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { addItemI18n } from '../add-item.i18n';
 
-/** Required, and more than spaces: the API trims the name. */
 const notBlank: ValidatorFn = (control) =>
   typeof control.value === 'string' && control.value.trim() === ''
     ? { required: true }
     : Validators.required(control);
 
-/**
- * J4: "not on the menu?" (`/venues/:id/add-item`). A short form (name, section,
- * price) creates an item only its submitter sees until the venue approves it,
- * then opens the log form for it.
- */
 @Component({
   selector: 'menu-menus-add-item-page',
   imports: [
@@ -53,7 +47,6 @@ export class MenusAddItemPage {
   private readonly i18n = inject(I18n);
   protected readonly t = injectTranslate(addItemI18n);
 
-  /** The venue's `:id` route parameter. */
   readonly id = input.required<string>();
 
   protected readonly name = new FormControl('', {

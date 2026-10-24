@@ -4,7 +4,6 @@ import { DiscoverApiClient } from '@menu/web/discover/data-access';
 import { DeviceLocation, DeviceShare } from '@menu/web/shared/util-device';
 import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 
-/** Sample data and boundary fakes for this lib's specs. */
 export const VENUE_ID = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
 
 export function sampleItem(n: number, changes: Partial<DiscoverItem> = {}): DiscoverItem {

@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { workspaceRoot } from '@nx/devkit';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-// Available in ESLint configs as "@nx/workspace-require-project-tags".
 export const RULE_NAME = 'require-project-tags';
 
 interface Boundaries {
@@ -29,7 +28,6 @@ export function loadTagRules(root = workspaceRoot): TagRules {
   };
 }
 
-/** Returns a problem description, or undefined when the tags are valid. */
 export function checkTags(tags: unknown, rules: TagRules): string | undefined {
   if (!Array.isArray(tags) || tags.some((tag) => typeof tag !== 'string')) {
     return 'Every project needs a "tags" array with one platform:*, one scope:* and one type:* tag.';

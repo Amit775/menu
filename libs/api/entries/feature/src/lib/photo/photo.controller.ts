@@ -5,7 +5,6 @@ import { type Entry, entryPath, IdSchema, PhotoIdSchema, photoPath } from '@menu
 import { readBody } from './photo-bytes';
 import { PhotoService } from './photo.service';
 
-/** `/api/entries/:id/photo`: the author sets (the image is the request body) or removes it. */
 @Controller(entryPath)
 export class EntryPhotoController {
   constructor(private readonly photos: PhotoService) {}
@@ -30,12 +29,10 @@ export class EntryPhotoController {
   }
 }
 
-/** The part of the HTTP response the photo route sets headers on. */
 interface HeaderSink {
   setHeader(name: string, value: string): unknown;
 }
 
-/** `/api/photos/:photoId`: a photo for anyone holding its id (ADR 0011). */
 @Controller(photoPath)
 export class PhotoController {
   constructor(private readonly photos: PhotoService) {}

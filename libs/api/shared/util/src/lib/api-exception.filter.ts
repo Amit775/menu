@@ -8,12 +8,10 @@ import {
 } from '@nestjs/common';
 import { type ApiError } from '@menu/shared/contracts';
 
-/** The subset of the HTTP response this filter needs (keeps it adapter-agnostic). */
 interface JsonResponse {
   status(code: number): { json(body: unknown): void };
 }
 
-/** Maps every thrown error to the shared `ApiError` contract. */
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(ApiExceptionFilter.name);

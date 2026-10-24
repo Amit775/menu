@@ -5,7 +5,6 @@ import { provideAccountAtStartup } from './account-at-startup';
 
 describe('provideAccountAtStartup', () => {
   it('loads a signed-in account without opening the profile', async () => {
-    // Imported the way the app does, lazily.
     const { AccountApiClient } = await import('@menu/web/users/data-access');
     const me = vi.fn().mockResolvedValue({
       id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',

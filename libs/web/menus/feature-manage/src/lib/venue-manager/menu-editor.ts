@@ -12,10 +12,6 @@ import { venueManagerI18n } from '../venue-manager.i18n';
 
 const nameValidators = [Validators.required.bind(Validators), Validators.maxLength(80)];
 
-/**
- * J6: the menu editor. Sections in order (rename, move, add), their approved
- * items (edit, take off the menu) and a way to add an item to each section.
- */
 @Component({
   selector: 'menu-menu-editor',
   imports: [

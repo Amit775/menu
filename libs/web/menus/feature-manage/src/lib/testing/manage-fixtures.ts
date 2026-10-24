@@ -11,7 +11,6 @@ import {
 import { MenuApiClient, VenueManagerStore } from '@menu/web/menus/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
 
-/** Contract-valid data for the manage specs. */
 export const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
 
 export const venue: Venue = {
@@ -92,7 +91,6 @@ export const insights: VenueInsights = {
   ],
 };
 
-/** A MenuApiClient stub that serves the venue above; override what a spec needs. */
 export function menuApi(overrides: Partial<MenuApiClient> = {}): Partial<MenuApiClient> {
   return {
     venue: () => Promise.resolve(venue),
@@ -104,7 +102,6 @@ export function menuApi(overrides: Partial<MenuApiClient> = {}): Partial<MenuApi
   };
 }
 
-/** Sets up TestBed with a loaded VenueManagerStore, for the venue manager's parts. */
 export async function loadedStore(api: Partial<MenuApiClient>): Promise<void> {
   TestBed.configureTestingModule({
     providers: [provideRouter([]), { provide: MenuApiClient, useValue: api }, VenueManagerStore],

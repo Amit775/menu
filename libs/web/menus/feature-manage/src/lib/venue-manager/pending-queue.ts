@@ -14,10 +14,6 @@ import {
 } from '@menu/web/shared/util-i18n';
 import { venueManagerI18n } from '../venue-manager.i18n';
 
-/**
- * J4/J6: items diners added, waiting for the venue's decision. Each shows the
- * item only (name, section, price, tags), never who added it or their entry.
- */
 @Component({
   selector: 'menu-pending-queue',
   imports: [
@@ -37,7 +33,6 @@ export class PendingQueue {
   private readonly i18n = inject(I18n);
   protected readonly t = injectTranslate(venueManagerI18n);
 
-  /** Items with a decision in flight, and items whose last decision failed. */
   protected readonly busy = signal<ReadonlySet<string>>(new Set());
   protected readonly failed = signal<ReadonlySet<string>>(new Set());
   protected readonly confirmingReject = signal<string | null>(null);

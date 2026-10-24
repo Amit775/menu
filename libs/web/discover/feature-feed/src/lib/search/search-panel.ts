@@ -13,7 +13,6 @@ import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { debounceTime } from 'rxjs';
 import { feedI18n } from '../feed.i18n';
 
-/** Search across items, venues and tags (opened as a full-screen dialog); picking a tag filters the feed by it. */
 @Component({
   selector: 'menu-search-panel',
   imports: [

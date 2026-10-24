@@ -38,10 +38,6 @@ function nameForm(tag?: Tag) {
   });
 }
 
-/**
- * J7 (Admin, `/manage/tags`): the tag vocabulary by kind. Add a tag, rename it
- * or change its kind, or merge a duplicate into another tag.
- */
 @Component({
   selector: 'menu-tags-page',
   imports: [

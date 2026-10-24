@@ -26,7 +26,6 @@ import {
 } from '@menu/shared/contracts';
 import { DiscoverService } from './discover.service';
 
-/** `/api/discover`: read-only views, open to visitors; signed-in callers also get their flags. */
 @Controller(discoverPath)
 export class DiscoverController {
   constructor(private readonly service: DiscoverService) {}
