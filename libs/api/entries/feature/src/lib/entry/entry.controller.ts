@@ -39,7 +39,6 @@ import {
 } from '@menu/shared/contracts';
 import { EntryService } from './entry.service';
 
-/** `/api/items/:itemId/entries`: the entries sheet, and where an entry is logged. */
 @Controller(itemEntriesRoute)
 export class ItemEntriesController {
   constructor(private readonly service: EntryService) {}
@@ -63,7 +62,6 @@ export class ItemEntriesController {
   }
 }
 
-/** `/api/entries`: the caller's diary and their own entries; Admins hide entries. */
 @Controller(entryPath)
 export class EntryController {
   constructor(private readonly service: EntryService) {}
@@ -117,7 +115,6 @@ export class EntryController {
   }
 }
 
-/** `/api/shared/:token`: a share link, open to anyone holding it. */
 @Controller(sharedEntryRoute)
 export class SharedEntryController {
   constructor(private readonly service: EntryService) {}

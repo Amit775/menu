@@ -3,7 +3,6 @@ import { AUTH_REQUIREMENT, type Principal } from '@menu/api/shared/util-auth';
 import { EntryController, ItemEntriesController, SharedEntryController } from './entry.controller';
 import { EntryService } from './entry.service';
 
-/** The `@Authenticated()` / `@AdminOnly()` requirement on a route handler, if any. */
 function requirementOf(controller: { prototype: object }, method: string): unknown {
   const handler = Object.getOwnPropertyDescriptor(controller.prototype, method)?.value as object;
   return Reflect.getMetadata(AUTH_REQUIREMENT, handler);

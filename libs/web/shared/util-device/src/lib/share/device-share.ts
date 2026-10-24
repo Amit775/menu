@@ -3,10 +3,6 @@ import { inject, Service } from '@angular/core';
 
 export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed';
 
-/**
- * Shares a link to an app page: the system share sheet where there is one
- * (phones), otherwise the clipboard.
- */
 @Service()
 export class DeviceShare {
   private readonly document = inject(DOCUMENT);

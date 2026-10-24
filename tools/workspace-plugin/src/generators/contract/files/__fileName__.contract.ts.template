@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-/** REST base path: `/api/<%= fileName %>`. Used by the Nest controller and the Angular client. */
 export const <%= propertyName %>Path = '<%= fileName %>';
 
 export const <%= className %>Schema = z.object({

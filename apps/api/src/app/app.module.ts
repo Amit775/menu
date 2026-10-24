@@ -10,8 +10,6 @@ import { EntryModule } from '@menu/api/entries/feature';
 import { HealthController } from './health/health.controller';
 import { PortsModule } from './ports.module';
 
-// Feature modules from libs/api/<domain>/feature are registered here by the
-// nest-resource generator. Keep this file to wiring only.
 @Module({
   imports: [
     DiscoverModule,

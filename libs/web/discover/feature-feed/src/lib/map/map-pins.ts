@@ -79,7 +79,6 @@ export class MapPins implements OnChanges, OnDestroy {
         .addTo(this.layer);
       const element = marker.getElement();
       if (element) {
-        // A divIcon is named by its content (the score), so screen readers need a label.
         element.setAttribute('aria-label', this.labels().get(pin) ?? '');
         element.addEventListener('keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {

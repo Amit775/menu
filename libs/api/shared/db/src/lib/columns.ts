@@ -14,17 +14,12 @@ export function fromLocalized(text: LocalizedText): LocalizedColumns {
   return { nameHe: text.he, nameEn: text.en ?? null };
 }
 
-/** Prisma's known request error codes this codebase reacts to. */
 export const PrismaErrorCode = {
-  /** Unique constraint failed. */
   UniqueViolation: 'P2002',
-  /** Foreign key constraint failed. */
   ForeignKeyViolation: 'P2003',
-  /** The record to update or delete does not exist. */
   NotFound: 'P2025',
 } as const;
 
-/** True when `error` is a Prisma known request error with this code. */
 export function isPrismaError(
   error: unknown,
   code: (typeof PrismaErrorCode)[keyof typeof PrismaErrorCode],

@@ -9,10 +9,6 @@ import {
   type SharedEntryView,
 } from '@menu/shared/contracts';
 
-/**
- * The spec's Entry, with its privacy rules as methods. Only its author reads or
- * changes it; others see it only when it is public (in lists) or shared (by link).
- */
 export class DiaryEntry {
   constructor(readonly record: EntryRecord) {}
 
@@ -27,7 +23,6 @@ export class DiaryEntry {
     }
   }
 
-  /** Who can read it, widest last: author only, link holders, everyone. */
   private static readonly audience: Record<EntryVisibility, number> = {
     private: 0,
     shared: 1,
@@ -45,7 +40,6 @@ export class DiaryEntry {
     );
   }
 
-  /** A share link exists once the entry has been shared or public. */
   needsShareToken(): boolean {
     return this.record.visibility !== 'private' && this.record.shareToken === null;
   }
@@ -54,7 +48,6 @@ export class DiaryEntry {
    * What the share link shows. Private (or on an item that is not public) reads
    * as private, even when hidden; a hidden shared or public entry as removed.
    */
-  /** `publicItem` is null when the item is not public (pending, rejected, gone). */
   sharedView(authorName: string, publicItem: ItemRef | null): SharedEntryView {
     if (this.record.visibility === 'private' || !publicItem) {
       return { status: 'private' };

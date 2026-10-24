@@ -3,10 +3,6 @@ import { createAngularLib, projectExists } from '../../utils/angular-lib';
 import { assertDomain, tagsFor, toKebab } from '../../utils/workspace';
 import { type UiLibGeneratorSchema } from './schema';
 
-/**
- * Presentational components only: signal inputs/outputs, no injected services.
- * Add components with: pnpm nx g @nx/angular:component libs/web/<domain>/ui/src/lib/<name>/<name>
- */
 export async function uiLibGenerator(tree: Tree, options: UiLibGeneratorSchema): Promise<void> {
   const domain = toKebab(options.domain, 'domain');
   assertDomain(tree, domain);

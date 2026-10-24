@@ -20,7 +20,6 @@ interface AccountWithOwnerships extends AccountRow {
   ownerships: { venueId: string }[];
 }
 
-/** Loads the venues an account owns with it: that is what makes it an Owner. */
 const withOwnerships = { ownerships: { select: { venueId: true } } } as const;
 
 export interface NewAccount {
@@ -29,7 +28,6 @@ export interface NewAccount {
   isAdmin: boolean;
 }
 
-/** Maps between Prisma rows and the shared contract. The only code that touches `prisma.account`. */
 @Injectable()
 export class AccountRepository {
   constructor(private readonly prisma: PrismaService) {}

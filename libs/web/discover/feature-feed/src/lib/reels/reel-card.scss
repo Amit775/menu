@@ -3,7 +3,6 @@
   height: 100%;
 }
 
-// The item's photo, or a dark typographic card; text stays white on both.
 article {
   position: relative;
   isolation: isolate;
@@ -40,7 +39,6 @@ article {
     object-fit: cover;
   }
 
-  // Keeps the white text readable on any photo.
   &::after {
     content: '';
     position: absolute;

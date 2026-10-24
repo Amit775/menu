@@ -2,7 +2,6 @@ import { DOCUMENT } from '@angular/common';
 import { inject, Service, InjectionToken, signal } from '@angular/core';
 import { type GeoPoint } from '@menu/shared/contracts';
 
-/** The part of the browser's Geolocation API the app uses. */
 export interface PositionSource {
   getCurrentPosition(
     success: (position: { coords: { latitude: number; longitude: number } }) => void,
@@ -11,7 +10,6 @@ export interface PositionSource {
   ): void;
 }
 
-/** The browser's geolocation, or null where there is none (SSR, old browsers). */
 export const POSITION_SOURCE = new InjectionToken<PositionSource | null>('POSITION_SOURCE', {
   providedIn: 'root',
   factory: () => inject(DOCUMENT).defaultView?.navigator.geolocation ?? null,

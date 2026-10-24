@@ -4,10 +4,8 @@ import { type PhotoType } from '@menu/shared/contracts';
 const JPEG_KEPT = new Set([0xe0, 0xe2, 0xee]);
 const JPEG_START_OF_SCAN = 0xda;
 const JPEG_COMMENT = 0xfe;
-/** PNG chunks that carry text, EXIF or a timestamp. */
 const PNG_DROPPED = new Set(['eXIf', 'tEXt', 'zTXt', 'iTXt', 'tIME']);
 const WEBP_DROPPED = new Set(['EXIF', 'XMP ']);
-/** VP8X flag bits that announce EXIF and XMP chunks. */
 const WEBP_METADATA_FLAGS = 0x08 | 0x04;
 
 class MalformedPhoto extends Error {
