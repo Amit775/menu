@@ -29,7 +29,5 @@ export function isPrismaError(
   error: unknown,
   code: (typeof PrismaErrorCode)[keyof typeof PrismaErrorCode],
 ): boolean {
-  return (
-    typeof error === 'object' && error !== null && 'code' in error && error.code === code
-  );
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
 }
