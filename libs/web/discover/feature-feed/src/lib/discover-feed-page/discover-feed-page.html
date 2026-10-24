@@ -68,8 +68,8 @@
       </p>
     }
     <div class="reel-track" #track (scroll)="scrolled(track)">
-      @for (item of store.items(); track item.id) {
-        <menu-reel-card [item]="item" />
+      @for (item of store.items(); track item.id; let first = $first) {
+        <menu-reel-card [item]="item" [lead]="first" />
       }
     </div>
   } @else {

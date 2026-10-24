@@ -128,4 +128,16 @@ describe('EntriesSharedPage', () => {
     await harness.fixture.whenStable();
     expect(harness.routeNativeElement?.querySelector('article')).not.toBeNull();
   });
+
+  it('shows the shared entry’s photo', async () => {
+    const { element } = await open(
+      vi.fn().mockResolvedValue({
+        ...visible,
+        entry: { ...visible.entry, photoUrl: '/api/photos/pppppppppppppppppppppp' },
+      }),
+    );
+    expect(element.querySelector('article .photo img')?.getAttribute('src')).toBe(
+      '/api/photos/pppppppppppppppppppppp',
+    );
+  });
 });
