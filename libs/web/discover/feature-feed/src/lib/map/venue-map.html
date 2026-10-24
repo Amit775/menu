@@ -6,6 +6,7 @@
       [map]="view.map"
       [pins]="store.pins()"
       [near]="store.near()"
+      [labels]="labels()"
       (opened)="open($event)"
     />
   }
