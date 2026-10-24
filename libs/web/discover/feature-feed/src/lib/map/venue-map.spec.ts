@@ -16,7 +16,6 @@ interface FakeMarker {
   click?: () => void;
 }
 
-/** Just enough of Leaflet to see what the map draws. */
 function fakeLeaflet() {
   const markers: FakeMarker[] = [];
   const view: { center?: unknown; zoom?: number; bounds?: unknown; me?: unknown } = {};
@@ -114,12 +113,23 @@ describe('VenueMap', () => {
     expect(view.bounds).toEqual([pin.location, pin.location]);
   });
 
+  it('relabels the pins when the language changes, without moving the map', async () => {
+    const { fixture, markers, view } = await render([pin]);
+    view.bounds = undefined;
+    TestBed.inject(I18n).setLanguage('en');
+    await fixture.whenStable();
+    expect(markers[0]?.element.getAttribute('aria-label')).toBe(
+      'מוזס, 3 items · best 4.6, You wrote about this',
+    );
+    expect(view.bounds).toBeUndefined();
+  });
+
   it('opens a card for the tapped venue', async () => {
     const { fixture, element, markers } = await render([pin]);
     markers[0]?.click?.();
     await fixture.whenStable();
     expect(element.querySelector('.card h2')?.textContent).toBe('מוזס');
-    expect(element.querySelector('.card p')?.textContent).toBe('3 פריטים · הכי טוב 4.6');
+    expect(element.querySelector('.card p')?.textContent.trim()).toBe('3 פריטים · הכי טוב 4.6');
     expect(element.querySelector('.card a')?.getAttribute('href')).toBe(`/venues/${VENUE_ID}`);
     element.querySelector<HTMLButtonElement>('.card button')?.click();
     await fixture.whenStable();
