@@ -12,6 +12,7 @@ import {
   itemEntriesPath,
   ItemEntriesSchema,
   sharedEntryPath,
+  type SetEntryHidden,
   type SharedEntryView,
   SharedEntryViewSchema,
   type UpdateEntry,
@@ -66,6 +67,12 @@ export class EntryApiClient {
 
   async remove(id: string): Promise<void> {
     await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
+  }
+
+  /** Admin: take someone's entry off public view, or put it back. */
+  async setHidden(id: string, hidden: boolean): Promise<void> {
+    const input: SetEntryHidden = { hidden };
+    await firstValueFrom(this.http.put(`${this.baseUrl}/${id}/hidden`, input));
   }
 
   /** What a share link shows; anyone may ask. */

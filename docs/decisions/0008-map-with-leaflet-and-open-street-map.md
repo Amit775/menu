@@ -23,6 +23,7 @@ The discover screen has a reels | list | map switch (product spec, mockups). The
 
 ## Consequences
 
-- OpenStreetMap's tile servers are for light use under their [tile usage policy](https://operations.osmfoundation.org/policies/tiles/). That fits friends-scale use. Before a public launch, move to a tile provider with an agreement (MapTiler, Stadia, or self-hosted tiles). Only the `TILES` URL and attribution change.
+- OpenStreetMap's tile servers are for light use under their [tile usage policy](https://operations.osmfoundation.org/policies/tiles/). That fits friends-scale use. Before a public launch, move to a tile provider with an agreement (MapTiler, Stadia, or self-hosted tiles). Only `OSM_TILES` and `OSM_ATTRIBUTION` change.
 - Leaflet touches `window` when imported, so the map stays client-only. That is fine for the SPA. Capacitor works the same way, and SSR will skip the map.
 - Unit tests replace `LeafletLoader` with a small fake. `apps/web-e2e` checks the real map in the built app: Leaflet loads, its stylesheet is served as CSS, and pins open by keyboard.
+- Slice 12 moves `LeafletLoader` and the tile constants into `web-shared-util-map` (`platform:web`, `scope:shared`, `type:util`), because Admins also drop a venue's pin in the menus domain. The lib holds no domain types and no components; each domain draws its own map.

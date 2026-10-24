@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Roles } from '@menu/web/shared/util-auth';
 import { injectMessages } from '@menu/web/shared/util-i18n';
 import { appMessages } from './app.messages';
 
@@ -14,4 +15,6 @@ import { appMessages } from './app.messages';
 })
 export class App {
   protected readonly t = injectMessages(appMessages);
+  /** Owners and Admins get a third tab for their venues. */
+  protected readonly roles = inject(Roles);
 }

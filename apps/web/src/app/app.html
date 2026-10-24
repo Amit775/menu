@@ -15,4 +15,10 @@
     <mat-icon aria-hidden="true">person</mat-icon>
     {{ t().profile }}
   </a>
+  @if (roles.canManage()) {
+    <a routerLink="/manage" routerLinkActive="active" ariaCurrentWhenActive="page">
+      <mat-icon aria-hidden="true">storefront</mat-icon>
+      {{ t().manage }}
+    </a>
+  }
 </nav>

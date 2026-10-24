@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
+import { AUTH_BACKEND, FakeAuthBackend, Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { AccountApiClient } from './account.api-client';
 import { AccountStore } from './account.store';
@@ -36,6 +36,7 @@ describe('AccountStore', () => {
     });
     expect(store.ownsVenues()).toBe(true);
     expect(setLanguage).toHaveBeenCalledWith('en');
+    expect(TestBed.inject(Roles).ownedVenueIds()).toEqual(account.ownedVenueIds);
   });
 
   it('records an error when loading fails', async () => {
@@ -43,6 +44,9 @@ describe('AccountStore', () => {
     backend.signIn();
     await store.load();
     expect(store.error()).toBe('load-failed');
+    const roles = TestBed.inject(Roles);
+    expect(roles.known()).toBe(true);
+    expect(roles.canManage()).toBe(false);
   });
 
   it('clears the account on sign-out', async () => {
@@ -53,6 +57,7 @@ describe('AccountStore', () => {
     void backend.signOut();
     TestBed.tick();
     expect(store.account()).toBeNull();
+    expect(TestBed.inject(Roles).known()).toBe(false);
   });
 
   it('drops an account that arrives after sign-out', async () => {
@@ -67,6 +72,34 @@ describe('AccountStore', () => {
     await loading;
     expect(store.account()).toBeNull();
     expect(setLanguage).not.toHaveBeenCalled();
+  });
+
+  it('leaves the roles unknown when loading fails after sign-out', async () => {
+    let fail: (error: Error) => void = () => undefined;
+    const me = vi.fn(() => new Promise<typeof account>((_resolve, reject) => (fail = reject)));
+    const { store, backend } = setup({ me });
+    backend.signIn();
+    const loading = store.load();
+    void backend.signOut();
+    TestBed.tick();
+    fail(new Error('offline'));
+    await loading;
+    expect(store.error()).toBeNull();
+    expect(TestBed.inject(Roles).known()).toBe(false);
+  });
+
+  it('keeps only the newest load when the account switches', async () => {
+    const answers: ((value: typeof account) => void)[] = [];
+    const me = vi.fn(() => new Promise<typeof account>((resolve) => answers.push(resolve)));
+    const { store, backend } = setup({ me });
+    backend.signIn();
+    const first = store.load();
+    const second = store.load();
+    expect(TestBed.inject(Roles).known()).toBe(false);
+    answers[1]?.({ ...account, isAdmin: true });
+    answers[0]?.(account);
+    await Promise.all([first, second]);
+    expect(TestBed.inject(Roles).isAdmin()).toBe(true);
   });
 
   it('switches language at once and saves it when signed in', async () => {
