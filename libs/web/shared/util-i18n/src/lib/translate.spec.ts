@@ -45,3 +45,54 @@ describe('injectTranslate', () => {
     expect(element.querySelector('p')?.textContent).toBe('3 entries');
   });
 });
+
+const broken = i18nScope('broken', {
+  he: () => Promise.resolve(he),
+  en: () => Promise.reject(new Error('chunk failed')),
+});
+
+@Component({
+  selector: 'menu-broken',
+  template: `<h1>{{ t('title') }}</h1>`,
+})
+class Broken {
+  protected readonly t = injectTranslate(broken);
+}
+
+describe('injectTranslate when a scope fails to load', () => {
+  it('keeps the last language that loaded', async () => {
+    TestBed.inject(I18n).setLanguage('he');
+    const fixture = TestBed.createComponent(Broken);
+    await TestBed.inject(ApplicationRef).whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    TestBed.inject(I18n).setLanguage('en');
+    await TestBed.inject(ApplicationRef).whenStable();
+    TestBed.tick();
+    expect(element.querySelector('h1')?.textContent).toBe('שלום');
+  });
+});
+
+const missing = i18nScope('missing', {
+  he: () => Promise.reject(new Error('chunk failed')),
+  en: () => Promise.reject(new Error('chunk failed')),
+});
+
+@Component({
+  selector: 'menu-missing',
+  template: `<h1>{{ t('title') }}</h1>`,
+})
+class Missing {
+  protected readonly t = injectTranslate(missing);
+}
+
+describe('injectTranslate when no language of a scope loads', () => {
+  it('renders nothing instead of breaking the view', async () => {
+    TestBed.inject(I18n).setLanguage('he');
+    const fixture = TestBed.createComponent(Missing);
+    await TestBed.inject(ApplicationRef).whenStable();
+    expect(() => {
+      TestBed.tick();
+    }).not.toThrow();
+    expect((fixture.nativeElement as HTMLElement).querySelector('h1')?.textContent).toBe('');
+  });
+});

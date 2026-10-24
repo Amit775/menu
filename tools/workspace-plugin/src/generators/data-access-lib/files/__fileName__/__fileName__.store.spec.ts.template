@@ -30,4 +30,36 @@ describe('<%= className %>Store', () => {
     await settle();
     expect(store.status()).toBe('error');
   });
+
+  it('adds a created item to the loaded list', async () => {
+    const created = { ...item, id: '1f9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10' };
+    const store = setup({
+      list: vi.fn().mockResolvedValue([item]),
+      create: vi.fn().mockResolvedValue(created),
+    });
+    store.load();
+    await settle();
+    await store.create({});
+    expect(store.items()).toEqual([item, created]);
+  });
+
+  it('loads again after a create when the list had failed', async () => {
+    const list = vi.fn().mockRejectedValueOnce(new Error('offline')).mockResolvedValue([item]);
+    const store = setup({ list, create: vi.fn().mockResolvedValue(item) });
+    store.load();
+    await settle();
+    await store.create({});
+    await settle();
+    expect(store.items()).toEqual([item]);
+  });
+
+  it('rejects when the create fails', async () => {
+    const store = setup({
+      list: vi.fn().mockResolvedValue([]),
+      create: vi.fn().mockRejectedValue(new Error('offline')),
+    });
+    store.load();
+    await settle();
+    await expect(store.create({})).rejects.toThrow('offline');
+  });
 });
