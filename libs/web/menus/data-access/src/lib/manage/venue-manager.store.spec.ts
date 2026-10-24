@@ -1,7 +1,8 @@
+import { signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { MenuApiClient } from '../menu/menu.api-client';
-import { insights, item, section, tag, venue, VENUE_ID } from '../testing/fixtures';
+import { insights, item, section, tag, venue, VENUE_ID, settle } from '../testing/fixtures';
 import { VenueManagerStore } from './venue-manager.store';
 
 describe('VenueManagerStore', () => {
@@ -39,7 +40,8 @@ describe('VenueManagerStore', () => {
 
   it('splits the venue’s items into the pending queue and the menu by section', async () => {
     const store = setup();
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     expect(store.status()).toBe('loaded');
     expect(store.pending()).toEqual([item]);
     expect(store.menu().map((view) => [view.section.id, view.items.map((i) => i.id)])).toEqual([
@@ -53,20 +55,23 @@ describe('VenueManagerStore', () => {
     const store = setup({
       items: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 403 })),
     });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     expect(store.status()).toBe('not-found');
   });
 
   it('records other failures as errors', async () => {
     const store = setup({ venue: vi.fn().mockRejectedValue(new Error('offline')) });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     expect(store.status()).toBe('error');
   });
 
   it('takes an approved item out of the queue and onto the menu', async () => {
     const decide = vi.fn().mockResolvedValue({ ...item, state: 'approved' });
     const store = setup({ decide });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.decide(item.id, 'approve');
     expect(decide).toHaveBeenCalledWith(item.id, 'approve');
     expect(store.pending()).toEqual([]);
@@ -75,7 +80,8 @@ describe('VenueManagerStore', () => {
 
   it('keeps the item in the queue when a decision fails', async () => {
     const store = setup({ decide: vi.fn().mockRejectedValue(new Error('offline')) });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await expect(store.decide(item.id, 'reject')).rejects.toThrow('offline');
     expect(store.pending()).toEqual([item]);
   });
@@ -85,7 +91,8 @@ describe('VenueManagerStore', () => {
       .fn()
       .mockResolvedValue({ ...item, state: 'merged', mergedIntoId: approved.id });
     const store = setup({ merge });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.merge(item.id, approved.id);
     expect(merge).toHaveBeenCalledWith(item.id, approved.id);
     expect(store.pending()).toEqual([]);
@@ -96,7 +103,8 @@ describe('VenueManagerStore', () => {
     const addItem = vi.fn().mockResolvedValue(added);
     const updateItem = vi.fn().mockResolvedValue({ ...approved, listPrice: 6000 });
     const store = setup({ addItem, updateItem });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.addItem({ sectionId: section.id, name: added.name });
     expect(addItem).toHaveBeenCalledWith(VENUE_ID, { sectionId: section.id, name: added.name });
     await store.updateItem(approved.id, { listPrice: 6000 });
@@ -116,7 +124,8 @@ describe('VenueManagerStore', () => {
       renameSection: vi.fn().mockResolvedValue({ ...desserts, name: { he: 'קינוחים' } }),
       reorderSections,
     });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.addSection(desserts.name);
     await store.renameSection(desserts.id, { he: 'קינוחים' });
     await store.moveSection(drinks.id, -1);
@@ -131,7 +140,8 @@ describe('VenueManagerStore', () => {
   it('does not move the first section further up', async () => {
     const reorderSections = vi.fn();
     const store = setup({ reorderSections });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.moveSection(section.id, -1);
     expect(reorderSections).not.toHaveBeenCalled();
   });
@@ -139,7 +149,8 @@ describe('VenueManagerStore', () => {
   it('loads insights once', async () => {
     const insightsCall = vi.fn().mockResolvedValue(insights);
     const store = setup({ insights: insightsCall });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.loadInsights();
     await store.loadInsights();
     expect(insightsCall).toHaveBeenCalledTimes(1);
@@ -150,19 +161,25 @@ describe('VenueManagerStore', () => {
     const store = setup({
       insights: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 500 })),
     });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await expect(store.loadInsights()).rejects.toBeInstanceOf(HttpErrorResponse);
     expect(store.insights()).toBeNull();
   });
 
   it('drops insights that arrive after another venue loaded', async () => {
     let answer: (value: typeof insights) => void = () => undefined;
+    const other = { ...venue, id: '1c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10' };
     const store = setup({
+      venue: vi.fn().mockResolvedValueOnce(venue).mockResolvedValueOnce(other),
       insights: vi.fn(() => new Promise<typeof insights>((resolve) => (answer = resolve))),
     });
-    await store.load(VENUE_ID);
+    const id = signal(VENUE_ID);
+    store.load(id);
+    await settle();
     const loading = store.loadInsights();
-    await store.load(VENUE_ID);
+    id.set(other.id);
+    await settle();
     answer(insights);
     await loading;
     expect(store.insights()).toBeNull();
@@ -174,7 +191,8 @@ describe('VenueManagerStore', () => {
       insights: insightsCall,
       decide: vi.fn().mockResolvedValue({ ...item, state: 'approved' }),
     });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     await store.loadInsights();
     await store.decide(item.id, 'approve');
     expect(store.insights()).toBeNull();

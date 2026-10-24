@@ -1,4 +1,4 @@
-import { computed, inject } from '@angular/core';
+import { computed, inject, resource, signal } from '@angular/core';
 import {
   type CreateEntryInput,
   type Entry,
@@ -6,31 +6,34 @@ import {
   type UpdateEntry,
 } from '@menu/shared/contracts';
 import { DataChanges } from '@menu/web/shared/util-events';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { loadStatus } from '@menu/web/shared/util-data';
+import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
 import { EntryApiClient } from '../entry/entry.api-client';
 import { LastVisibility } from '../entry/last-visibility';
-import { failure, type LoadStatus } from './load-status';
 
-interface ItemEntriesState {
-  sheet: ItemEntries | null;
-  status: LoadStatus;
-}
-
-/**
- * One item with the caller's entries and other people's public ones: the
- * entries sheet and the log form. Every write tells discover (ADR 0009).
- * Provide it in the routed page.
- */
 export const ItemEntriesStore = signalStore(
-  withState<ItemEntriesState>({ sheet: null, status: 'loading' }),
-  withComputed(({ sheet }) => ({
-    mine: computed(() => sheet()?.mine ?? []),
-    others: computed(() => sheet()?.others ?? []),
-    /** What the user paid the last time they wrote it down. */
-    lastPaid: computed(
-      () => sheet()?.mine.find((entry) => entry.pricePaid !== null)?.pricePaid ?? null,
-    ),
-  })),
+  withProps((_, api = inject(EntryApiClient)) => {
+    const itemId = signal<() => string | undefined>(() => undefined);
+    return {
+      _itemId: itemId,
+      _sheet: resource({
+        params: () => itemId()(),
+        loader: ({ params }) => api.forItem(params),
+      }),
+    };
+  }),
+  withComputed(({ _sheet }) => {
+    const sheet = computed(() => (_sheet.hasValue() ? _sheet.value() : null));
+    return {
+      sheet,
+      status: loadStatus(_sheet),
+      mine: computed(() => sheet()?.mine ?? []),
+      others: computed(() => sheet()?.others ?? []),
+      lastPaid: computed(
+        () => sheet()?.mine.find((entry) => entry.pricePaid !== null)?.pricePaid ?? null,
+      ),
+    };
+  }),
   withMethods(
     (
       store,
@@ -38,31 +41,24 @@ export const ItemEntriesStore = signalStore(
       changes = inject(DataChanges),
       lastVisibility = inject(LastVisibility),
     ) => {
-      let request = 0;
-
-      function replaceMine(mine: Entry[]): void {
+      function patchSheet(change: (sheet: ItemEntries) => ItemEntries): void {
         const sheet = store.sheet();
         if (sheet) {
-          patchState(store, { sheet: { ...sheet, mine } });
+          store._sheet.set(change(sheet));
         }
       }
 
+      function replaceMine(mine: Entry[]): void {
+        patchSheet((sheet) => ({ ...sheet, mine }));
+      }
+
       return {
-        async load(itemId: string): Promise<void> {
-          const current = ++request;
-          patchState(store, { status: 'loading' });
-          try {
-            const sheet = await api.forItem(itemId);
-            if (current === request) {
-              patchState(store, { sheet, status: 'loaded' });
-            }
-          } catch (error) {
-            if (current === request) {
-              patchState(store, { sheet: null, status: failure(error) });
-            }
-          }
+        load(itemId: () => string): void {
+          store._itemId.set(itemId);
         },
-        /** Rejects when the API refuses; the caller shows why. */
+        reload(): void {
+          store._sheet.reload();
+        },
         async create(itemId: string, input: CreateEntryInput): Promise<Entry> {
           const created = await api.create(itemId, input);
           if (input.visibility) {
@@ -100,12 +96,10 @@ export const ItemEntriesStore = signalStore(
         /** Admin: takes someone else's entry off public view (it leaves the sheet). */
         async hide(id: string): Promise<void> {
           await api.setHidden(id, true);
-          const sheet = store.sheet();
-          if (sheet) {
-            patchState(store, {
-              sheet: { ...sheet, others: sheet.others.filter((entry) => entry.id !== id) },
-            });
-          }
+          patchSheet((sheet) => ({
+            ...sheet,
+            others: sheet.others.filter((entry) => entry.id !== id),
+          }));
           changes.notify('entries');
         },
       };

@@ -4,11 +4,10 @@ import {
   Component,
   DestroyRef,
   type ElementRef,
-  effect,
   inject,
+  type OnChanges,
   input,
   output,
-  untracked,
   viewChild,
   ViewEncapsulation,
 } from '@angular/core';
@@ -51,7 +50,7 @@ const PIN_ZOOM = 17;
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PinPicker {
+export class PinPicker implements OnChanges {
   readonly point = input<GeoPoint | null>(null);
   readonly label = input.required<string>();
   readonly picked = output<GeoPoint>();
@@ -68,20 +67,18 @@ export class PinPicker {
 
   constructor() {
     afterNextRender(() => void this.init());
-    effect(() => {
-      const point = this.point();
-      untracked(() => {
-        this.place(point);
-        // Typed coordinates (the keyboard way) bring the map along with the pin.
-        if (point && (point.lat !== this.lastPicked?.lat || point.lng !== this.lastPicked.lng)) {
-          this.map?.panTo(point);
-        }
-      });
-    });
     inject(DestroyRef).onDestroy(() => {
       this.destroyed = true;
       this.map?.remove();
     });
+  }
+
+  ngOnChanges(): void {
+    const point = this.point();
+    this.place(point);
+    if (point && (point.lat !== this.lastPicked?.lat || point.lng !== this.lastPicked.lng)) {
+      this.map?.panTo(point);
+    }
   }
 
   private async init(): Promise<void> {

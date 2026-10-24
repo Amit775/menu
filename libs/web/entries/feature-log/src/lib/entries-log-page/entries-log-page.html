@@ -40,15 +40,15 @@
         <p class="pending" role="note">{{ t().pending }}</p>
       }
 
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <menu-rating-input [(value)]="rating" [disabled]="saving()" />
+      <form novalidate (submit)="$event.preventDefault(); save()">
+        <menu-rating-input [formField]="form.rating" />
 
         <fieldset class="again">
           <legend>{{ t().wouldOrderAgain }}</legend>
           <div class="choices">
             <button
               type="button"
-              [attr.aria-pressed]="wouldOrderAgain() === true"
+              [attr.aria-pressed]="form.wouldOrderAgain().value() === true"
               [disabled]="saving()"
               (click)="toggleOrderAgain(true)"
             >
@@ -56,7 +56,7 @@
             </button>
             <button
               type="button"
-              [attr.aria-pressed]="wouldOrderAgain() === false"
+              [attr.aria-pressed]="form.wouldOrderAgain().value() === false"
               [disabled]="saving()"
               (click)="toggleOrderAgain(false)"
             >
@@ -72,22 +72,21 @@
               matInput
               type="number"
               inputmode="numeric"
-              min="0"
               step="1"
-              formControlName="price"
+              [formField]="form.price"
               aria-describedby="price-hint"
             />
             <span matTextPrefix>₪&nbsp;</span>
-            @if (price.invalid) {
+            @if (form.price().invalid()) {
               <mat-error>{{ t().priceInvalid }}</mat-error>
             }
           </mat-form-field>
           <mat-form-field appearance="outline">
             <mat-label>{{ t().eatenAt }}</mat-label>
-            <input matInput type="datetime-local" [max]="maxDate" formControlName="eatenAt" />
-            @if (eatenAt.hasError('future')) {
+            <input matInput type="datetime-local" [max]="maxDate" [formField]="form.eatenAt" />
+            @if (eatenAtFuture()) {
               <mat-error>{{ t().eatenAtFuture }}</mat-error>
-            } @else if (eatenAt.invalid) {
+            } @else if (form.eatenAt().invalid()) {
               <mat-error>{{ t().eatenAtMissing }}</mat-error>
             }
           </mat-form-field>
@@ -106,8 +105,7 @@
           <textarea
             matInput
             rows="4"
-            maxlength="2000"
-            formControlName="text"
+            [formField]="form.text"
             [placeholder]="t().textPlaceholder"
           ></textarea>
         </mat-form-field>
@@ -157,7 +155,7 @@
 
         <div class="visibility">
           <span id="visibility-label">{{ t().visibility }}</span>
-          <mat-button-toggle-group formControlName="visibility" aria-labelledby="visibility-label">
+          <mat-button-toggle-group aria-labelledby="visibility-label" [formField]="form.visibility">
             <mat-button-toggle value="private">{{ t().private }}</mat-button-toggle>
             <mat-button-toggle value="shared">{{ t().shared }}</mat-button-toggle>
             <mat-button-toggle value="public">{{ t().public }}</mat-button-toggle>

@@ -1,7 +1,8 @@
+import { signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { MenuApiClient } from '../menu/menu.api-client';
-import { item, section, venue, VENUE_ID } from '../testing/fixtures';
+import { item, section, venue, VENUE_ID, settle } from '../testing/fixtures';
 import { AddItemStore } from './add-item.store';
 
 describe('AddItemStore', () => {
@@ -17,7 +18,8 @@ describe('AddItemStore', () => {
       venue: vi.fn().mockResolvedValue(venue),
       sections: vi.fn().mockResolvedValue([section]),
     });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     expect(store.status()).toBe('loaded');
     expect(store.venue()).toEqual(venue);
     expect(store.sections()).toEqual([section]);
@@ -28,14 +30,16 @@ describe('AddItemStore', () => {
       venue: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 404 })),
       sections: vi.fn().mockResolvedValue([]),
     });
-    await missing.load(VENUE_ID);
+    missing.load(() => VENUE_ID);
+    await settle();
     expect(missing.status()).toBe('not-found');
     TestBed.resetTestingModule();
     const failed = setup({
       venue: vi.fn().mockResolvedValue(venue),
       sections: vi.fn().mockRejectedValue(new Error('offline')),
     });
-    await failed.load(VENUE_ID);
+    failed.load(() => VENUE_ID);
+    await settle();
     expect(failed.status()).toBe('error');
   });
 
@@ -49,10 +53,13 @@ describe('AddItemStore', () => {
         .mockResolvedValueOnce(other),
       sections: vi.fn().mockResolvedValue([section]),
     });
-    const first = store.load(VENUE_ID);
-    await store.load(other.id);
+    const id = signal(VENUE_ID);
+    store.load(id);
+    TestBed.tick();
+    id.set(other.id);
+    await settle();
     answerFirst(venue);
-    await first;
+    await settle();
     expect(store.venue()).toEqual(other);
   });
 
@@ -63,7 +70,8 @@ describe('AddItemStore', () => {
       sections: vi.fn().mockResolvedValue([section]),
       addItem,
     });
-    await store.load(VENUE_ID);
+    store.load(() => VENUE_ID);
+    await settle();
     const input = { sectionId: section.id, name: { he: 'שקשוקה' }, listPrice: null };
     await expect(store.add(input)).resolves.toEqual(item);
     expect(addItem).toHaveBeenCalledWith(VENUE_ID, input);

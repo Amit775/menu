@@ -1,73 +1,55 @@
-import { HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { type ItemPage, type VenuePage } from '@menu/shared/contracts';
-import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
-import { DiscoverApiClient } from '../api/discover.api-client';
+import { computed, inject, resource, signal } from '@angular/core';
 import { DeviceLocation } from '@menu/web/shared/util-device';
+import { loadStatus } from '@menu/web/shared/util-data';
+import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
+import { DiscoverApiClient } from '../api/discover.api-client';
 
-export type PageStatus = 'loading' | 'loaded' | 'not-found' | 'error';
-
-/** A 404, or a 400 for an id that is not one (`/items/foo`), means there is nothing to retry. */
-function failure(error: unknown): PageStatus {
-  return error instanceof HttpErrorResponse && (error.status === 404 || error.status === 400)
-    ? 'not-found'
-    : 'error';
-}
-
-interface ItemPageState {
-  page: ItemPage | null;
-  status: PageStatus;
-}
-
-/** One item's page. Provide it in the routed page. */
 export const ItemPageStore = signalStore(
-  withState<ItemPageState>({ page: null, status: 'loading' }),
-  withMethods((store, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
-    let request = 0;
+  withProps((_, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
+    const id = signal<() => string | undefined>(() => undefined);
     return {
-      async load(id: string): Promise<void> {
-        const current = ++request;
-        patchState(store, { status: 'loading' });
-        try {
-          const page = await api.item(id, await location.locate());
-          if (current === request) {
-            patchState(store, { page, status: 'loaded' });
-          }
-        } catch (error) {
-          if (current === request) {
-            patchState(store, { page: null, status: failure(error) });
-          }
-        }
-      },
+      _id: id,
+      _page: resource({
+        params: () => id()(),
+        loader: async ({ params }) => api.item(params, await location.locate()),
+      }),
     };
   }),
+  withComputed(({ _page }) => ({
+    page: computed(() => (_page.hasValue() ? _page.value() : null)),
+    status: loadStatus(_page),
+  })),
+  withMethods(({ _id, _page }) => ({
+    load(id: () => string): void {
+      _id.set(id);
+    },
+    reload(): void {
+      _page.reload();
+    },
+  })),
 );
 
-interface VenuePageState {
-  page: VenuePage | null;
-  status: PageStatus;
-}
-
-/** One venue's page. Provide it in the routed page. */
 export const VenuePageStore = signalStore(
-  withState<VenuePageState>({ page: null, status: 'loading' }),
-  withMethods((store, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
-    let request = 0;
+  withProps((_, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
+    const id = signal<() => string | undefined>(() => undefined);
     return {
-      async load(id: string): Promise<void> {
-        const current = ++request;
-        patchState(store, { status: 'loading' });
-        try {
-          const page = await api.venue(id, await location.locate());
-          if (current === request) {
-            patchState(store, { page, status: 'loaded' });
-          }
-        } catch (error) {
-          if (current === request) {
-            patchState(store, { page: null, status: failure(error) });
-          }
-        }
-      },
+      _id: id,
+      _page: resource({
+        params: () => id()(),
+        loader: async ({ params }) => api.venue(params, await location.locate()),
+      }),
     };
   }),
+  withComputed(({ _page }) => ({
+    page: computed(() => (_page.hasValue() ? _page.value() : null)),
+    status: loadStatus(_page),
+  })),
+  withMethods(({ _id, _page }) => ({
+    load(id: () => string): void {
+      _id.set(id);
+    },
+    reload(): void {
+      _page.reload();
+    },
+  })),
 );
