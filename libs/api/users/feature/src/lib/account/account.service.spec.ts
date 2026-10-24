@@ -60,6 +60,24 @@ describe('AccountService', () => {
     );
   });
 
+  it('makes a bootstrap uid an Admin even when its account already exists', async () => {
+    const findOrCreateByFirebaseUid = vi.fn().mockResolvedValue(account);
+    const setAdmin = vi.fn().mockResolvedValue({ ...account, isAdmin: true });
+    const service = await setup({ findOrCreateByFirebaseUid, setAdmin }, ['uid-1']);
+    await expect(service.resolve({ uid: 'uid-1' })).resolves.toMatchObject({ isAdmin: true });
+    expect(setAdmin).toHaveBeenCalledWith(account.id, true);
+  });
+
+  it('leaves an account that is not listed as it is', async () => {
+    const setAdmin = vi.fn();
+    const service = await setup(
+      { findOrCreateByFirebaseUid: vi.fn().mockResolvedValue(account), setAdmin },
+      ['someone-else'],
+    );
+    await expect(service.resolve({ uid: 'uid-1' })).resolves.toMatchObject({ isAdmin: false });
+    expect(setAdmin).not.toHaveBeenCalled();
+  });
+
   it('fails with 404 for an unknown account', async () => {
     const service = await setup({ findById: vi.fn().mockResolvedValue(null) });
     await expect(service.get(account.id)).rejects.toThrow(NotFoundException);
