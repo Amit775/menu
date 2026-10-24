@@ -25,8 +25,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { type GeoPoint, type LocalizedText, type VenueStatus } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
-import { injectMessages } from '@menu/web/shared/util-i18n';
-import { venueFormMessages } from '../venue-form.messages';
+import { injectTranslate } from '@menu/web/shared/util-i18n';
+import { venueFormI18n } from '../venue-form.i18n';
 import { PinPicker } from './pin-picker';
 
 interface VenueModel {
@@ -86,7 +86,7 @@ export class VenueFormPage {
 
   protected readonly store = inject(VenueManagerStore);
   private readonly router = inject(Router);
-  protected readonly t = injectMessages(venueFormMessages);
+  protected readonly t = injectTranslate(venueFormI18n);
 
   protected readonly model = linkedSignal<VenueModel>(() => {
     const venue = this.store.venue();

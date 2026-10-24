@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { DistancePipe, MessagesPipe, RelativeDatePipe, ShekelsPipe } from './format.pipes';
+import { DistancePipe, RelativeDatePipe, ShekelsPipe } from './format.pipes';
 import { I18n } from './i18n';
-import { defineMessages } from './messages';
 
 describe('format pipes', () => {
   beforeEach(() => {
@@ -26,13 +25,5 @@ describe('format pipes', () => {
   it('shows a date relative to today', () => {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     expect(create(RelativeDatePipe).transform(yesterday)).toBe('אתמול');
-  });
-
-  it('picks the strings of the current language', () => {
-    const messages = defineMessages({ he: { hello: 'שלום' }, en: { hello: 'Hello' } });
-    const pipe = create(MessagesPipe);
-    expect(pipe.transform(messages).hello).toBe('שלום');
-    TestBed.inject(I18n).setLanguage('en');
-    expect(pipe.transform(messages).hello).toBe('Hello');
   });
 });

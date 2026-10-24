@@ -1,0 +1,16 @@
+export const he = {
+  back: 'חזרה',
+  loading: 'טוען…',
+  loadFailed: 'לא הצלחנו לטעון את המקום.',
+  retry: 'לנסות שוב',
+  notFound: 'המקום הזה לא נמצא.',
+  toFeed: 'לגילוי',
+  navigate: 'ניווט',
+  call: 'חיוג',
+  reserve: 'הזמנת מקום',
+  myEntries: '{count, plural, =1 {רשומה אחת שלך כאן} other {# רשומות שלך כאן}}',
+  topItems: 'מה טעים כאן',
+  menu: 'התפריט',
+  emptyMenu: 'התפריט עוד לא הוזן.',
+  addItem: 'לא בתפריט? הוסיפו פריט ורשמו עליו',
+};

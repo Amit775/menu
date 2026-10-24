@@ -1,5 +1,5 @@
 <header class="top">
-  <button mat-icon-button type="button" [attr.aria-label]="t().back" (click)="back()">
+  <button mat-icon-button type="button" [attr.aria-label]="t('back')" (click)="back()">
     <mat-icon aria-hidden="true">{{ backIcon() }}</mat-icon>
   </button>
 </header>
@@ -7,19 +7,19 @@
 @switch (store.status()) {
   @case ('loading') {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   }
   @case ('not-found') {
     <div class="state" role="status">
-      {{ t().notFound }}
-      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+      {{ t('notFound') }}
+      <a mat-button routerLink="/">{{ t('toFeed') }}</a>
     </div>
   }
   @case ('error') {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="retry()">{{ t('retry') }}</button>
     </div>
   }
   @default {
@@ -37,32 +37,32 @@
           @if (navigateUrl(); as url) {
             <a mat-stroked-button [href]="url" target="_blank" rel="noopener">
               <mat-icon aria-hidden="true">directions</mat-icon>
-              {{ t().navigate }}
+              {{ t('navigate') }}
             </a>
           }
           @if (phoneUrl(); as url) {
             <a mat-stroked-button [href]="url">
               <mat-icon aria-hidden="true">call</mat-icon>
-              {{ t().call }}
+              {{ t('call') }}
             </a>
           }
           @if (page.venue.reservationUrl; as url) {
             <a mat-stroked-button [href]="url" target="_blank" rel="noopener">
               <mat-icon aria-hidden="true">event</mat-icon>
-              {{ t().reserve }}
+              {{ t('reserve') }}
             </a>
           }
         </div>
 
         @if (page.myEntryCount > 0) {
           <a class="mine" routerLink="/diary" [queryParams]="{ venueId: page.venue.id }">{{
-            t().myEntries(page.myEntryCount)
+            t('myEntries', { count: page.myEntryCount })
           }}</a>
         }
 
         @if (page.topItems.length > 0) {
           <section>
-            <h2>{{ t().topItems }}</h2>
+            <h2>{{ t('topItems') }}</h2>
             @for (item of page.topItems; track item.id) {
               <menu-item-row [item]="item" [showVenue]="false" />
             }
@@ -70,7 +70,7 @@
         }
 
         <section>
-          <h2>{{ t().menu }}</h2>
+          <h2>{{ t('menu') }}</h2>
           @if (hasMenu()) {
             @for (entry of page.sections; track entry.section.id) {
               @if (entry.items.length > 0) {
@@ -81,11 +81,11 @@
               }
             }
           } @else {
-            <p class="empty">{{ t().emptyMenu }}</p>
+            <p class="empty">{{ t('emptyMenu') }}</p>
           }
           <a class="add-item" [routerLink]="['/venues', page.venue.id, 'add-item']">
             <mat-icon aria-hidden="true">add</mat-icon>
-            {{ t().addItem }}
+            {{ t('addItem') }}
           </a>
         </section>
       </article>

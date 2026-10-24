@@ -17,20 +17,26 @@
       }
     </div>
     <p class="visually-hidden" aria-live="polite">
-      {{ t().position(position() + 1, siblings().length, current.venue.name | localize) }}
+      {{
+        t('position', {
+          index: position() + 1,
+          count: siblings().length,
+          venue: current.venue.name | localize,
+        })
+      }}
     </p>
   }
 
   <button
     type="button"
     class="edge start"
-    [attr.aria-label]="t().previousAtVenue"
+    [attr.aria-label]="t('previousAtVenue')"
     (click)="step(-1)"
   ></button>
   <button
     type="button"
     class="edge end"
-    [attr.aria-label]="t().nextAtVenue"
+    [attr.aria-label]="t('nextAtVenue')"
     (click)="step(1)"
   ></button>
 
@@ -38,25 +44,25 @@
     <a
       class="side-item"
       [routerLink]="['/items', current.id, 'entries']"
-      [attr.aria-label]="t().whatPeopleSay(current.ratingCount)"
+      [attr.aria-label]="t('whatPeopleSay', { count: current.ratingCount })"
     >
       <span class="side-count">{{ current.ratingCount }}</span>
-      <span class="side-label">{{ t().entriesWord }}</span>
+      <span class="side-label">{{ t('entriesWord') }}</span>
     </a>
     <button type="button" class="side-item" (click)="share()">
       <mat-icon aria-hidden="true">share</mat-icon>
-      <span class="side-label">{{ t().share }}</span>
+      <span class="side-label">{{ t('share') }}</span>
     </button>
-    <span class="side-label copied" role="status">{{ copied() ? t().copied : '' }}</span>
+    <span class="side-label copied" role="status">{{ copied() ? t('copied') : '' }}</span>
     <a class="side-item log" [routerLink]="['/log', current.id]">
       <span class="log-icon"><mat-icon aria-hidden="true">add</mat-icon></span>
-      <span class="side-label">{{ t().logIt }}</span>
+      <span class="side-label">{{ t('logIt') }}</span>
     </a>
   </div>
 
   <div class="info">
     @if (current.writtenByMe) {
-      <span class="flag">{{ t().writtenByMe }}</span>
+      <span class="flag">{{ t('writtenByMe') }}</span>
     }
     <h2>
       <a [routerLink]="['/items', current.id]">{{ current.name | localize }}</a>
@@ -71,13 +77,13 @@
       @if (current.score !== null) {
         <menu-score-badge [score]="current.score" [showCount]="false" tone="light" />
         <span>
-          {{ t().entries(current.ratingCount) }}
+          {{ t('entries', { count: current.ratingCount }) }}
           @if (current.wouldOrderAgainPercent !== null) {
-            · {{ t().wouldOrderAgain(current.wouldOrderAgainPercent) }}
+            · {{ t('wouldOrderAgain', { percent: current.wouldOrderAgainPercent }) }}
           }
         </span>
       } @else {
-        <span>{{ t().noScoreYet }}</span>
+        <span>{{ t('noScoreYet') }}</span>
       }
       @if (current.latestPrice !== null) {
         <span class="price">{{ current.latestPrice | shekels }}</span>
@@ -85,7 +91,7 @@
     </div>
     <a class="hint" [routerLink]="['/venues', current.venue.id]">
       <mat-icon aria-hidden="true">keyboard_arrow_up</mat-icon>
-      {{ t().swipeUp }}
+      {{ t('swipeUp') }}
     </a>
   </div>
 </article>

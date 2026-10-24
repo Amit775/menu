@@ -1,26 +1,26 @@
 <section>
-  <h1>{{ t().title }}</h1>
+  <h1>{{ t('title') }}</h1>
 
   @switch (auth.status()) {
     @case ('loading') {
       <mat-spinner diameter="32" />
     }
     @case ('signed-out') {
-      <h2>{{ t().signedOutTitle }}</h2>
-      <p>{{ t().signedOutText }}</p>
-      <a mat-flat-button routerLink="/sign-in">{{ t().signIn }}</a>
+      <h2>{{ t('signedOutTitle') }}</h2>
+      <p>{{ t('signedOutText') }}</p>
+      <a mat-flat-button routerLink="/sign-in">{{ t('signIn') }}</a>
     }
     @default {
       <a mat-flat-button class="diary" routerLink="/diary">
         <mat-icon aria-hidden="true">menu_book</mat-icon>
-        {{ t().diary }}
+        {{ t('diary') }}
       </a>
       @if (store.error() === 'load-failed') {
-        <p class="error" role="alert">{{ t().loadFailed }}</p>
+        <p class="error" role="alert">{{ t('loadFailed') }}</p>
       }
       <form novalidate (submit)="$event.preventDefault(); saveName()">
         <mat-form-field appearance="outline">
-          <mat-label>{{ t().name }}</mat-label>
+          <mat-label>{{ t('name') }}</mat-label>
           <input matInput autocomplete="nickname" [formField]="nameField" />
         </mat-form-field>
         <button
@@ -28,31 +28,33 @@
           type="submit"
           [disabled]="nameField().invalid() || !store.account()"
         >
-          {{ t().save }}
+          {{ t('save') }}
         </button>
         @if (saved()) {
-          <span class="saved" role="status">{{ t().saved }}</span>
+          <span class="saved" role="status">{{ t('saved') }}</span>
         }
         @if (store.error() === 'save-failed') {
-          <span class="error" role="alert">{{ t().saveFailed }}</span>
+          <span class="error" role="alert">{{ t('saveFailed') }}</span>
         }
       </form>
     }
   }
 
   <div class="language">
-    <span id="language-label">{{ t().language }}</span>
+    <span id="language-label">{{ t('language') }}</span>
     <mat-button-toggle-group
       aria-labelledby="language-label"
       [value]="i18n.language()"
       (change)="setLanguage($event.value)"
     >
-      <mat-button-toggle value="he" lang="he">{{ t().hebrew }}</mat-button-toggle>
-      <mat-button-toggle value="en" lang="en">{{ t().english }}</mat-button-toggle>
+      <mat-button-toggle value="he" lang="he">{{ t('hebrew') }}</mat-button-toggle>
+      <mat-button-toggle value="en" lang="en">{{ t('english') }}</mat-button-toggle>
     </mat-button-toggle-group>
   </div>
 
   @if (auth.signedIn()) {
-    <button mat-button type="button" class="sign-out" (click)="signOut()">{{ t().signOut }}</button>
+    <button mat-button type="button" class="sign-out" (click)="signOut()">
+      {{ t('signOut') }}
+    </button>
   }
 </section>
