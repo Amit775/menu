@@ -1,14 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  inject,
   input,
   type OnChanges,
   type OnDestroy,
   output,
+  type SimpleChanges,
 } from '@angular/core';
 import { type GeoPoint, type MapPin } from '@menu/shared/contracts';
-import { I18n, injectTranslate } from '@menu/web/shared/util-i18n';
+import { injectTranslate } from '@menu/web/shared/util-i18n';
 import type * as Leaflet from 'leaflet';
 import { feedI18n } from '../feed.i18n';
 
@@ -24,18 +24,20 @@ export class MapPins implements OnChanges, OnDestroy {
   readonly map = input.required<Leaflet.Map>();
   readonly pins = input.required<readonly MapPin[]>();
   readonly near = input.required<GeoPoint | null>();
+  readonly labels = input.required<ReadonlyMap<MapPin, string>>();
   readonly opened = output<MapPin>();
 
-  private readonly i18n = inject(I18n);
   private readonly t = injectTranslate(feedI18n);
   private layer: Leaflet.LayerGroup | undefined;
   private me: Leaflet.CircleMarker | undefined;
   private readonly markers = new Map<string, HTMLElement>();
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges<MapPins>): void {
     this.showMe();
     this.draw();
-    this.fit();
+    if (changes.pins || changes.near) {
+      this.fit();
+    }
   }
 
   ngOnDestroy(): void {
@@ -78,7 +80,7 @@ export class MapPins implements OnChanges, OnDestroy {
       const element = marker.getElement();
       if (element) {
         // A divIcon is named by its content (the score), so screen readers need a label.
-        element.setAttribute('aria-label', this.label(pin));
+        element.setAttribute('aria-label', this.labels().get(pin) ?? '');
         element.addEventListener('keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
@@ -99,13 +101,5 @@ export class MapPins implements OnChanges, OnDestroy {
         maxZoom: FIT_MAX_ZOOM,
       });
     }
-  }
-
-  private label(pin: MapPin): string {
-    const parts = [
-      this.i18n.pick(pin.venue.name),
-      this.t('pinSummary', { count: pin.itemCount, best: pin.bestScore?.toFixed(1) ?? 'none' }),
-    ];
-    return (pin.writtenByMe ? [...parts, this.t('writtenByMe')] : parts).join(', ');
   }
 }

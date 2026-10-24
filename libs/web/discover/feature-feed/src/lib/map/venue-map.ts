@@ -16,16 +16,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { type MapPin } from '@menu/shared/contracts';
 import { FeedStore } from '@menu/web/discover/data-access';
-import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { LeafletLoader, OSM_ATTRIBUTION, OSM_TILES, TEL_AVIV } from '@menu/web/shared/util-map';
 import type * as Leaflet from 'leaflet';
 import { feedI18n } from '../feed.i18n';
 import { MapPins } from './map-pins';
 
-/**
- * The map view: one pin per venue, labelled with its best score (ADR 0008).
- * A pin opens a card that links to the venue, by tap or by Enter/Space.
- */
 @Component({
   selector: 'menu-venue-map',
   imports: [RouterLink, MatButtonModule, MatIconModule, LocalizePipe, MapPins],
@@ -40,6 +36,7 @@ export class VenueMap {
   protected readonly store = inject(FeedStore);
   private readonly loader = inject(LeafletLoader);
   private readonly injector = inject(Injector);
+  private readonly i18n = inject(I18n);
   protected readonly t = injectTranslate(feedI18n);
 
   private readonly container = viewChild.required<ElementRef<HTMLElement>>('map');
@@ -49,6 +46,10 @@ export class VenueMap {
   private readonly selectedId = signal<string | null>(null);
   protected readonly selected = computed(
     () => this.store.pins().find((pin) => pin.venue.id === this.selectedId()) ?? null,
+  );
+
+  protected readonly labels = computed(
+    () => new Map(this.store.pins().map((pin) => [pin, this.label(pin)])),
   );
 
   private destroyed = false;
@@ -74,6 +75,14 @@ export class VenueMap {
       this.selectedId.set(null);
       this.pins()?.focus(id);
     }
+  }
+
+  private label(pin: MapPin): string {
+    const parts = [
+      this.i18n.pick(pin.venue.name),
+      this.t('pinSummary', { count: pin.itemCount, best: pin.bestScore?.toFixed(1) ?? 'none' }),
+    ];
+    return (pin.writtenByMe ? [...parts, this.t('writtenByMe')] : parts).join(', ');
   }
 
   private async init(): Promise<void> {
