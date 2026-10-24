@@ -11,3 +11,4 @@ export * from './lib/menus/tag.contract';
 export * from './lib/menus/item.contract';
 export * from './lib/entries/entry.contract';
 export * from './lib/discover/discover.contract';
+export * from './lib/entries/photo.contract';

@@ -20,6 +20,7 @@ const entry: Entry = {
   visibility: 'public',
   shareToken: 'abcdefghijklmnopqrstuv',
   hidden: false,
+  photoUrl: null,
   createdAt: '2026-10-20T20:00:00.000Z',
   updatedAt: '2026-10-20T20:00:00.000Z',
 };
