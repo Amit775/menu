@@ -34,44 +34,52 @@ export const PeopleStore = signalStore(
       return accounts().filter((account) => !owning.has(account.id));
     }),
   })),
-  withMethods((store, api = inject(PeopleApiClient)) => ({
-    /** Every account, and with a venue id that venue's Owners too. */
-    async load(venueId: string | null = null): Promise<void> {
-      patchState(store, { status: 'loading', venueId });
-      try {
-        const [accounts, owners] = await Promise.all([
-          api.accounts(),
-          venueId ? api.owners(venueId) : Promise.resolve([]),
-        ]);
-        patchState(store, { accounts, owners, status: 'loaded' });
-      } catch {
-        patchState(store, { status: 'error' });
-      }
-    },
-    /** Each write rejects when the API refuses; the caller shows why. */
-    async setAdmin(id: string, isAdmin: boolean): Promise<void> {
-      const updated = await api.setAdmin(id, isAdmin);
-      patchState(store, {
-        accounts: store.accounts().map((account) => (account.id === id ? updated : account)),
-      });
-    },
-    async grant(accountId: string): Promise<void> {
-      const venueId = store.venueId();
-      if (!venueId) {
-        throw new Error('Load a venue first.');
-      }
-      const ownership = await api.grant(venueId, accountId);
-      patchState(store, { owners: [...store.owners(), ownership] });
-    },
-    async revoke(accountId: string): Promise<void> {
-      const venueId = store.venueId();
-      if (!venueId) {
-        throw new Error('Load a venue first.');
-      }
-      await api.revoke(venueId, accountId);
-      patchState(store, {
-        owners: store.owners().filter((owner) => owner.accountId !== accountId),
-      });
-    },
-  })),
+  withMethods((store, api = inject(PeopleApiClient)) => {
+    let request = 0;
+    return {
+      /** Every account, and with a venue id that venue's Owners too. */
+      async load(venueId: string | null = null): Promise<void> {
+        const current = ++request;
+        patchState(store, { status: 'loading', venueId, owners: [] });
+        try {
+          const [accounts, owners] = await Promise.all([
+            api.accounts(),
+            venueId ? api.owners(venueId) : Promise.resolve([]),
+          ]);
+          if (current === request) {
+            patchState(store, { accounts, owners, status: 'loaded' });
+          }
+        } catch {
+          if (current === request) {
+            patchState(store, { status: 'error' });
+          }
+        }
+      },
+      /** Each write rejects when the API refuses; the caller shows why. */
+      async setAdmin(id: string, isAdmin: boolean): Promise<void> {
+        const updated = await api.setAdmin(id, isAdmin);
+        patchState(store, {
+          accounts: store.accounts().map((account) => (account.id === id ? updated : account)),
+        });
+      },
+      async grant(accountId: string): Promise<void> {
+        const venueId = store.venueId();
+        if (!venueId) {
+          throw new Error('Load a venue first.');
+        }
+        const ownership = await api.grant(venueId, accountId);
+        patchState(store, { owners: [...store.owners(), ownership] });
+      },
+      async revoke(accountId: string): Promise<void> {
+        const venueId = store.venueId();
+        if (!venueId) {
+          throw new Error('Load a venue first.');
+        }
+        await api.revoke(venueId, accountId);
+        patchState(store, {
+          owners: store.owners().filter((owner) => owner.accountId !== accountId),
+        });
+      },
+    };
+  }),
 );
