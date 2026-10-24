@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   input,
   linkedSignal,
@@ -61,10 +60,7 @@ export class VenueManagerPage {
   });
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
   protected choose(index: number): void {
@@ -72,6 +68,6 @@ export class VenueManagerPage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 }

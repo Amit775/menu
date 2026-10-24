@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { MenuApiClient } from '../menu/menu.api-client';
-import { tag } from '../testing/fixtures';
+import { tag, settle } from '../testing/fixtures';
 import { TagsStore } from './tags.store';
 
 describe('TagsStore', () => {
@@ -22,13 +22,13 @@ describe('TagsStore', () => {
 
   it('lists the vocabulary by slug', async () => {
     const store = setup({});
-    await store.load();
+    await settle();
     expect(store.sorted().map((t) => t.slug)).toEqual(['burger', 'hamburger']);
   });
 
   it('records a failed load', async () => {
     const store = setup({ tags: vi.fn().mockRejectedValue(new Error('offline')) });
-    await store.load();
+    await settle();
     expect(store.status()).toBe('error');
   });
 
@@ -40,7 +40,7 @@ describe('TagsStore', () => {
       updateTag: vi.fn().mockResolvedValue({ ...burger, name: { he: 'בורגר' } }),
       mergeTag,
     });
-    await store.load();
+    await settle();
     await store.add({ slug: 'fries', name: fries.name, kind: 'dish' });
     await store.update(burger.id, { name: { he: 'בורגר' } });
     await store.merge(burger.id, tag.id);
@@ -52,7 +52,7 @@ describe('TagsStore', () => {
     const store = setup({
       addTag: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 409 })),
     });
-    await store.load();
+    await settle();
     await expect(
       store.add({ slug: 'burger', name: burger.name, kind: 'dish' }),
     ).rejects.toBeInstanceOf(HttpErrorResponse);

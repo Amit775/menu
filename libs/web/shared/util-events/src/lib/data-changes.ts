@@ -1,24 +1,17 @@
-import { Service, type Signal, signal, type WritableSignal } from '@angular/core';
+import { Service } from '@angular/core';
+import { type Observable, Subject } from 'rxjs';
 
-/** Data that one domain changes and another domain shows. */
 export type ChangeTopic = 'entries';
 
-/**
- * Tells other domains that data they show has changed, without importing
- * each other (ADR 0009). A domain that writes calls `notify`; a domain that
- * reads watches `version` and reloads when it moves.
- */
 @Service()
 export class DataChanges {
-  private readonly versions: Record<ChangeTopic, WritableSignal<number>> = {
-    entries: signal(0),
-  };
+  private readonly topics: Record<ChangeTopic, Subject<void>> = { entries: new Subject() };
 
-  version(topic: ChangeTopic): Signal<number> {
-    return this.versions[topic].asReadonly();
+  on(topic: ChangeTopic): Observable<void> {
+    return this.topics[topic].asObservable();
   }
 
   notify(topic: ChangeTopic): void {
-    this.versions[topic].update((version) => version + 1);
+    this.topics[topic].next();
   }
 }

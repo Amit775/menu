@@ -1,13 +1,5 @@
 import { Location } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  input,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -61,10 +53,7 @@ export class EntriesSheetPage {
   protected readonly confirmingHide = signal<string | null>(null);
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
   protected close(): void {
@@ -76,7 +65,7 @@ export class EntriesSheetPage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 
   protected async makePublic(entry: Entry): Promise<void> {

@@ -1,13 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -65,14 +56,11 @@ export class VenueOwnersPage {
   protected readonly confirming = signal<string | null>(null);
 
   constructor() {
-    effect(() => {
-      const venueId = this.venueId();
-      untracked(() => void this.store.load(venueId));
-    });
+    this.store.load(this.venueId);
   }
 
   protected retry(): void {
-    void this.store.load(this.venueId());
+    this.store.reload();
   }
 
   protected name(owner: Ownership): string {

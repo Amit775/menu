@@ -30,11 +30,7 @@ export class MenusManagePage {
     this.i18n.dir() === 'rtl' ? 'chevron_left' : 'chevron_right',
   );
 
-  constructor() {
-    void this.store.load();
-  }
-
   protected retry(): void {
-    void this.store.load();
+    this.store.reload();
   }
 }

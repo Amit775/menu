@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { EntryApiClient } from '../entry/entry.api-client';
-import { entry, itemRef } from '../testing/fixtures';
+import { entry, itemRef, settle } from '../testing/fixtures';
 import { DiaryStore } from './diary.store';
 
 describe('DiaryStore', () => {
@@ -13,20 +13,23 @@ describe('DiaryStore', () => {
 
   it('loads the caller’s diary', async () => {
     const store = setup(vi.fn().mockResolvedValue([{ ...entry, item: itemRef }]));
-    await store.load();
+    store.load(() => ({}));
+    await settle();
     expect(store.status()).toBe('loaded');
     expect(store.entries()[0]?.item.name.he).toBe('המבורגר הקלאסי');
   });
 
   it('narrows the diary to one venue', async () => {
     const diary = vi.fn().mockResolvedValue([]);
-    await setup(diary).load({ venueId: entry.venueId });
+    setup(diary).load(() => ({ venueId: entry.venueId }));
+    await settle();
     expect(diary).toHaveBeenCalledWith({ venueId: entry.venueId });
   });
 
   it('records a failed load', async () => {
     const store = setup(vi.fn().mockRejectedValue(new Error('offline')));
-    await store.load();
+    store.load(() => ({}));
+    await settle();
     expect(store.status()).toBe('error');
   });
 });
