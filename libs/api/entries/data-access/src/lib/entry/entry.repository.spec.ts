@@ -22,7 +22,8 @@ describe('EntryRepository', () => {
   };
 
   function repositoryWith(entry: Record<string, unknown>): EntryRepository {
-    return new EntryRepository({ entry } as unknown as PrismaService);
+    const $transaction = (operations: Promise<unknown>[]) => Promise.all(operations);
+    return new EntryRepository({ entry, $transaction } as unknown as PrismaService);
   }
 
   it('maps a row to a record, with the hidden flag', async () => {

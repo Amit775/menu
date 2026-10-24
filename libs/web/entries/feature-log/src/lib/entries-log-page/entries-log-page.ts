@@ -144,6 +144,19 @@ export class EntriesLogPage {
     return change.kind === 'remove' ? null : (this.editing()?.photoUrl ?? null);
   });
 
+  protected readonly photoBackground = computed(() => {
+    const preview = this.photoPreview();
+    return preview === null ? null : `url(${preview})`;
+  });
+
+  protected readonly pickLabel = computed(() => {
+    const t = this.t();
+    if (this.preparingPhoto()) {
+      return t.preparingPhoto;
+    }
+    return this.photoPreview() === null ? t.addPhoto : t.changePhoto;
+  });
+
   protected readonly status = computed(() =>
     this.store.status() === 'loaded' && this.editing() === null ? 'not-found' : this.store.status(),
   );

@@ -1,6 +1,6 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type PhotoType } from '@menu/shared/contracts';
+import { type PhotoType, PhotoTypeSchema } from '@menu/shared/contracts';
 
 /** The bytes of one stored photo. */
 export interface StoredPhoto {
@@ -53,7 +53,7 @@ export class DiskPhotoStorage implements PhotoStorage {
     const path = this.path(key);
     try {
       const [bytes, type] = await Promise.all([readFile(path), readFile(`${path}.type`, 'utf8')]);
-      return { bytes, type: type as PhotoType };
+      return { bytes, type: PhotoTypeSchema.parse(type) };
     } catch (error) {
       if ((error as { code?: unknown }).code === 'ENOENT') {
         return null;
@@ -95,7 +95,11 @@ export class CloudPhotoStorage implements PhotoStorage {
   constructor(private readonly connect: () => Promise<PhotoBucket>) {}
 
   private get bucket(): Promise<PhotoBucket> {
-    this.connected ??= this.connect();
+    // A failed connect is not kept, so the next request tries again.
+    this.connected ??= this.connect().catch((error: unknown) => {
+      this.connected = undefined;
+      throw error;
+    });
     return this.connected;
   }
 
@@ -110,7 +114,7 @@ export class CloudPhotoStorage implements PhotoStorage {
     const file = (await this.bucket).file(key);
     try {
       const [[bytes], [metadata]] = await Promise.all([file.download(), file.getMetadata()]);
-      return { bytes, type: (metadata.contentType ?? 'image/jpeg') as PhotoType };
+      return { bytes, type: PhotoTypeSchema.parse(metadata.contentType) };
     } catch (error) {
       if ((error as { code?: unknown }).code === 404) {
         return null;
