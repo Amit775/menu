@@ -1,3 +1,5 @@
+import { ApplicationRef } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import {
   type Item,
   type MenuSection,
@@ -6,7 +8,6 @@ import {
   type VenueInsights,
 } from '@menu/shared/contracts';
 
-/** Contract-valid data for the menus specs. */
 export const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
 
 export const venue: Venue = {
@@ -61,3 +62,7 @@ export const insights: VenueInsights = {
     },
   ],
 };
+
+export function settle(): Promise<void> {
+  return TestBed.inject(ApplicationRef).whenStable();
+}

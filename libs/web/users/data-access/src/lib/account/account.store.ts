@@ -1,4 +1,5 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type Account, type Language, type UpdateAccount } from '@menu/shared/contracts';
 import { Auth, NO_ROLES, Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
@@ -22,10 +23,6 @@ interface AccountState {
 
 const initialState: AccountState = { account: null, loading: false, error: null };
 
-/**
- * The signed-in account, app-wide. Loads after sign-in, clears on sign-out, and
- * applies the account's language and roles (`Roles`, ADR 0010) to the app.
- */
 export const AccountStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
@@ -79,7 +76,6 @@ export const AccountStore = signalStore(
             return false;
           }
         },
-        /** Switches the app at once; saved to the account when signed in. */
         async setLanguage(language: Language): Promise<void> {
           i18n.setLanguage(language);
           if (store.account()) {
@@ -95,16 +91,13 @@ export const AccountStore = signalStore(
     },
   ),
   withHooks({
-    onInit(store, auth = inject(Auth)) {
-      effect(() => {
-        const signedIn = auth.signedIn();
-        untracked(() => {
-          if (signedIn) {
-            void store.load();
-          } else {
-            store.clear();
-          }
-        });
+    onInit(store, auth = inject(Auth), destroyRef = inject(DestroyRef)) {
+      auth.userChanges.pipe(takeUntilDestroyed(destroyRef)).subscribe((user) => {
+        if (user) {
+          void store.load();
+        } else {
+          store.clear();
+        }
       });
     },
   }),

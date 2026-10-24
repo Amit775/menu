@@ -1,7 +1,6 @@
 import { signal } from '@angular/core';
 import { type AuthBackend, type AuthUser } from './auth-backend';
 
-/** An in-memory `AuthBackend` for tests: `signIn()` and `signOut()` drive it. */
 export class FakeAuthBackend implements AuthBackend {
   private callback: ((user: AuthUser | null) => void) | undefined;
   readonly calls = signal<string[]>([]);

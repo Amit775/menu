@@ -1,23 +1,14 @@
 import { Location } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { VenuePageStore } from '@menu/web/discover/data-access';
 import { ItemRow } from '@menu/web/discover/ui';
-import { DistancePipe, I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { venueMessages } from '../venue.messages';
+import { DistancePipe, I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { venueI18n } from '../venue.i18n';
 
-/** A venue's page: how to get there, what is good, and the whole menu by section. */
 @Component({
   selector: 'menu-discover-venue-page',
   imports: [
@@ -39,9 +30,8 @@ export class DiscoverVenuePage {
   private readonly location = inject(Location);
   private readonly router = inject(Router);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(venueMessages);
+  protected readonly t = injectTranslate(venueI18n);
 
-  /** The `:id` route parameter. */
   readonly id = input.required<string>();
 
   /** Waze opens the route on phones (and its web map elsewhere); it is what Israel drives with. */
@@ -60,18 +50,13 @@ export class DiscoverVenuePage {
   );
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
-  /** The back arrow points where the user came from: right in Hebrew, left in English. */
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );
 
-  /** Back in the app, or to discover when the page was opened from a shared link. */
   protected back(): void {
     if (this.router.lastSuccessfulNavigation()?.previousNavigation) {
       this.location.back();
@@ -81,6 +66,6 @@ export class DiscoverVenuePage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 }

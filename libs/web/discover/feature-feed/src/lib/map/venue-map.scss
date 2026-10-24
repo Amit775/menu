@@ -14,7 +14,6 @@ menu-venue-map {
     isolation: isolate;
   }
 
-  // At the bottom, clear of Leaflet's zoom buttons at the top.
   .empty {
     position: absolute;
     inset-inline: 16px;
@@ -61,7 +60,6 @@ menu-venue-map {
     }
   }
 
-  // Leaflet draws these inside its own panes.
   .menu-map-pin {
     display: flex;
     align-items: center;

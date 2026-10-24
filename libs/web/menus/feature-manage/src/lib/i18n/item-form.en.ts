@@ -1,0 +1,25 @@
+import type { he } from './item-form.he';
+
+export const en = {
+  newTitle: 'New item',
+  editTitle: 'Edit item',
+  cancel: 'Cancel',
+  intro: '{venue} · An item you add here is on the menu at once.',
+  nameHe: 'Name in Hebrew',
+  nameEn: 'Name in English (optional)',
+  nameRequired: 'A Hebrew name is needed.',
+  section: 'Menu section',
+  sectionRequired: 'Pick a section.',
+  price: 'Menu price',
+  priceInvalid: 'A price in whole shekels, up to 100,000.',
+  tags: 'Tags',
+  tagsHint: 'They help people find it in discover.',
+  save: 'Save',
+  saving: 'Saving…',
+  saveFailed: 'The item was not saved. Try again.',
+  loading: 'Loading…',
+  loadFailed: 'Could not load this venue.',
+  retry: 'Try again',
+  notFound: 'This item was not found, or you do not manage it.',
+  toVenue: 'Back to the venue',
+} satisfies typeof he;

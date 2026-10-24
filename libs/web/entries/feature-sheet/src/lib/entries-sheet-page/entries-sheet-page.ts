@@ -1,13 +1,5 @@
 import { Location } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  input,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -17,15 +9,11 @@ import { ItemEntriesStore } from '@menu/web/entries/data-access';
 import { EntryCard } from '@menu/web/entries/ui';
 import { Roles } from '@menu/web/shared/util-auth';
 import { DeviceShare } from '@menu/web/shared/util-device';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { sheetMessages } from '../sheet.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { sheetI18n } from '../sheet.i18n';
 
 type Notice = 'copied' | 'share-failed' | 'update-failed';
 
-/**
- * What people wrote about an item (`/items/:id/entries`): the user's own
- * entries on top, marked private or public, then public ones newest first.
- */
 @Component({
   selector: 'menu-entries-sheet-page',
   imports: [
@@ -47,24 +35,18 @@ export class EntriesSheetPage {
   private readonly location = inject(Location);
   private readonly deviceShare = inject(DeviceShare);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(sheetMessages);
+  protected readonly t = injectTranslate(sheetI18n);
   protected readonly roles = inject(Roles);
 
-  /** The item's `:id` route parameter. */
   readonly id = input.required<string>();
 
   protected readonly notice = signal<Notice | null>(null);
   protected readonly busy = signal<string | null>(null);
-  /** The entry whose "make public" waits for a second tap. */
   protected readonly confirmingPublic = signal<string | null>(null);
-  /** Admin: the public entry whose "hide" waits for a second tap. */
   protected readonly confirmingHide = signal<string | null>(null);
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
   protected close(): void {
@@ -76,7 +58,7 @@ export class EntriesSheetPage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 
   protected async makePublic(entry: Entry): Promise<void> {

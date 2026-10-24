@@ -17,22 +17,15 @@ import { ScoreBadge } from '@menu/web/discover/ui';
 import {
   DistancePipe,
   I18n,
-  injectMessages,
+  injectTranslate,
   LocalizePipe,
   ShekelsPipe,
 } from '@menu/web/shared/util-i18n';
-import { feedMessages } from '../feed.messages';
+import { feedI18n } from '../feed.i18n';
 
-/** How far a swipe must travel, in pixels, to count. */
 const SWIPE = 60;
-/** How long "link copied" stays up. */
 const COPIED_NOTICE_MS = 3000;
 
-/**
- * One full-screen card in the reels feed. Tapping the edges steps through the
- * venue's other items; swiping up opens the venue. The item's newest public
- * photo fills it; without one the card is typographic.
- */
 @Component({
   selector: 'menu-reel-card',
   imports: [
@@ -53,14 +46,11 @@ export class ReelCard {
   private readonly router = inject(Router);
   private readonly shareLink = inject(DeviceShare);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(feedMessages);
+  protected readonly t = injectTranslate(feedI18n);
 
-  /** The item the feed placed here. */
   readonly item = input.required<DiscoverItem>();
-  /** The first card on screen: its photo loads first. */
   readonly lead = input(false);
 
-  /** The venue's item shown instead, after an edge tap. */
   private readonly stepped = signal<DiscoverItem | null>(null);
   protected readonly shown = computed(() => this.stepped() ?? this.item());
   protected readonly siblings = computed(() => this.store.venueItems()[this.item().venue.id] ?? []);

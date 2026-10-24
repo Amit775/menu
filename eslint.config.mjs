@@ -14,7 +14,6 @@ const depConstraints = [
     sourceTag,
     onlyDependOnLibsWithTags: allow,
   })),
-  // Apps compose domains; libraries never import across domains.
   { sourceTag: 'scope:app', onlyDependOnLibsWithTags: ['*'] },
   { sourceTag: 'scope:shared', onlyDependOnLibsWithTags: ['scope:shared'] },
   ...boundaries.domains.map((domain) => ({
@@ -62,7 +61,6 @@ export default [
       eqeqeq: ['error', 'always'],
     },
   },
-  // Type-aware rules for all TypeScript sources.
   ...[...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked].map(
     (config) => ({ ...config, files: ['**/*.ts', '**/*.mts', '**/*.cts'] }),
   ),
@@ -83,7 +81,6 @@ export default [
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },
   },
-  // Libraries expose named exports only, through src/index.ts.
   {
     files: ['**/src/lib/**/*.ts'],
     rules: {
@@ -102,7 +99,6 @@ export default [
       parser: await import('jsonc-eslint-parser'),
     },
   },
-  // Every project must carry valid platform/scope/type tags (tools/eslint-rules).
   {
     files: ['**/project.json'],
     rules: {

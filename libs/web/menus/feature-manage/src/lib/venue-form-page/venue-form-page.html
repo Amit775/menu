@@ -1,106 +1,106 @@
 <header>
-  <a mat-button [routerLink]="id() ? ['/manage/venues', id()] : ['/manage']">{{ t().cancel }}</a>
-  <h1>{{ editing() ? t().editTitle : t().newTitle }}</h1>
+  <a mat-button [routerLink]="id() ? ['/manage/venues', id()] : ['/manage']">{{ t('cancel') }}</a>
+  <h1>{{ editing() ? t('editTitle') : t('newTitle') }}</h1>
 </header>
 
 @switch (state()) {
   @case ('loading') {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   }
   @case ('not-found') {
     <div class="state" role="alert">
-      {{ t().notFound }}
-      <a mat-button routerLink="/manage">{{ t().toVenues }}</a>
+      {{ t('notFound') }}
+      <a mat-button routerLink="/manage">{{ t('toVenues') }}</a>
     </div>
   }
   @case ('error') {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="retry()">{{ t('retry') }}</button>
     </div>
   }
   @default {
-    <form [formGroup]="form" (ngSubmit)="save()">
+    <form novalidate (submit)="$event.preventDefault(); save()">
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().nameHe }}</mat-label>
-        <input matInput maxlength="200" dir="rtl" lang="he" formControlName="nameHe" />
-        @if (nameHe.invalid) {
-          <mat-error>{{ t().nameRequired }}</mat-error>
+        <mat-label>{{ t('nameHe') }}</mat-label>
+        <input matInput dir="rtl" lang="he" [formField]="form.nameHe" />
+        @if (form.nameHe().invalid()) {
+          <mat-error>{{ t('nameRequired') }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().nameEn }}</mat-label>
-        <input matInput maxlength="200" dir="ltr" lang="en" formControlName="nameEn" />
+        <mat-label>{{ t('nameEn') }}</mat-label>
+        <input matInput dir="ltr" lang="en" [formField]="form.nameEn" />
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().address }}</mat-label>
-        <input matInput maxlength="200" formControlName="address" />
-        @if (address.invalid) {
-          <mat-error>{{ t().addressRequired }}</mat-error>
+        <mat-label>{{ t('address') }}</mat-label>
+        <input matInput [formField]="form.address" />
+        @if (form.address().invalid()) {
+          <mat-error>{{ t('addressRequired') }}</mat-error>
         }
       </mat-form-field>
 
-      <menu-pin-picker [point]="point()" [label]="t().map" (picked)="place($event)" />
-      <p class="hint">{{ t().mapHint }}</p>
+      <menu-pin-picker [point]="point()" [label]="t('map')" (picked)="place($event)" />
+      <p class="hint">{{ t('mapHint') }}</p>
       <div class="coordinates">
         <mat-form-field appearance="outline">
-          <mat-label>{{ t().lat }}</mat-label>
-          <input matInput type="number" step="any" dir="ltr" formControlName="lat" />
-          @if (lat.invalid) {
-            <mat-error>{{ t().locationRequired }}</mat-error>
+          <mat-label>{{ t('lat') }}</mat-label>
+          <input matInput type="number" step="any" dir="ltr" [formField]="form.lat" />
+          @if (form.lat().invalid()) {
+            <mat-error>{{ t('locationRequired') }}</mat-error>
           }
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>{{ t().lng }}</mat-label>
-          <input matInput type="number" step="any" dir="ltr" formControlName="lng" />
-          @if (lng.invalid) {
-            <mat-error>{{ t().locationRequired }}</mat-error>
+          <mat-label>{{ t('lng') }}</mat-label>
+          <input matInput type="number" step="any" dir="ltr" [formField]="form.lng" />
+          @if (form.lng().invalid()) {
+            <mat-error>{{ t('locationRequired') }}</mat-error>
           }
         </mat-form-field>
       </div>
 
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().phone }}</mat-label>
-        <input matInput type="tel" dir="ltr" maxlength="20" formControlName="phone" />
-        @if (phone.invalid) {
-          <mat-error>{{ t().phoneInvalid }}</mat-error>
+        <mat-label>{{ t('phone') }}</mat-label>
+        <input matInput type="tel" dir="ltr" [formField]="form.phone" />
+        @if (form.phone().invalid()) {
+          <mat-error>{{ t('phoneInvalid') }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t().reservationUrl }}</mat-label>
-        <input matInput type="url" dir="ltr" formControlName="reservationUrl" />
-        @if (reservationUrl.invalid) {
-          <mat-error>{{ t().urlInvalid }}</mat-error>
+        <mat-label>{{ t('reservationUrl') }}</mat-label>
+        <input matInput type="url" dir="ltr" [formField]="form.reservationUrl" />
+        @if (form.reservationUrl().invalid()) {
+          <mat-error>{{ t('urlInvalid') }}</mat-error>
         }
       </mat-form-field>
 
       @if (editing()) {
         <mat-form-field appearance="outline">
-          <mat-label>{{ t().status }}</mat-label>
-          <mat-select formControlName="status">
-            <mat-option value="active">{{ t().active }}</mat-option>
-            <mat-option value="hidden">{{ t().hidden }}</mat-option>
+          <mat-label>{{ t('status') }}</mat-label>
+          <mat-select class="status" [formField]="form.status">
+            <mat-option value="active">{{ t('active') }}</mat-option>
+            <mat-option value="hidden">{{ t('hidden') }}</mat-option>
           </mat-select>
-          <mat-hint>{{ t().hiddenHint }}</mat-hint>
+          <mat-hint>{{ t('hiddenHint') }}</mat-hint>
         </mat-form-field>
       } @else {
         <mat-form-field appearance="outline">
-          <mat-label>{{ t().sections }}</mat-label>
-          <textarea matInput rows="4" formControlName="sections"></textarea>
-          <mat-hint>{{ t().sectionsHint }}</mat-hint>
-          @if (sections.invalid) {
-            <mat-error>{{ t().sectionsTooMany }}</mat-error>
+          <mat-label>{{ t('sections') }}</mat-label>
+          <textarea matInput rows="4" [formField]="form.sections"></textarea>
+          <mat-hint>{{ t('sectionsHint') }}</mat-hint>
+          @if (form.sections().invalid()) {
+            <mat-error>{{ t('sectionsTooMany') }}</mat-error>
           }
         </mat-form-field>
       }
 
       @if (failed()) {
-        <p class="error" role="alert">{{ t().saveFailed }}</p>
+        <p class="error" role="alert">{{ t('saveFailed') }}</p>
       }
       <button mat-flat-button class="save" type="submit" [disabled]="saving()">
-        {{ saving() ? t().saving : editing() ? t().save : t().create }}
+        {{ saving() ? t('saving') : editing() ? t('save') : t('create') }}
       </button>
     </form>
   }

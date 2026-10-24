@@ -1,4 +1,5 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { type DiscoverItem, type GeoPoint, type MapPin, type Tag } from '@menu/shared/contracts';
 import { Auth } from '@menu/web/shared/util-auth';
 import { DataChanges } from '@menu/web/shared/util-events';
@@ -10,6 +11,7 @@ import {
   withMethods,
   withState,
 } from '@ngrx/signals';
+import { skip } from 'rxjs';
 import { DiscoverApiClient } from '../api/discover.api-client';
 import { DeviceLocation } from '@menu/web/shared/util-device';
 
@@ -20,7 +22,6 @@ export interface FeedFilters {
   tagIds: string[];
   radiusKm: number;
   sort: FeedSort;
-  /** In agorot; null for any price. */
   maxPrice: number | null;
 }
 
@@ -40,13 +41,9 @@ interface FeedState {
   nextOffset: number | null;
   status: 'idle' | 'loading' | 'loaded' | 'error';
   tags: Tag[];
-  /** Other items at a venue, for tapping through them in reels. */
   venueItems: Record<string, DiscoverItem[]>;
-  /** The reels card on screen, restored when the user comes back to the feed. */
   reelIndex: number;
-  /** The map view: one pin per venue with matching items. */
   pins: MapPin[];
-  /** Where the user is, when they shared it; the map centres on it. */
   near: GeoPoint | null;
 }
 
@@ -63,15 +60,10 @@ const initialState: FeedState = {
   near: null,
 };
 
-/**
- * The discover feed: reels or list, with the filters the user picked. App-wide
- * so the feed is where they left it after visiting an item or a venue.
- */
 export const FeedStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withComputed(({ items, filters, tags }) => ({
-    /** Items with a score; the list puts the rest after a divider. */
     ranked: computed(() => items().filter((item) => item.score !== null)),
     unranked: computed(() => items().filter((item) => item.score === null)),
     filterCount: computed(() => {
@@ -83,7 +75,6 @@ export const FeedStore = signalStore(
         (current.maxPrice === null ? 0 : 1)
       );
     }),
-    /** The first chosen tag, named on the filter button. */
     primaryTag: computed(() => tags().find((tag) => tag.id === filters().tagIds[0]) ?? null),
   })),
   withMethods((store, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
@@ -91,7 +82,6 @@ export const FeedStore = signalStore(
     /** Set by a refresh that should leave the user on the reel they were watching. */
     let keepReel = false;
 
-    /** `keep` leaves the user on their reel; any other fetch forgets an earlier ask to. */
     async function fetchPage(offset: number, keep = false): Promise<void> {
       const current = ++request;
       keepReel = false;
@@ -133,7 +123,6 @@ export const FeedStore = signalStore(
     }
 
     return {
-      /** The first page, unless it is already here. */
       async load(): Promise<void> {
         if (store.status() === 'idle' || store.status() === 'error') {
           await fetchPage(0, keepReel);
@@ -156,7 +145,6 @@ export const FeedStore = signalStore(
         patchState(store, { filters: DEFAULT_FILTERS });
         await fetchPage(0);
       },
-      /** Reels interleave unranked items, the list puts them last, the map groups by venue. */
       async setView(view: FeedView): Promise<void> {
         if (view !== store.view()) {
           patchState(store, { view });
@@ -199,31 +187,21 @@ export const FeedStore = signalStore(
     };
   }),
   withHooks({
-    onInit(store, auth = inject(Auth), changes = inject(DataChanges)) {
-      let account: string | null | undefined;
-      effect(() => {
-        const uid = auth.status() === 'loading' ? undefined : (auth.user()?.uid ?? null);
-        untracked(() => {
-          if (uid === undefined) {
-            return;
-          }
-          if (account !== undefined && account !== uid) {
-            store.invalidate();
-          }
-          account = uid;
+    onInit(
+      store,
+      auth = inject(Auth),
+      changes = inject(DataChanges),
+      destroyRef = inject(DestroyRef),
+    ) {
+      auth.userChanges.pipe(skip(1), takeUntilDestroyed(destroyRef)).subscribe(() => {
+        store.invalidate();
+      });
+      changes
+        .on('entries')
+        .pipe(takeUntilDestroyed(destroyRef))
+        .subscribe(() => {
+          store.invalidate({ keepReel: true });
         });
-      });
-      const entries = changes.version('entries');
-      let seen = entries();
-      effect(() => {
-        const version = entries();
-        if (version !== seen) {
-          seen = version;
-          untracked(() => {
-            store.invalidate({ keepReel: true });
-          });
-        }
-      });
     },
   }),
 );

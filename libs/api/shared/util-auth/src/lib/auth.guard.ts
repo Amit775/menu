@@ -63,7 +63,6 @@ export class AuthGuard implements CanActivate {
   }
 }
 
-/** The bearer token, null when there is no header, and a 401 when the header is malformed. */
 function bearerToken(request: RequestWithPrincipal): string | null {
   const header = request.headers['authorization'];
   if (header === undefined) {

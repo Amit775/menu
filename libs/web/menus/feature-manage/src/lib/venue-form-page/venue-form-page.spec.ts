@@ -8,7 +8,6 @@ import { LeafletLoader } from '@menu/web/shared/util-map';
 import { menuApi, venue, VENUE_ID } from '../testing/manage-fixtures';
 import { VenueFormPage } from './venue-form-page';
 
-/** Just enough of Leaflet to tap the map and see where the pin is. */
 function fakeLeaflet() {
   const seen: {
     tap?: (event: { latlng: GeoPoint }) => void;
@@ -70,6 +69,7 @@ describe('VenueFormPage', () => {
     });
     TestBed.inject(I18n).setLanguage('he');
     const harness = await RouterTestingHarness.create(url);
+    await harness.fixture.whenStable();
     await vi.waitFor(() => {
       harness.detectChanges();
       expect(harness.routeNativeElement?.querySelector('mat-spinner')).toBeNull();
@@ -85,7 +85,7 @@ describe('VenueFormPage', () => {
   }
 
   function field(element: HTMLElement, name: string): HTMLInputElement {
-    const input = element.querySelector<HTMLInputElement>(`[formcontrolname="${name}"]`);
+    const input = element.querySelector<HTMLInputElement>(`[name="venue.${name}"]`);
     if (!input) {
       throw new Error(`No ${name}`);
     }
@@ -173,10 +173,8 @@ describe('VenueFormPage', () => {
     TestBed.tick();
     expect(seen.pin).toEqual({ lat: 32.09, lng: venue.location.lng });
     expect(seen.center).toEqual({ lat: 32.09, lng: venue.location.lng });
-    expect(element.querySelector('[formcontrolname="sections"]')).toBeNull();
-    element
-      .querySelector<HTMLElement>('mat-select[formcontrolname="status"] .mat-mdc-select-trigger')
-      ?.click();
+    expect(element.querySelector('[name="venue.sections"]')).toBeNull();
+    element.querySelector<HTMLElement>('mat-select.status .mat-mdc-select-trigger')?.click();
     TestBed.tick();
     const hidden = [...element.ownerDocument.querySelectorAll<HTMLElement>('mat-option')].find(
       (option) => option.textContent.trim() === 'מוסתר',

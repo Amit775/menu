@@ -28,6 +28,20 @@ describe('feature-lib generator', () => {
     );
   });
 
+  it('reads its text from a lazy Transloco scope in Hebrew and English', () => {
+    const lib = 'libs/web/reviews/feature-browse/src/lib';
+    expect(tree.read(`${lib}/reviews-browse-page/reviews-browse-page.ts`, 'utf-8')).toContain(
+      'protected readonly t = injectTranslate(reviewsBrowseI18n);',
+    );
+    expect(tree.read(`${lib}/reviews-browse.i18n.ts`, 'utf-8')).toContain(
+      "i18nScope('reviewsBrowse', {",
+    );
+    expect(tree.read(`${lib}/i18n/reviews-browse.he.ts`, 'utf-8')).toContain('export const he = {');
+    expect(tree.read(`${lib}/i18n/reviews-browse.en.ts`, 'utf-8')).toContain(
+      '} satisfies typeof he;',
+    );
+  });
+
   it('registers a lazy route at <domain>/<name>', () => {
     const routes = tree.read('apps/web/src/app/app.routes.ts', 'utf-8');
     expect(routes).toContain("path: 'reviews/browse'");
@@ -37,6 +51,12 @@ describe('feature-lib generator', () => {
   it('uses the shared Angular ESLint config', () => {
     expect(tree.read('libs/web/reviews/feature-browse/eslint.config.mjs', 'utf-8')).toContain(
       "from '../../../../tools/eslint/angular.mjs'",
+    );
+  });
+
+  it('provides translations to its specs', () => {
+    expect(tree.read('libs/web/reviews/feature-browse/src/test-setup.ts', 'utf-8')).toContain(
+      'setupTestBed({ providers: [provideI18n()] });',
     );
   });
 

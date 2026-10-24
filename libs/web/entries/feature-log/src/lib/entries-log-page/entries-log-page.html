@@ -1,24 +1,24 @@
 <header>
-  <button mat-button type="button" (click)="cancel()">{{ t().cancel }}</button>
-  <h1>{{ entryId() ? t().editTitle : t().newTitle }}</h1>
+  <button mat-button type="button" (click)="cancel()">{{ t('cancel') }}</button>
+  <h1>{{ entryId() ? t('editTitle') : t('newTitle') }}</h1>
 </header>
 
 @switch (status()) {
   @case ('loading') {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   }
   @case ('not-found') {
     <div class="state" role="status">
-      {{ t().notFound }}
-      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+      {{ t('notFound') }}
+      <a mat-button routerLink="/">{{ t('toFeed') }}</a>
     </div>
   }
   @case ('error') {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="retry()">{{ t('retry') }}</button>
     </div>
   }
   @default {
@@ -29,91 +29,89 @@
           <span class="meta">
             {{ sheet.item.venue.name | localize }}
             @if (!editing()) {
-              · {{ t().visit(store.mine().length + 1) }}
+              · {{ t('visit', { count: store.mine().length + 1 }) }}
             }
           </span>
         </div>
-        <a mat-button [routerLink]="['/venues', sheet.item.venue.id]">{{ t().change }}</a>
+        <a mat-button [routerLink]="['/venues', sheet.item.venue.id]">{{ t('change') }}</a>
       </div>
 
       @if (!store.sheet()?.itemIsPublic) {
-        <p class="pending" role="note">{{ t().pending }}</p>
+        <p class="pending" role="note">{{ t('pending') }}</p>
       }
 
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <menu-rating-input [(value)]="rating" [disabled]="saving()" />
+      <form novalidate (submit)="$event.preventDefault(); save()">
+        <menu-rating-input [formField]="form.rating" />
 
         <fieldset class="again">
-          <legend>{{ t().wouldOrderAgain }}</legend>
+          <legend>{{ t('wouldOrderAgain') }}</legend>
           <div class="choices">
             <button
               type="button"
-              [attr.aria-pressed]="wouldOrderAgain() === true"
+              [attr.aria-pressed]="form.wouldOrderAgain().value() === true"
               [disabled]="saving()"
               (click)="toggleOrderAgain(true)"
             >
-              {{ t().yes }}
+              {{ t('yes') }}
             </button>
             <button
               type="button"
-              [attr.aria-pressed]="wouldOrderAgain() === false"
+              [attr.aria-pressed]="form.wouldOrderAgain().value() === false"
               [disabled]="saving()"
               (click)="toggleOrderAgain(false)"
             >
-              {{ t().no }}
+              {{ t('no') }}
             </button>
           </div>
         </fieldset>
 
         <div class="row">
           <mat-form-field appearance="outline">
-            <mat-label>{{ t().pricePaid }}</mat-label>
+            <mat-label>{{ t('pricePaid') }}</mat-label>
             <input
               matInput
               type="number"
               inputmode="numeric"
-              min="0"
               step="1"
-              formControlName="price"
+              [formField]="form.price"
               aria-describedby="price-hint"
             />
             <span matTextPrefix>₪&nbsp;</span>
-            @if (price.invalid) {
-              <mat-error>{{ t().priceInvalid }}</mat-error>
+            @if (form.price().invalid()) {
+              <mat-error>{{ t('priceInvalid') }}</mat-error>
             }
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>{{ t().eatenAt }}</mat-label>
-            <input matInput type="datetime-local" [max]="maxDate" formControlName="eatenAt" />
-            @if (eatenAt.hasError('future')) {
-              <mat-error>{{ t().eatenAtFuture }}</mat-error>
-            } @else if (eatenAt.invalid) {
-              <mat-error>{{ t().eatenAtMissing }}</mat-error>
+            <mat-label>{{ t('eatenAt') }}</mat-label>
+            <input matInput type="datetime-local" [max]="maxDate" [formField]="form.eatenAt" />
+            @if (eatenAtFuture()) {
+              <mat-error>{{ t('eatenAtFuture') }}</mat-error>
+            } @else if (form.eatenAt().invalid()) {
+              <mat-error>{{ t('eatenAtMissing') }}</mat-error>
             }
           </mat-form-field>
         </div>
         <p id="price-hint" class="hint">
           @if (store.lastPaid(); as lastPaid) {
-            {{ t().lastPaid(lastPaid | shekels) }}
+            {{ t('lastPaid', { price: lastPaid | shekels }) }}
           }
           @if (sheet.item.listPrice !== null) {
-            {{ t().listPrice(sheet.item.listPrice | shekels) }}
+            {{ t('listPrice', { price: sheet.item.listPrice | shekels }) }}
           }
         </p>
 
         <mat-form-field appearance="outline" class="text">
-          <mat-label>{{ t().text }}</mat-label>
+          <mat-label>{{ t('text') }}</mat-label>
           <textarea
             matInput
             rows="4"
-            maxlength="2000"
-            formControlName="text"
-            [placeholder]="t().textPlaceholder"
+            [formField]="form.text"
+            [placeholder]="t('textPlaceholder')"
           ></textarea>
         </mat-form-field>
 
         <div class="photo">
-          <span id="photo-label">{{ t().photo }}</span>
+          <span id="photo-label">{{ t('photo') }}</span>
           <input
             #photoInput
             class="visually-hidden"
@@ -127,7 +125,7 @@
             <div
               class="preview"
               role="img"
-              [attr.aria-label]="t().photoAlt"
+              [attr.aria-label]="t('photoAlt')"
               [style.background-image]="background"
             ></div>
           }
@@ -149,33 +147,33 @@
                 [disabled]="saving()"
                 (click)="removePhoto()"
               >
-                {{ t().removePhoto }}
+                {{ t('removePhoto') }}
               </button>
             }
           </div>
         </div>
 
         <div class="visibility">
-          <span id="visibility-label">{{ t().visibility }}</span>
-          <mat-button-toggle-group formControlName="visibility" aria-labelledby="visibility-label">
-            <mat-button-toggle value="private">{{ t().private }}</mat-button-toggle>
-            <mat-button-toggle value="shared">{{ t().shared }}</mat-button-toggle>
-            <mat-button-toggle value="public">{{ t().public }}</mat-button-toggle>
+          <span id="visibility-label">{{ t('visibility') }}</span>
+          <mat-button-toggle-group aria-labelledby="visibility-label" [formField]="form.visibility">
+            <mat-button-toggle value="private">{{ t('private') }}</mat-button-toggle>
+            <mat-button-toggle value="shared">{{ t('shared') }}</mat-button-toggle>
+            <mat-button-toggle value="public">{{ t('public') }}</mat-button-toggle>
           </mat-button-toggle-group>
         </div>
 
         @switch (saveError()) {
           @case ('closed') {
-            <p class="error" role="alert">{{ t().closed }}</p>
+            <p class="error" role="alert">{{ t('closed') }}</p>
           }
           @case ('failed') {
-            <p class="error" role="alert">{{ t().saveFailed }}</p>
+            <p class="error" role="alert">{{ t('saveFailed') }}</p>
           }
           @case ('photoRejected') {
-            <p class="error" role="alert">{{ t().photoRejected }}</p>
+            <p class="error" role="alert">{{ t('photoRejected') }}</p>
           }
           @case ('photoFailed') {
-            <p class="error" role="alert">{{ t().photoFailed }}</p>
+            <p class="error" role="alert">{{ t('photoFailed') }}</p>
           }
         }
 
@@ -185,15 +183,15 @@
           type="submit"
           [disabled]="saving() || preparingPhoto()"
         >
-          {{ saving() ? t().saving : t().save }}
+          {{ saving() ? t('saving') : t('save') }}
         </button>
         @if (editing()) {
           <button mat-button class="delete" type="button" [disabled]="saving()" (click)="remove()">
-            {{ confirmingDelete() ? t().confirmDelete : t().delete }}
+            {{ confirmingDelete() ? t('confirmDelete') : t('delete') }}
           </button>
           <p class="delete-hint" role="status">
             @if (confirmingDelete()) {
-              {{ t().confirmDeleteHint }}
+              {{ t('confirmDeleteHint') }}
             }
           </p>
         }

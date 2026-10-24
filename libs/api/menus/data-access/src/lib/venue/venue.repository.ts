@@ -22,13 +22,10 @@ interface VenueRow {
 }
 
 export interface VenueFilter {
-  /** Only these venues. */
   ids?: readonly string[];
-  /** Include hidden venues (Admins, and Owners for their own). */
   includeHidden: boolean;
 }
 
-/** Maps between Prisma rows and the shared contract. The only code that touches `prisma.venue`. */
 @Injectable()
 export class VenueRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -49,7 +46,6 @@ export class VenueRepository {
     return row ? toContract(row) : null;
   }
 
-  /** Creates the venue and its first sections in menu order. */
   async create(input: CreateVenue, createdById: string): Promise<Venue> {
     const row = await this.prisma.venue.create({
       data: {

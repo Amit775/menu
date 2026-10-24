@@ -37,7 +37,6 @@ export async function readBody(
   return Buffer.concat(chunks);
 }
 
-/** Where an entry's photo is stored: one object per entry, replaced by a new upload. */
 export function entryPhotoKey(entryId: string): string {
   return `entries/${entryId}`;
 }

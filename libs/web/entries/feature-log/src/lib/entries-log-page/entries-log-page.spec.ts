@@ -93,7 +93,7 @@ describe('EntriesLogPage', () => {
     expect(element.querySelector('h1')?.textContent).toBe('רשומה חדשה');
     expect(element.querySelector('.item .name')?.textContent).toBe('המבורגר הקלאסי');
     expect(element.querySelector('.item .meta')?.textContent).toContain('ביקור 2');
-    expect((field('input[formcontrolname="price"]') as HTMLInputElement).value).toBe('62');
+    expect((field('input[type="number"]') as HTMLInputElement).value).toBe('62');
     expect(element.querySelector('#price-hint')?.textContent.replace(/\s+/g, ' ').trim()).toBe(
       'בפעם הקודמת שילמת ₪62. המחיר בתפריט היום ₪68.',
     );
@@ -105,7 +105,7 @@ describe('EntriesLogPage', () => {
       { forItem: vi.fn().mockResolvedValue({ ...sheet, mine: [] }) },
       'public',
     );
-    expect((field('input[formcontrolname="price"]') as HTMLInputElement).value).toBe('68');
+    expect((field('input[type="number"]') as HTMLInputElement).value).toBe('68');
     expect(field('mat-button-toggle.mat-button-toggle-checked').textContent).toContain('כולם');
   });
 
@@ -138,7 +138,7 @@ describe('EntriesLogPage', () => {
   it('refuses a price that is not whole shekels', async () => {
     const create = vi.fn();
     const { harness, field } = await open(`/log/${ITEM_ID}`, { create });
-    const price = field('input[formcontrolname="price"]') as HTMLInputElement;
+    const price = field('input[type="number"]') as HTMLInputElement;
     price.value = '12.5';
     price.dispatchEvent(new Event('input'));
     (field('button.save') as HTMLButtonElement).click();
@@ -155,7 +155,7 @@ describe('EntriesLogPage', () => {
         .mockResolvedValue({ ...sheet, item: { ...sheet.item, listPrice: 4250 }, mine: [] }),
       create,
     });
-    expect((field('input[formcontrolname="price"]') as HTMLInputElement).value).toBe('43');
+    expect((field('input[type="number"]') as HTMLInputElement).value).toBe('43');
     (field('button.save') as HTMLButtonElement).click();
     await harness.fixture.whenStable();
     expect(create).toHaveBeenCalledWith(ITEM_ID, expect.objectContaining({ pricePaid: 4250 }));
@@ -175,7 +175,7 @@ describe('EntriesLogPage', () => {
 
   it('asks for a date when the field is empty, and refuses one in the future', async () => {
     const { harness, field } = await open(`/log/${ITEM_ID}`, {});
-    const when = field('input[formcontrolname="eatenAt"]') as HTMLInputElement;
+    const when = field('input[type="datetime-local"]') as HTMLInputElement;
     when.value = '';
     when.dispatchEvent(new Event('input'));
     (field('button.save') as HTMLButtonElement).click();
@@ -189,7 +189,7 @@ describe('EntriesLogPage', () => {
 
   it('moves focus to the first field to fix', async () => {
     const { harness, field } = await open(`/log/${ITEM_ID}`, {});
-    const price = field('input[formcontrolname="price"]') as HTMLInputElement;
+    const price = field('input[type="number"]') as HTMLInputElement;
     price.value = '-3';
     price.dispatchEvent(new Event('input'));
     (field('button.save') as HTMLButtonElement).click();
@@ -211,11 +211,37 @@ describe('EntriesLogPage', () => {
     await vi.waitFor(() => {
       harness.detectChanges();
       expect(
-        harness.routeNativeElement?.querySelector<HTMLInputElement>(
-          'input[formcontrolname="price"]',
-        )?.value,
+        harness.routeNativeElement?.querySelector<HTMLInputElement>('input[type="number"]')?.value,
       ).toBe('30');
     });
+  });
+
+  it('starts clean for another item even when it opens with the same price', async () => {
+    const other = '8b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    const forItem = vi.fn((id: string) =>
+      Promise.resolve(
+        id === other
+          ? { ...sheet, item: { ...sheet.item, id: other, listPrice: 6250 }, mine: [] }
+          : { ...sheet, item: { ...sheet.item, listPrice: 6250 }, mine: [] },
+      ),
+    );
+    const create = vi.fn().mockResolvedValue({ ...entry, itemId: other });
+    const { harness, field } = await open(`/log/${ITEM_ID}`, { forItem, create });
+    const note = field('textarea') as HTMLTextAreaElement;
+    note.value = 'טעים';
+    note.dispatchEvent(new Event('input'));
+    const price = field('input[type="number"]') as HTMLInputElement;
+    price.value = '70';
+    price.dispatchEvent(new Event('input'));
+    await harness.navigateByUrl(`/log/${other}`, EntriesLogPage);
+    await harness.fixture.whenStable();
+    expect((field('textarea') as HTMLTextAreaElement).value).toBe('');
+    (field('button.save') as HTMLButtonElement).click();
+    await harness.fixture.whenStable();
+    expect(create).toHaveBeenCalledWith(
+      other,
+      expect.objectContaining({ text: '', pricePaid: 6250 }),
+    );
   });
 
   it('says so when the item no longer takes entries', async () => {

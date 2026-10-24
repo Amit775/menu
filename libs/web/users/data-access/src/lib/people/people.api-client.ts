@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
   accountPath,
   type AccountSummary,
@@ -11,11 +11,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { z } from 'zod';
 
-/**
- * HTTP access to the Admin's people endpoints: accounts, the Admin flag and
- * venue ownerships. Every response is validated against the shared contract.
- */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class PeopleApiClient {
   private readonly http = inject(HttpClient);
 

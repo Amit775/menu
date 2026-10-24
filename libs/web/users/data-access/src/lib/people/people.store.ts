@@ -1,26 +1,45 @@
-import { computed, inject } from '@angular/core';
+import { computed, inject, resource, signal } from '@angular/core';
 import { type AccountSummary, type Ownership } from '@menu/shared/contracts';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { loadStatus } from '@menu/web/shared/util-data';
+import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
 import { PeopleApiClient } from './people.api-client';
 
-export type PeopleStatus = 'loading' | 'loaded' | 'error';
-
-interface PeopleState {
-  accounts: AccountSummary[];
-  /** The Owners of `venueId`, when the page manages one venue's owners. */
-  owners: Ownership[];
+interface People {
   venueId: string | null;
-  status: PeopleStatus;
+  accounts: AccountSummary[];
+  owners: Ownership[];
 }
 
-/**
- * J7: the Admin's people: every account with its Admin flag, and the Owners
- * of one venue. Provide it in the routed page.
- */
 export const PeopleStore = signalStore(
-  withState<PeopleState>({ accounts: [], owners: [], venueId: null, status: 'loading' }),
+  withProps((_, api = inject(PeopleApiClient)) => {
+    const venueId = signal<() => string | null | undefined>(() => undefined);
+    return {
+      _venueId: venueId,
+      _people: resource({
+        params: () => {
+          const id = venueId()();
+          return id === undefined ? undefined : { venueId: id };
+        },
+        loader: async ({ params }): Promise<People> => {
+          const [accounts, owners] = await Promise.all([
+            api.accounts(),
+            params.venueId ? api.owners(params.venueId) : Promise.resolve([]),
+          ]);
+          return { venueId: params.venueId, accounts, owners };
+        },
+      }),
+    };
+  }),
+  withComputed(({ _people }) => {
+    const people = computed(() => (_people.hasValue() ? _people.value() : null));
+    return {
+      status: loadStatus(_people),
+      venueId: computed(() => people()?.venueId ?? null),
+      accounts: computed(() => people()?.accounts ?? []),
+      owners: computed(() => people()?.owners ?? []),
+    };
+  }),
   withComputed(({ accounts, owners }) => ({
-    /** Named accounts first, by name; phone sign-ins without a name last. */
     sorted: computed(() =>
       [...accounts()].sort(
         (a, b) =>
@@ -28,57 +47,49 @@ export const PeopleStore = signalStore(
           a.displayName.localeCompare(b.displayName),
       ),
     ),
-    /** Accounts that could become Owners of the venue: not already one. */
     candidates: computed(() => {
       const owning = new Set(owners().map((owner) => owner.accountId));
       return accounts().filter((account) => !owning.has(account.id));
     }),
   })),
   withMethods((store, api = inject(PeopleApiClient)) => {
-    let request = 0;
+    function patch(change: (people: People) => Partial<People>): void {
+      if (store._people.hasValue()) {
+        const people = store._people.value();
+        store._people.set({ ...people, ...change(people) });
+      }
+    }
+
+    function venueId(): string {
+      const id = store.venueId();
+      if (!id) {
+        throw new Error('Load a venue first.');
+      }
+      return id;
+    }
+
     return {
-      /** Every account, and with a venue id that venue's Owners too. */
-      async load(venueId: string | null = null): Promise<void> {
-        const current = ++request;
-        patchState(store, { status: 'loading', venueId, owners: [] });
-        try {
-          const [accounts, owners] = await Promise.all([
-            api.accounts(),
-            venueId ? api.owners(venueId) : Promise.resolve([]),
-          ]);
-          if (current === request) {
-            patchState(store, { accounts, owners, status: 'loaded' });
-          }
-        } catch {
-          if (current === request) {
-            patchState(store, { status: 'error' });
-          }
-        }
+      load(venueId: () => string | null): void {
+        store._venueId.set(venueId);
       },
-      /** Each write rejects when the API refuses; the caller shows why. */
+      reload(): void {
+        store._people.reload();
+      },
       async setAdmin(id: string, isAdmin: boolean): Promise<void> {
         const updated = await api.setAdmin(id, isAdmin);
-        patchState(store, {
-          accounts: store.accounts().map((account) => (account.id === id ? updated : account)),
-        });
+        patch(({ accounts }) => ({
+          accounts: accounts.map((account) => (account.id === id ? updated : account)),
+        }));
       },
       async grant(accountId: string): Promise<void> {
-        const venueId = store.venueId();
-        if (!venueId) {
-          throw new Error('Load a venue first.');
-        }
-        const ownership = await api.grant(venueId, accountId);
-        patchState(store, { owners: [...store.owners(), ownership] });
+        const ownership = await api.grant(venueId(), accountId);
+        patch(({ owners }) => ({ owners: [...owners, ownership] }));
       },
       async revoke(accountId: string): Promise<void> {
-        const venueId = store.venueId();
-        if (!venueId) {
-          throw new Error('Load a venue first.');
-        }
-        await api.revoke(venueId, accountId);
-        patchState(store, {
-          owners: store.owners().filter((owner) => owner.accountId !== accountId),
-        });
+        await api.revoke(venueId(), accountId);
+        patch(({ owners }) => ({
+          owners: owners.filter((owner) => owner.accountId !== accountId),
+        }));
       },
     };
   }),

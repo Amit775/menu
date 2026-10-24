@@ -5,7 +5,6 @@ import { type EntryTarget, type ItemCatalog } from '@menu/api/shared/util-ports'
 import { type ItemRef } from '@menu/shared/contracts';
 import { MenuItem } from './menu-item';
 
-/** The menus side of the `ITEM_CATALOG` port: entries asks here before touching an item. */
 @Injectable()
 export class MenusItemCatalog implements ItemCatalog {
   constructor(

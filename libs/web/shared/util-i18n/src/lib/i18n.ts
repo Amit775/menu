@@ -1,44 +1,38 @@
 import { DOCUMENT } from '@angular/common';
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Service } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { type Language, type LocalizedText } from '@menu/shared/contracts';
 import { BrowserStorage } from './browser-storage';
 
 const STORAGE_KEY = 'menu.language';
 
-/**
- * The current language. Hebrew (right to left) by default, English at runtime,
- * remembered per device. Keeps `<html lang dir>` in sync so the whole app,
- * Material included, mirrors itself.
- */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class I18n {
+  private readonly transloco = inject(TranslocoService);
   private readonly storage = inject(BrowserStorage);
-  private readonly current = signal<Language>(this.restore());
+  private readonly html = inject(DOCUMENT).documentElement;
 
-  readonly language = this.current.asReadonly();
-  readonly dir = computed(() => (this.current() === 'he' ? 'rtl' : 'ltr'));
+  readonly language = computed<Language>(() =>
+    this.transloco.activeLang() === 'en' ? 'en' : 'he',
+  );
+  readonly dir = computed(() => (this.language() === 'he' ? 'rtl' : 'ltr'));
 
   constructor() {
-    const html = inject(DOCUMENT).documentElement;
-    effect(() => {
-      html.lang = this.current();
-      html.dir = this.dir();
-    });
+    this.apply(this.storage.get(STORAGE_KEY) === 'en' ? 'en' : 'he');
   }
 
   setLanguage(language: Language): void {
-    this.current.set(language);
+    this.apply(language);
     this.storage.set(STORAGE_KEY, language);
   }
 
-  /** The name in the current language, falling back to Hebrew. */
   pick(text: LocalizedText): string {
-    return this.current() === 'en' ? (text.en ?? text.he) : text.he;
+    return this.language() === 'en' ? (text.en ?? text.he) : text.he;
   }
 
-  private restore(): Language {
-    // A plain check, not LanguageSchema: the shell must not pull Zod into the initial bundle.
-    const stored = this.storage.get(STORAGE_KEY);
-    return stored === 'en' ? 'en' : 'he';
+  private apply(language: Language): void {
+    this.transloco.setActiveLang(language);
+    this.html.lang = language;
+    this.html.dir = language === 'he' ? 'rtl' : 'ltr';
   }
 }

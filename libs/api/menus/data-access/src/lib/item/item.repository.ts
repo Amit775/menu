@@ -9,7 +9,6 @@ import {
   type UpdateItem,
 } from '@menu/shared/contracts';
 
-/** An item as the API sees it internally: the contract plus who submitted it. */
 export type ItemRecord = Omit<Item, 'submittedByMe'> & { submittedById: string | null };
 
 export interface NewItem {
@@ -39,12 +38,10 @@ interface ItemRow {
 
 const withTags = { tags: { select: { tagId: true }, orderBy: { position: 'asc' } } } as const;
 
-/** Maps between Prisma rows and records. The only code that touches `prisma.item` and `prisma.itemTag`. */
 @Injectable()
 export class ItemRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** A venue's items in menu order: those in `states`, plus anything `submittedById` submitted. */
   async listByVenue(
     venueId: string,
     states: readonly ItemState[],
@@ -66,7 +63,6 @@ export class ItemRepository {
     return rows.map(toRecord);
   }
 
-  /** Pending items awaiting a decision, oldest first. `venueIds: null` means every venue. */
   async listPending(venueIds: readonly string[] | null): Promise<ItemRecord[]> {
     const rows = await this.prisma.item.findMany({
       where: { state: 'pending', ...(venueIds ? { venueId: { in: [...venueIds] } } : {}) },
@@ -81,7 +77,6 @@ export class ItemRepository {
     return row ? toRecord(row) : null;
   }
 
-  /** These items in any state; unknown ids are left out. */
   async findByIds(ids: readonly string[]): Promise<ItemRecord[]> {
     if (ids.length === 0) {
       return [];
@@ -93,7 +88,6 @@ export class ItemRepository {
     return rows.map(toRecord);
   }
 
-  /** Adds the item at the end of its section. */
   async create(input: NewItem): Promise<ItemRecord> {
     const row = await this.prisma.$transaction(async (tx) => {
       const last = await tx.item.aggregate({

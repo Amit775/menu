@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { GeoPointSchema, LocalizedTextSchema } from '../common/values.contract';
 
-/** REST base path: `/api/venues`. Used by the Nest controller and the Angular client. */
 export const venuePath = 'venues';
 
 export const VenueStatusSchema = z.enum(['active', 'hidden']);
@@ -30,7 +29,6 @@ export const VenueSchema = z.object({
 
 export type Venue = z.infer<typeof VenueSchema>;
 
-/** `POST /api/venues` (Admin). Optional first sections, in menu order. */
 export const CreateVenueSchema = VenueSchema.pick({
   name: true,
   address: true,
@@ -43,7 +41,6 @@ export const CreateVenueSchema = VenueSchema.pick({
 
 export type CreateVenue = z.infer<typeof CreateVenueSchema>;
 
-/** `PATCH /api/venues/:id` (Admin). */
 export const UpdateVenueSchema = VenueSchema.pick({
   name: true,
   address: true,
@@ -55,7 +52,6 @@ export const UpdateVenueSchema = VenueSchema.pick({
 
 export type UpdateVenue = z.infer<typeof UpdateVenueSchema>;
 
-/** `GET /api/venues?owned=true`: only the caller's venues (an Owner's "my venues"). */
 export const VenueListQuerySchema = z.object({
   owned: z
     .enum(['true', 'false'])

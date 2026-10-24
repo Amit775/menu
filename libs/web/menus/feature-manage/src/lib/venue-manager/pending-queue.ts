@@ -8,16 +8,12 @@ import { VenueManagerStore } from '@menu/web/menus/data-access';
 import {
   formatShekels,
   I18n,
-  injectMessages,
+  injectTranslate,
   LocalizePipe,
   RelativeDatePipe,
 } from '@menu/web/shared/util-i18n';
-import { venueManagerMessages } from '../venue-manager.messages';
+import { venueManagerI18n } from '../venue-manager.i18n';
 
-/**
- * J4/J6: items diners added, waiting for the venue's decision. Each shows the
- * item only (name, section, price, tags), never who added it or their entry.
- */
 @Component({
   selector: 'menu-pending-queue',
   imports: [
@@ -35,9 +31,8 @@ import { venueManagerMessages } from '../venue-manager.messages';
 export class PendingQueue {
   protected readonly store = inject(VenueManagerStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(venueManagerMessages);
+  protected readonly t = injectTranslate(venueManagerI18n);
 
-  /** Items with a decision in flight, and items whose last decision failed. */
   protected readonly busy = signal<ReadonlySet<string>>(new Set());
   protected readonly failed = signal<ReadonlySet<string>>(new Set());
   protected readonly confirmingReject = signal<string | null>(null);
@@ -94,11 +89,11 @@ export class PendingQueue {
       .filter((tag) => tag !== undefined)
       .map((tag) => this.i18n.pick(tag.name))
       .join(', ');
-    return this.t().facts(
-      section ? this.i18n.pick(section.name) : '',
-      item.listPrice === null ? '' : formatShekels(item.listPrice),
-      tags,
-    );
+    return this.t('facts', {
+      section: section ? this.i18n.pick(section.name) : '',
+      price: item.listPrice === null ? 'none' : formatShekels(item.listPrice),
+      tags: tags || 'none',
+    });
   }
 }
 

@@ -1,34 +1,30 @@
-import { inject } from '@angular/core';
-import { type DiaryQuery, type EntryWithItem } from '@menu/shared/contracts';
-import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
+import { computed, inject, resource, signal } from '@angular/core';
+import { type DiaryQuery } from '@menu/shared/contracts';
+import { loadStatus } from '@menu/web/shared/util-data';
+import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
 import { EntryApiClient } from '../entry/entry.api-client';
-import { failure, type LoadStatus } from './load-status';
 
-interface DiaryState {
-  entries: EntryWithItem[];
-  status: LoadStatus;
-}
-
-/** The caller's diary, newest first, optionally for one venue. Provide it in the routed page. */
 export const DiaryStore = signalStore(
-  withState<DiaryState>({ entries: [], status: 'loading' }),
-  withMethods((store, api = inject(EntryApiClient)) => {
-    let request = 0;
+  withProps((_, api = inject(EntryApiClient)) => {
+    const query = signal<() => DiaryQuery | undefined>(() => undefined);
     return {
-      async load(query: DiaryQuery = {}): Promise<void> {
-        const current = ++request;
-        patchState(store, { status: 'loading' });
-        try {
-          const entries = await api.diary(query);
-          if (current === request) {
-            patchState(store, { entries, status: 'loaded' });
-          }
-        } catch (error) {
-          if (current === request) {
-            patchState(store, { status: failure(error) });
-          }
-        }
-      },
+      _query: query,
+      _diary: resource({
+        params: () => query()(),
+        loader: ({ params }) => api.diary(params),
+      }),
     };
   }),
+  withComputed(({ _diary }) => ({
+    entries: computed(() => (_diary.hasValue() ? _diary.value() : [])),
+    status: loadStatus(_diary),
+  })),
+  withMethods(({ _query, _diary }) => ({
+    load(query: () => DiaryQuery): void {
+      _query.set(query);
+    },
+    reload(): void {
+      _diary.reload();
+    },
+  })),
 );

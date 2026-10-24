@@ -4,11 +4,10 @@ import {
   Component,
   DestroyRef,
   type ElementRef,
-  effect,
   inject,
+  type OnChanges,
   input,
   output,
-  untracked,
   viewChild,
   ViewEncapsulation,
 } from '@angular/core';
@@ -16,13 +15,8 @@ import { type GeoPoint } from '@menu/shared/contracts';
 import { LeafletLoader, OSM_ATTRIBUTION, OSM_TILES, TEL_AVIV } from '@menu/web/shared/util-map';
 import type * as Leaflet from 'leaflet';
 
-/** Close enough to tell one building from the next. */
 const PIN_ZOOM = 17;
 
-/**
- * Where the venue is: tap the map or drag the pin. The form's latitude and
- * longitude fields are the keyboard way to set it, and move the pin too.
- */
 @Component({
   selector: 'menu-pin-picker',
   template:
@@ -51,7 +45,7 @@ const PIN_ZOOM = 17;
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PinPicker {
+export class PinPicker implements OnChanges {
   readonly point = input<GeoPoint | null>(null);
   readonly label = input.required<string>();
   readonly picked = output<GeoPoint>();
@@ -68,20 +62,18 @@ export class PinPicker {
 
   constructor() {
     afterNextRender(() => void this.init());
-    effect(() => {
-      const point = this.point();
-      untracked(() => {
-        this.place(point);
-        // Typed coordinates (the keyboard way) bring the map along with the pin.
-        if (point && (point.lat !== this.lastPicked?.lat || point.lng !== this.lastPicked.lng)) {
-          this.map?.panTo(point);
-        }
-      });
-    });
     inject(DestroyRef).onDestroy(() => {
       this.destroyed = true;
       this.map?.remove();
     });
+  }
+
+  ngOnChanges(): void {
+    const point = this.point();
+    this.place(point);
+    if (point && (point.lat !== this.lastPicked?.lat || point.lng !== this.lastPicked.lng)) {
+      this.map?.panTo(point);
+    }
   }
 
   private async init(): Promise<void> {

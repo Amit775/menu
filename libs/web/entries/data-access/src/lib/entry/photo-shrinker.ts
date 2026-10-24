@@ -1,10 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 
-/** The long edge of an uploaded photo, in pixels. */
 export const PHOTO_EDGE = 1600;
 const QUALITY = 0.85;
 
-/** The size a photo is drawn at: at most `edge` on its long side, never enlarged. */
 export function fitWithin(
   width: number,
   height: number,
@@ -20,7 +18,7 @@ export function fitWithin(
  * where it was taken). Where the browser cannot decode or redraw it, the file
  * goes as it is and the API decides.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class PhotoShrinker {
   async shrink(file: Blob): Promise<Blob> {
     if (typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') {

@@ -16,8 +16,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { type LocalizedText, type Tag, type TagKind, TagKindSchema } from '@menu/shared/contracts';
 import { TagsStore } from '@menu/web/menus/data-access';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { tagsMessages } from '../tags.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { tagsI18n } from '../tags.i18n';
 
 const notBlank: ValidatorFn = (control) =>
   typeof control.value === 'string' && control.value.trim() === ''
@@ -38,10 +38,6 @@ function nameForm(tag?: Tag) {
   });
 }
 
-/**
- * J7 (Admin, `/manage/tags`): the tag vocabulary by kind. Add a tag, rename it
- * or change its kind, or merge a duplicate into another tag.
- */
 @Component({
   selector: 'menu-tags-page',
   imports: [
@@ -63,7 +59,7 @@ function nameForm(tag?: Tag) {
 export class TagsPage {
   protected readonly store = inject(TagsStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(tagsMessages);
+  protected readonly t = injectTranslate(tagsI18n);
   protected readonly kinds = TagKindSchema.options;
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
@@ -92,12 +88,8 @@ export class TagsPage {
   protected readonly busy = signal(false);
   protected readonly failed = signal<'saveFailed' | 'slugTaken' | null>(null);
 
-  constructor() {
-    void this.store.load();
-  }
-
   protected retry(): void {
-    void this.store.load();
+    this.store.reload();
   }
 
   protected others(tag: Tag): Tag[] {

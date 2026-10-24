@@ -1,34 +1,38 @@
-import { computed, inject } from '@angular/core';
-import { type Create<%= className %>, type <%= className %> } from '@menu/shared/contracts';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { computed, inject, resource, signal } from '@angular/core';
+import { type Create<%= className %> } from '@menu/shared/contracts';
+import { loadStatus } from '@menu/web/shared/util-data';
+import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
 import { <%= className %>ApiClient } from './<%= fileName %>.api-client';
 
-interface <%= className %>State {
-  items: <%= className %>[];
-  loading: boolean;
-  error: string | null;
-}
-
-const initialState: <%= className %>State = { items: [], loading: false, error: null };
-
-/** State for <%= fileName %>. Provide it in the routed feature that owns the screen. */
 export const <%= className %>Store = signalStore(
-  withState(initialState),
-  withComputed(({ items }) => ({
-    count: computed(() => items().length),
-  })),
-  withMethods((store, api = inject(<%= className %>ApiClient)) => ({
-    async load(): Promise<void> {
-      patchState(store, { loading: true, error: null });
-      try {
-        patchState(store, { items: await api.list(), loading: false });
-      } catch {
-        patchState(store, { loading: false, error: 'Could not load <%= fileName %>.' });
-      }
+  withProps((_, api = inject(<%= className %>ApiClient)) => {
+    const requested = signal(false);
+    return {
+      _requested: requested,
+      _items: resource({
+        params: () => (requested() ? {} : undefined),
+        loader: () => api.list(),
+      }),
+    };
+  }),
+  withComputed(({ _items }) => {
+    const items = computed(() => (_items.hasValue() ? _items.value() : []));
+    return { items, count: computed(() => items().length), status: loadStatus(_items) };
+  }),
+  withMethods(({ _requested, _items }, api = inject(<%= className %>ApiClient)) => ({
+    load(): void {
+      _requested.set(true);
+    },
+    reload(): void {
+      _items.reload();
     },
     async create(input: Create<%= className %>): Promise<void> {
       const created = await api.create(input);
-      patchState(store, { items: [...store.items(), created] });
+      if (_items.hasValue()) {
+        _items.set([..._items.value(), created]);
+      } else {
+        _items.reload();
+      }
     },
   })),
 );

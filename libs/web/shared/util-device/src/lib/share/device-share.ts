@@ -1,13 +1,9 @@
 import { DOCUMENT } from '@angular/common';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 
 export type ShareOutcome = 'shared' | 'copied' | 'cancelled' | 'failed';
 
-/**
- * Shares a link to an app page: the system share sheet where there is one
- * (phones), otherwise the clipboard.
- */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class DeviceShare {
   private readonly document = inject(DOCUMENT);
 

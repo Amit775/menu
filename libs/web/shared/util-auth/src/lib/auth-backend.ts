@@ -1,23 +1,19 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, InjectionToken } from '@angular/core';
+import { inject, Service, InjectionToken } from '@angular/core';
 import type { FirebaseOptions } from 'firebase/app';
 import type { Auth as FirebaseAuth, ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { firstValueFrom } from 'rxjs';
 
-/** The signed-in user as the app needs it. */
 export interface AuthUser {
   uid: string;
   displayName: string | null;
   phoneNumber: string | null;
 }
 
-/** The sign-in provider behind `Auth`. Firebase in the app; a fake in tests. */
 export interface AuthBackend {
-  /** Calls back now and on every sign-in, sign-out and token refresh. */
   watchUser(callback: (user: AuthUser | null) => void): Promise<void>;
   idToken(): Promise<string | null>;
   signInWithGoogle(): Promise<void>;
-  /** Sends an SMS code; `container` hosts the invisible reCAPTCHA. */
   sendPhoneCode(phoneNumber: string, container: HTMLElement): Promise<void>;
   confirmPhoneCode(code: string): Promise<void>;
   signOut(): Promise<void>;
@@ -29,7 +25,7 @@ export interface AuthBackend {
  * `/__/firebase/init.json` (proxied to the live site in development), so no
  * keys live in the repository.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class FirebaseAuthBackend implements AuthBackend {
   private readonly http = inject(HttpClient);
   private auth: Promise<FirebaseAuth> | undefined;
@@ -97,7 +93,6 @@ export class FirebaseAuthBackend implements AuthBackend {
       const { getApps, initializeApp } = await import('firebase/app');
       const { getAuth } = await import('firebase/auth');
       const auth = getAuth(getApps()[0] ?? initializeApp(config));
-      // SMS codes in Hebrew, the app's default language.
       auth.languageCode = 'he';
       return auth;
     })().catch((error: unknown) => {

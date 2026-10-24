@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
   type CreateEntryInput,
   type DiaryQuery,
@@ -21,16 +21,11 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { z } from 'zod';
 
-/**
- * HTTP access to the caller's entries, an item's entries sheet and share links.
- * Every response is validated against the shared contract.
- */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class EntryApiClient {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `/api/${entryPath}`;
 
-  /** The caller's diary, newest first, optionally for one venue or item. */
   async diary(query: DiaryQuery = {}): Promise<EntryWithItem[]> {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(query)) {
@@ -47,13 +42,11 @@ export class EntryApiClient {
     return EntrySchema.parse(body);
   }
 
-  /** The item, the caller's own entries on it, then other people's public ones. */
   async forItem(itemId: string): Promise<ItemEntries> {
     const body = await firstValueFrom(this.http.get<unknown>(`/api/${itemEntriesPath(itemId)}`));
     return ItemEntriesSchema.parse(body);
   }
 
-  /** Any of the entry's fields; the API fills in the rest. */
   async create(itemId: string, input: CreateEntryInput): Promise<Entry> {
     const body = await firstValueFrom(
       this.http.post<unknown>(`/api/${itemEntriesPath(itemId)}`, input),
@@ -70,7 +63,6 @@ export class EntryApiClient {
     await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
   }
 
-  /** Sets the entry's one photo (ADR 0011); the image is the whole body. */
   async setPhoto(id: string, photo: Blob): Promise<Entry> {
     const body = await firstValueFrom(this.http.put<unknown>(`/api/${entryPhotoPath(id)}`, photo));
     return EntrySchema.parse(body);
@@ -81,13 +73,11 @@ export class EntryApiClient {
     return EntrySchema.parse(body);
   }
 
-  /** Admin: take someone's entry off public view, or put it back. */
   async setHidden(id: string, hidden: boolean): Promise<void> {
     const input: SetEntryHidden = { hidden };
     await firstValueFrom(this.http.put(`${this.baseUrl}/${id}/hidden`, input));
   }
 
-  /** What a share link shows; anyone may ask. */
   async shared(token: string): Promise<SharedEntryView> {
     const body = await firstValueFrom(this.http.get<unknown>(`/api/${sharedEntryPath(token)}`));
     return SharedEntryViewSchema.parse(body);

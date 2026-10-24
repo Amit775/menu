@@ -9,11 +9,10 @@ import { RouterLink } from '@angular/router';
 import { type Tag } from '@menu/shared/contracts';
 import { FeedStore, SearchStore } from '@menu/web/discover/data-access';
 import { ItemRow } from '@menu/web/discover/ui';
-import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { debounceTime } from 'rxjs';
-import { feedMessages } from '../feed.messages';
+import { feedI18n } from '../feed.i18n';
 
-/** Search across items, venues and tags (opened as a full-screen dialog); picking a tag filters the feed by it. */
 @Component({
   selector: 'menu-search-panel',
   imports: [
@@ -33,7 +32,7 @@ import { feedMessages } from '../feed.messages';
 export class SearchPanel {
   protected readonly search = inject(SearchStore);
   private readonly feed = inject(FeedStore);
-  protected readonly t = injectMessages(feedMessages);
+  protected readonly t = injectTranslate(feedI18n);
 
   private readonly dialog = inject(MatDialogRef);
 

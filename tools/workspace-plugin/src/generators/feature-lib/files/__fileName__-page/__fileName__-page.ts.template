@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { injectTranslate } from '@menu/web/shared/util-i18n';
+import { <%= propertyName %>I18n } from '../<%= fileName %>.i18n';
 
-/** Routed page for <%= domain %>/<%= name %>. Inject stores from data-access; render with ui components. */
 @Component({
   selector: 'menu-<%= fileName %>-page',
   imports: [],
@@ -9,5 +10,5 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class <%= className %>Page {
-  protected readonly title = '<%= title %>';
+  protected readonly t = injectTranslate(<%= propertyName %>I18n);
 }

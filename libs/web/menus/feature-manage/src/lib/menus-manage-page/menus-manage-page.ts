@@ -5,14 +5,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { ManagedVenuesStore } from '@menu/web/menus/data-access';
 import { Roles } from '@menu/web/shared/util-auth';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { venuesMessages } from '../venues.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { venuesI18n } from '../venues.i18n';
 
-/**
- * J6/J7: "my venues" (`/manage`). An Owner's venues, or every venue for an
- * Admin, those with items waiting for approval first. Admins also reach new
- * venues, the tag vocabulary and people from here.
- */
 @Component({
   selector: 'menu-menus-manage-page',
   imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, LocalizePipe],
@@ -25,16 +20,12 @@ export class MenusManagePage {
   protected readonly store = inject(ManagedVenuesStore);
   protected readonly roles = inject(Roles);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(venuesMessages);
+  protected readonly t = injectTranslate(venuesI18n);
   protected readonly openIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'chevron_left' : 'chevron_right',
   );
 
-  constructor() {
-    void this.store.load();
-  }
-
   protected retry(): void {
-    void this.store.load();
+    this.store.reload();
   }
 }

@@ -1,13 +1,5 @@
 import { Location } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  input,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -23,20 +15,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { AddItemStore } from '@menu/web/menus/data-access';
 import { type LocalizedText } from '@menu/shared/contracts';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { addItemMessages } from '../add-item.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { addItemI18n } from '../add-item.i18n';
 
-/** Required, and more than spaces: the API trims the name. */
 const notBlank: ValidatorFn = (control) =>
   typeof control.value === 'string' && control.value.trim() === ''
     ? { required: true }
     : Validators.required(control);
 
-/**
- * J4: "not on the menu?" (`/venues/:id/add-item`). A short form (name, section,
- * price) creates an item only its submitter sees until the venue approves it,
- * then opens the log form for it.
- */
 @Component({
   selector: 'menu-menus-add-item-page',
   imports: [
@@ -59,9 +45,8 @@ export class MenusAddItemPage {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(addItemMessages);
+  protected readonly t = injectTranslate(addItemI18n);
 
-  /** The venue's `:id` route parameter. */
   readonly id = input.required<string>();
 
   protected readonly name = new FormControl('', {
@@ -86,10 +71,7 @@ export class MenusAddItemPage {
   protected readonly failed = signal(false);
 
   constructor() {
-    effect(() => {
-      const id = this.id();
-      untracked(() => void this.store.load(id));
-    });
+    this.store.load(this.id);
   }
 
   protected cancel(): void {
@@ -101,7 +83,7 @@ export class MenusAddItemPage {
   }
 
   protected retry(): void {
-    void this.store.load(this.id());
+    this.store.reload();
   }
 
   protected async save(): Promise<void> {

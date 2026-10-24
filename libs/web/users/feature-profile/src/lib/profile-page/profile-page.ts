@@ -1,18 +1,5 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  signal,
-  untracked,
-} from '@angular/core';
-import {
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  type ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject, linkedSignal, signal } from '@angular/core';
+import { form, FormField, maxLength, required, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -23,20 +10,13 @@ import { RouterLink } from '@angular/router';
 import { type Language } from '@menu/shared/contracts';
 import { AccountStore } from '@menu/web/users/data-access';
 import { Auth } from '@menu/web/shared/util-auth';
-import { I18n, injectMessages } from '@menu/web/shared/util-i18n';
-import { profileMessages } from '../profile.messages';
+import { I18n, injectTranslate } from '@menu/web/shared/util-i18n';
+import { profileI18n } from '../profile.i18n';
 
-/** The profile tab: sign-in prompt, or the way to the diary, the account's name, language and sign-out. */
-
-/** Required, and more than spaces: the API trims the name. */
-const required: ValidatorFn = (control) =>
-  typeof control.value === 'string' && control.value.trim() === ''
-    ? { required: true }
-    : Validators.required(control);
 @Component({
   selector: 'menu-profile-page',
   imports: [
-    ReactiveFormsModule,
+    FormField,
     RouterLink,
     MatButtonModule,
     MatButtonToggleModule,
@@ -53,28 +33,18 @@ export class ProfilePage {
   protected readonly auth = inject(Auth);
   protected readonly store = inject(AccountStore);
   protected readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(profileMessages);
+  protected readonly t = injectTranslate(profileI18n);
 
-  protected readonly name = new FormControl('', {
-    nonNullable: true,
-    validators: [required, Validators.maxLength(60)],
+  private readonly name = linkedSignal(() => this.store.account()?.displayName ?? '');
+  protected readonly nameField = form(this.name, (path) => {
+    required(path);
+    validate(path, ({ value }) => (value().trim() === '' ? { kind: 'required' } : null));
+    maxLength(path, 60);
   });
-  protected readonly nameForm = new FormGroup({ name: this.name });
   protected readonly saved = signal(false);
 
-  constructor() {
-    effect(() => {
-      const displayName = this.store.account()?.displayName;
-      if (displayName !== undefined) {
-        untracked(() => {
-          this.name.setValue(displayName);
-        });
-      }
-    });
-  }
-
   protected async saveName(): Promise<void> {
-    this.saved.set(await this.store.update({ displayName: this.name.value.trim() }));
+    this.saved.set(await this.store.update({ displayName: this.name().trim() }));
   }
 
   protected setLanguage(language: Language): void {

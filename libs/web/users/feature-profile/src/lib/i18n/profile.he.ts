@@ -1,0 +1,16 @@
+export const he = {
+  title: 'פרופיל',
+  signedOutTitle: 'היומן שלך מחכה',
+  signedOutText: 'אחרי כניסה אפשר לשמור מה אכלת, לדרג ולשתף.',
+  signIn: 'כניסה',
+  diary: 'היומן שלי',
+  name: 'השם שיופיע ליד רשומות ציבוריות',
+  save: 'שמירה',
+  saved: 'נשמר',
+  saveFailed: 'השמירה לא הצליחה.',
+  loadFailed: 'לא הצלחנו לטעון את החשבון.',
+  language: 'שפה',
+  hebrew: 'עברית',
+  english: 'English',
+  signOut: 'יציאה',
+};

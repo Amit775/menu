@@ -1,16 +1,14 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
+import { distinctUntilChanged, type Observable, ReplaySubject } from 'rxjs';
 import { AUTH_BACKEND, type AuthUser } from './auth-backend';
 
 export type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
 
-/**
- * Who is signed in, as signals. Starts `loading` until the provider has restored
- * (or not) the previous session. Sign-in itself happens in the sign-in page.
- */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class Auth {
   private readonly backend = inject(AUTH_BACKEND);
   private readonly current = signal<AuthUser | null | undefined>(undefined);
+  private readonly users = new ReplaySubject<AuthUser | null>(1);
   private resolveReady: () => void = () => undefined;
 
   readonly user = computed(() => this.current() ?? null);
@@ -20,7 +18,10 @@ export class Auth {
   });
   readonly signedIn = computed(() => this.status() === 'signed-in');
 
-  /** Resolves once the previous session has been restored or found missing. */
+  readonly userChanges: Observable<AuthUser | null> = this.users.pipe(
+    distinctUntilChanged((previous, next) => previous?.uid === next?.uid),
+  );
+
   readonly ready = new Promise<void>((resolve) => {
     this.resolveReady = resolve;
   });
@@ -28,13 +29,11 @@ export class Auth {
   constructor() {
     this.backend
       .watchUser((user) => {
-        this.current.set(user);
-        this.resolveReady();
+        this.restored(user);
       })
       .catch(() => {
         // Sign-in is unavailable (no config, offline): carry on signed out.
-        this.current.set(null);
-        this.resolveReady();
+        this.restored(null);
       });
   }
 
@@ -61,5 +60,11 @@ export class Auth {
 
   signOut(): Promise<void> {
     return this.backend.signOut();
+  }
+
+  private restored(user: AuthUser | null): void {
+    this.current.set(user);
+    this.users.next(user);
+    this.resolveReady();
   }
 }

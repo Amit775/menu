@@ -1,0 +1,5 @@
+import type { he } from './<%= fileName %>.he';
+
+export const en = {
+  title: '<%= title %>',
+} satisfies typeof he;

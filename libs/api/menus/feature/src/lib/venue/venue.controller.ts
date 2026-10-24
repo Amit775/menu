@@ -19,7 +19,6 @@ import {
 } from '@menu/shared/contracts';
 import { VenueService } from './venue.service';
 
-/** `/api/venues`: HTTP only. Validation via the shared contract, logic in the service. */
 @Controller(venuePath)
 export class VenueController {
   constructor(private readonly service: VenueService) {}

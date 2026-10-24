@@ -16,20 +16,15 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FeedStore, type FeedView } from '@menu/web/discover/data-access';
 import { ItemRow } from '@menu/web/discover/ui';
-import { I18n, injectMessages } from '@menu/web/shared/util-i18n';
-import { feedMessages } from '../feed.messages';
+import { I18n, injectTranslate } from '@menu/web/shared/util-i18n';
+import { feedI18n } from '../feed.i18n';
 import { FilterSheet } from '../filters/filter-sheet';
 import { VenueMap } from '../map/venue-map';
 import { ReelCard } from '../reels/reel-card';
 import { SearchPanel } from '../search/search-panel';
 
-/** Load the next page when this few cards are left. */
 const PREFETCH = 3;
 
-/**
- * The discover home: a full-screen reels feed (swipe sideways for the next item)
- * a ranked list, or a map of venues, with filters and search on top.
- */
 @Component({
   selector: 'menu-discover-feed-page',
   imports: [
@@ -49,15 +44,13 @@ const PREFETCH = 3;
 export class DiscoverFeedPage {
   protected readonly store = inject(FeedStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(feedMessages);
+  protected readonly t = injectTranslate(feedI18n);
 
   private readonly sheet = inject(MatBottomSheet);
   private readonly dialog = inject(MatDialog);
   private readonly track = viewChild<ElementRef<HTMLElement>>('track');
 
-  /** By score the list splits off items without enough ratings; other orders are one list. */
   protected readonly splitByRanking = computed(() => this.store.filters().sort === 'score');
-  /** Items (or the map) are on screen and a newer request is on its way. */
   protected readonly refreshing = computed(
     () =>
       this.store.status() === 'loading' &&
@@ -68,7 +61,7 @@ export class DiscoverFeedPage {
   );
   protected readonly filterLabel = computed(() => {
     const tag = this.store.primaryTag();
-    return tag ? `${this.t().filter} · ${this.i18n.pick(tag.name)}` : this.t().filter;
+    return tag ? `${this.t('filter')} · ${this.i18n.pick(tag.name)}` : this.t('filter');
   });
 
   constructor() {
@@ -87,12 +80,12 @@ export class DiscoverFeedPage {
   }
 
   protected openFilters(): void {
-    this.sheet.open(FilterSheet, { ariaLabel: this.t().filters });
+    this.sheet.open(FilterSheet, { ariaLabel: this.t('filters') });
   }
 
   protected openSearch(): void {
     this.dialog.open(SearchPanel, {
-      ariaLabel: this.t().search,
+      ariaLabel: this.t('search'),
       width: '100vw',
       maxWidth: '100vw',
       height: '100dvh',
@@ -103,7 +96,6 @@ export class DiscoverFeedPage {
     void this.store.setView(view);
   }
 
-  /** Reels: work out which card is showing, prepare its venue strip, and fetch ahead. */
   protected scrolled(element: HTMLElement): void {
     const index = Math.round(Math.abs(element.scrollLeft) / Math.max(element.clientWidth, 1));
     if (index !== this.store.reelIndex()) {

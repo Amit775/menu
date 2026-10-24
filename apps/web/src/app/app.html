@@ -1,7 +1,7 @@
 <main>
   <router-outlet />
 </main>
-<nav [attr.aria-label]="t().navigation">
+<nav [attr.aria-label]="t('navigation')">
   <a
     routerLink="/"
     routerLinkActive="active"
@@ -9,16 +9,16 @@
     ariaCurrentWhenActive="page"
   >
     <mat-icon aria-hidden="true">view_carousel</mat-icon>
-    {{ t().discover }}
+    {{ t('discover') }}
   </a>
   <a routerLink="/profile" routerLinkActive="active" ariaCurrentWhenActive="page">
     <mat-icon aria-hidden="true">person</mat-icon>
-    {{ t().profile }}
+    {{ t('profile') }}
   </a>
   @if (roles.canManage()) {
     <a routerLink="/manage" routerLinkActive="active" ariaCurrentWhenActive="page">
       <mat-icon aria-hidden="true">storefront</mat-icon>
-      {{ t().manage }}
+      {{ t('manage') }}
     </a>
   }
 </nav>

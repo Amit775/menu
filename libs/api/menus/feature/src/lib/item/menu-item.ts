@@ -3,10 +3,6 @@ import { type ItemRecord } from '@menu/api/menus/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
 import { type Item, type ItemState } from '@menu/shared/contracts';
 
-/**
- * The spec's Item, with its permissions and lifecycle as methods. Every rule
- * about who may see, decide on or write about an item lives here.
- */
 export class MenuItem {
   constructor(readonly record: ItemRecord) {}
 
@@ -18,7 +14,6 @@ export class MenuItem {
     return this.record.state;
   }
 
-  /** Approvers: the venue's Owners and Admins. */
   canBeEditedBy(principal: Principal | null): boolean {
     return canEditVenue(principal, this.record.venueId);
   }
@@ -39,7 +34,6 @@ export class MenuItem {
     return true;
   }
 
-  /** Any signed-in user writes about an approved item; only its submitter about their pending or rejected one. */
   acceptsEntryFrom(principal: Principal): boolean {
     if (this.state === 'approved') {
       return true;
@@ -47,7 +41,6 @@ export class MenuItem {
     return (this.state === 'pending' || this.state === 'rejected') && this.isSubmittedBy(principal);
   }
 
-  /** Approvers edit pending and approved items; rejected and merged ones are history. */
   assertEditableBy(principal: Principal): void {
     if (!this.canBeEditedBy(principal)) {
       throw new ForbiddenException('Only the venue’s Owner or an Admin can edit its items.');
@@ -57,7 +50,6 @@ export class MenuItem {
     }
   }
 
-  /** Checks a decision and returns the state it moves the item from. */
   assertDecision(
     principal: Principal,
     decision: 'approve' | 'reject' | 'merge' | 'archive',
@@ -74,7 +66,6 @@ export class MenuItem {
     return from;
   }
 
-  /** A pending item merges into an approved item of the same venue. */
   assertCanMergeInto(target: MenuItem): void {
     if (target.record.venueId !== this.record.venueId || target.state !== 'approved') {
       throw new BadRequestException('Merge into an approved item of the same venue.');
