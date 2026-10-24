@@ -92,4 +92,26 @@ describe('PendingQueue', () => {
     });
     expect(element.querySelectorAll('li.card')).toHaveLength(1);
   });
+
+  it('keeps each item busy until its own decision returns', async () => {
+    const onions = {
+      ...lamb,
+      id: '7c1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+      name: { he: 'טבעות בצל' },
+    };
+    const answers = new Map<string, (value: Item) => void>();
+    const decide = vi.fn((id: string) => new Promise<Item>((resolve) => answers.set(id, resolve)));
+    const element = await render({ items: () => Promise.resolve([classic, lamb, onions]), decide });
+    const approves = (): HTMLButtonElement[] => [
+      ...element.querySelectorAll<HTMLButtonElement>('.approve'),
+    ];
+    approves()[0]?.click();
+    approves()[1]?.click();
+    answers.get(lamb.id)?.({ ...lamb, state: 'approved' });
+    await vi.waitFor(() => {
+      TestBed.tick();
+      expect(element.querySelectorAll('li.card')).toHaveLength(1);
+    });
+    expect(approves()[0]?.disabled).toBe(true);
+  });
 });

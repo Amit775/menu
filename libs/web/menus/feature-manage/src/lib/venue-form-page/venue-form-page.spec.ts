@@ -10,7 +10,11 @@ import { VenueFormPage } from './venue-form-page';
 
 /** Just enough of Leaflet to tap the map and see where the pin is. */
 function fakeLeaflet() {
-  const seen: { tap?: (event: { latlng: GeoPoint }) => void; pin?: GeoPoint } = {};
+  const seen: {
+    tap?: (event: { latlng: GeoPoint }) => void;
+    pin?: GeoPoint;
+    center?: GeoPoint;
+  } = {};
   const chain = { addTo: () => chain };
   const L = {
     map: () => {
@@ -18,6 +22,10 @@ function fakeLeaflet() {
         setView: () => map,
         on: (_event: string, handler: (event: { latlng: GeoPoint }) => void) => {
           seen.tap = handler;
+          return map;
+        },
+        panTo: (point: GeoPoint) => {
+          seen.center = point;
           return map;
         },
         remove: vi.fn(),
@@ -104,6 +112,7 @@ describe('VenueFormPage', () => {
     TestBed.tick();
     expect(field(element, 'lat').value).toBe('32.08');
     expect(seen.pin).toEqual({ lat: 32.08, lng: 34.77 });
+    expect(seen.center).toBeUndefined();
     type(element, 'sections', 'עיקריות\n\n שתייה \n');
     submit(element);
     await vi.waitFor(() => {
@@ -163,6 +172,7 @@ describe('VenueFormPage', () => {
     type(element, 'lat', '32.09');
     TestBed.tick();
     expect(seen.pin).toEqual({ lat: 32.09, lng: venue.location.lng });
+    expect(seen.center).toEqual({ lat: 32.09, lng: venue.location.lng });
     expect(element.querySelector('[formcontrolname="sections"]')).toBeNull();
     element
       .querySelector<HTMLElement>('mat-select[formcontrolname="status"] .mat-mdc-select-trigger')

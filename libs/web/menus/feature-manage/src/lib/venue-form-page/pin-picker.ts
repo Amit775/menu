@@ -26,7 +26,7 @@ const PIN_ZOOM = 17;
 @Component({
   selector: 'menu-pin-picker',
   template:
-    '<div #map class="menu-pin-picker-map" [attr.aria-label]="label()" role="application"></div>',
+    '<div #map class="menu-pin-picker-map" dir="ltr" [attr.aria-label]="label()" role="application"></div>',
   styles: `
     menu-pin-picker {
       display: block;
@@ -62,6 +62,8 @@ export class PinPicker {
   private leaflet: typeof Leaflet | undefined;
   private map: Leaflet.Map | undefined;
   private pin: Leaflet.Marker | undefined;
+  /** The point the user last tapped or dragged to: the map is already there. */
+  private lastPicked: GeoPoint | null = null;
   private destroyed = false;
 
   constructor() {
@@ -70,6 +72,10 @@ export class PinPicker {
       const point = this.point();
       untracked(() => {
         this.place(point);
+        // Typed coordinates (the keyboard way) bring the map along with the pin.
+        if (point && (point.lat !== this.lastPicked?.lat || point.lng !== this.lastPicked.lng)) {
+          this.map?.panTo(point);
+        }
       });
     });
     inject(DestroyRef).onDestroy(() => {
@@ -120,6 +126,7 @@ export class PinPicker {
   private pick(at: { lat: number; lng: number }): void {
     // Six decimals is about 10 cm: plenty, and it keeps the fields readable.
     const point = { lat: round(at.lat), lng: round(at.lng) };
+    this.lastPicked = point;
     this.place(point);
     this.picked.emit(point);
   }

@@ -5,7 +5,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { MenuApiClient } from '@menu/web/menus/data-access';
 import { Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
-import { classic, menuApi, VENUE_ID } from '../testing/manage-fixtures';
+import { classic, lamb, menuApi, VENUE_ID } from '../testing/manage-fixtures';
 import { VenueManagerPage } from './venue-manager-page';
 
 describe('VenueManagerPage', () => {
@@ -71,5 +71,16 @@ describe('VenueManagerPage', () => {
     const element = await render(menuApi({ venue: vi.fn().mockRejectedValue(forbidden) }));
     expect(element.querySelector('[role="alert"]')?.textContent).toContain('המקום לא נמצא');
     expect(element.querySelector('[role="alert"] a')?.getAttribute('href')).toBe('/manage');
+  });
+
+  it('stays on the pending tab after the last item is approved', async () => {
+    const decide = vi.fn().mockResolvedValue({ ...lamb, state: 'approved' });
+    const element = await render(menuApi({ decide }));
+    element.querySelector<HTMLButtonElement>('.approve')?.click();
+    await vi.waitFor(() => {
+      TestBed.tick();
+      expect(element.querySelector('menu-pending-queue .empty')).not.toBeNull();
+    });
+    expect(tabs(element)[0]?.selected).toBe(true);
   });
 });
