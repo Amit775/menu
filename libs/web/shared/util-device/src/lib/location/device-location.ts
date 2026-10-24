@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { inject, Injectable, InjectionToken, signal } from '@angular/core';
+import { inject, Service, InjectionToken, signal } from '@angular/core';
 import { type GeoPoint } from '@menu/shared/contracts';
 
 /** The part of the browser's Geolocation API the app uses. */
@@ -29,7 +29,7 @@ export const LOCATION_WAIT_MS = 3000;
  * a slow answer or no answer gives null, and discovery carries on without distances.
  * A position that arrives late is still kept for the next load.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class DeviceLocation {
   private readonly source = inject(POSITION_SOURCE);
   private request: Promise<GeoPoint | null> | undefined;

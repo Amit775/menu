@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Service, signal } from '@angular/core';
 import { type Language, type LocalizedText } from '@menu/shared/contracts';
 import { BrowserStorage } from './browser-storage';
 
@@ -10,7 +10,7 @@ const STORAGE_KEY = 'menu.language';
  * remembered per device. Keeps `<html lang dir>` in sync so the whole app,
  * Material included, mirrors itself.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class I18n {
   private readonly storage = inject(BrowserStorage);
   private readonly current = signal<Language>(this.restore());

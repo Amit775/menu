@@ -1,4 +1,4 @@
-import { Injectable, type Signal, signal, type WritableSignal } from '@angular/core';
+import { Service, type Signal, signal, type WritableSignal } from '@angular/core';
 
 /** Data that one domain changes and another domain shows. */
 export type ChangeTopic = 'entries';
@@ -8,7 +8,7 @@ export type ChangeTopic = 'entries';
  * each other (ADR 0009). A domain that writes calls `notify`; a domain that
  * reads watches `version` and reloads when it moves.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class DataChanges {
   private readonly versions: Record<ChangeTopic, WritableSignal<number>> = {
     entries: signal(0),

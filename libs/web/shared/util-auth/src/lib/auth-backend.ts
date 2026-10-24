@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, InjectionToken } from '@angular/core';
+import { inject, Service, InjectionToken } from '@angular/core';
 import type { FirebaseOptions } from 'firebase/app';
 import type { Auth as FirebaseAuth, ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { firstValueFrom } from 'rxjs';
@@ -29,7 +29,7 @@ export interface AuthBackend {
  * `/__/firebase/init.json` (proxied to the live site in development), so no
  * keys live in the repository.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class FirebaseAuthBackend implements AuthBackend {
   private readonly http = inject(HttpClient);
   private auth: Promise<FirebaseAuth> | undefined;

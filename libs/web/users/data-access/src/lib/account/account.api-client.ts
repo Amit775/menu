@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
   type Account,
   accountMePath,
@@ -10,7 +10,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 
 /** HTTP access to `/api/accounts`. Every response is validated against the shared contract. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class AccountApiClient {
   private readonly http = inject(HttpClient);
   private readonly meUrl = `/api/${accountPath}/${accountMePath}`;
