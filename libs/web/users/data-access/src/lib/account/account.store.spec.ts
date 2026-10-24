@@ -74,6 +74,34 @@ describe('AccountStore', () => {
     expect(setLanguage).not.toHaveBeenCalled();
   });
 
+  it('leaves the roles unknown when loading fails after sign-out', async () => {
+    let fail: (error: Error) => void = () => undefined;
+    const me = vi.fn(() => new Promise<typeof account>((_resolve, reject) => (fail = reject)));
+    const { store, backend } = setup({ me });
+    backend.signIn();
+    const loading = store.load();
+    void backend.signOut();
+    TestBed.tick();
+    fail(new Error('offline'));
+    await loading;
+    expect(store.error()).toBeNull();
+    expect(TestBed.inject(Roles).known()).toBe(false);
+  });
+
+  it('keeps only the newest load when the account switches', async () => {
+    const answers: ((value: typeof account) => void)[] = [];
+    const me = vi.fn(() => new Promise<typeof account>((resolve) => answers.push(resolve)));
+    const { store, backend } = setup({ me });
+    backend.signIn();
+    const first = store.load();
+    const second = store.load();
+    expect(TestBed.inject(Roles).known()).toBe(false);
+    answers[1]?.({ ...account, isAdmin: true });
+    answers[0]?.(account);
+    await Promise.all([first, second]);
+    expect(TestBed.inject(Roles).isAdmin()).toBe(true);
+  });
+
   it('switches language at once and saves it when signed in', async () => {
     const updateMe = vi.fn().mockResolvedValue({ ...account, language: 'he' });
     const { store, backend, setLanguage } = setup({

@@ -41,6 +41,9 @@ export const AccountStore = signalStore(
       auth = inject(Auth),
       roles = inject(Roles),
     ) => {
+      // Each load, and each sign-out, starts a new request; only the latest may set the roles.
+      let request = 0;
+
       function apply(account: Account): void {
         patchState(store, { account, loading: false, error: null });
         i18n.setLanguage(account.language);
@@ -48,17 +51,23 @@ export const AccountStore = signalStore(
       }
       return {
         async load(): Promise<void> {
+          const current = ++request;
           patchState(store, { loading: true, error: null });
+          // Guards wait for this account's roles, not the previous one's.
+          roles.set(null);
+          // Signed out, or a newer load started, while this was loading: drop the answer.
+          const stale = (): boolean => current !== request || !auth.signedIn();
           try {
             const account = await api.me();
-            // Signed out (or someone else signed in) while this was loading: drop it.
-            if (auth.signedIn()) {
+            if (!stale()) {
               apply(account);
             }
           } catch {
-            patchState(store, { loading: false, error: 'load-failed' });
-            // Without the account, act as a plain user rather than keep guards waiting.
-            roles.set(NO_ROLES);
+            if (!stale()) {
+              patchState(store, { loading: false, error: 'load-failed' });
+              // Without the account, act as a plain user rather than keep guards waiting.
+              roles.set(NO_ROLES);
+            }
           }
         },
         async update(changes: UpdateAccount): Promise<boolean> {
@@ -78,6 +87,7 @@ export const AccountStore = signalStore(
           }
         },
         clear(): void {
+          request++;
           patchState(store, initialState);
           roles.set(null);
         },
