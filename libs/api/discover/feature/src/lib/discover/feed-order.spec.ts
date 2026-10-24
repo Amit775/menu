@@ -19,6 +19,7 @@ describe('orderFeed', () => {
       ratingCount: score === null ? 0 : 3,
       wouldOrderAgainPercent: null,
       latestPrice: null,
+      photoUrl: null,
       writtenByMe,
     };
   }

@@ -1,6 +1,6 @@
 import { type EntryFact } from '@menu/api/entries/data-access';
 import { type ItemEntryStats } from '@menu/api/shared/util-ports';
-import { type PricePoint, SCORE_FLOOR } from '@menu/shared/contracts';
+import { photoUrl, type PricePoint, SCORE_FLOOR } from '@menu/shared/contracts';
 
 /** Price-history months follow the diners' calendar, not UTC. */
 const monthFormat = new Intl.DateTimeFormat('en-CA', {
@@ -73,9 +73,12 @@ export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {
   const yes = answered.filter((fact) => fact.wouldOrderAgain === true).length;
   const publicFacts = facts.filter((fact) => fact.visibility === 'public');
   const others = facts.length - publicFacts.length;
-  const latestPriced = publicFacts
-    .filter((fact) => fact.pricePaid !== null)
-    .reduce<EntryFact | null>((best, fact) => (!best || newer(fact, best) ? fact : best), null);
+  const newest = (has: (fact: EntryFact) => boolean): EntryFact | null =>
+    publicFacts
+      .filter(has)
+      .reduce<EntryFact | null>((best, fact) => (!best || newer(fact, best) ? fact : best), null);
+  const latestPriced = newest((fact) => fact.pricePaid !== null);
+  const latestPhotoId = newest((fact) => fact.photoId !== null)?.photoId ?? null;
   return {
     ratingCount: rated.length,
     ratingSum: rated.reduce((sum, fact) => sum + (fact.rating ?? 0), 0),
@@ -84,6 +87,7 @@ export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {
     publicEntryCount: publicFacts.length,
     otherEntryCount: others >= SCORE_FLOOR ? others : null,
     latestPublicPrice: latestPriced?.pricePaid ?? null,
+    latestPublicPhotoUrl: latestPhotoId ? photoUrl(latestPhotoId) : null,
     priceHistory: priceHistory(facts),
   };
 }

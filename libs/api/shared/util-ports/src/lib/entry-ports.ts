@@ -17,6 +17,8 @@ export interface ItemEntryStats {
   otherEntryCount: number | null;
   /** The newest price in a public entry. */
   latestPublicPrice: number | null;
+  /** The photo of the newest public entry that has one (`/api/photos/<id>`). */
+  latestPublicPhotoUrl: string | null;
   priceHistory: PricePoint[];
 }
 

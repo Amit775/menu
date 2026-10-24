@@ -251,6 +251,7 @@ export class DiscoverService {
       ratingCount: stats.ratingCount,
       wouldOrderAgainPercent: stats.wouldOrderAgainPercent,
       latestPrice: item.listPrice ?? stats.latestPublicPrice,
+      photoUrl: stats.latestPublicPhotoUrl,
       writtenByMe: snapshot.writtenByMe.has(item.id),
     };
   }
