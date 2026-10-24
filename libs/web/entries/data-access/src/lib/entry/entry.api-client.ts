@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
   type CreateEntryInput,
   type DiaryQuery,
@@ -25,7 +25,7 @@ import { z } from 'zod';
  * HTTP access to the caller's entries, an item's entries sheet and share links.
  * Every response is validated against the shared contract.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class EntryApiClient {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `/api/${entryPath}`;

@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
 import { AUTH_BACKEND, type AuthUser } from './auth-backend';
 
 export type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
@@ -7,7 +7,7 @@ export type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
  * Who is signed in, as signals. Starts `loading` until the provider has restored
  * (or not) the previous session. Sign-in itself happens in the sign-in page.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class Auth {
   private readonly backend = inject(AUTH_BACKEND);
   private readonly current = signal<AuthUser | null | undefined>(undefined);

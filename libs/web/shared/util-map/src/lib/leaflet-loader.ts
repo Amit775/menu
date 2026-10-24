@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import type * as Leaflet from 'leaflet';
 
 /**
@@ -9,7 +9,7 @@ import type * as Leaflet from 'leaflet';
 export const LEAFLET_STYLESHEET = 'leaflet-1.9.4.css';
 
 /** Loads Leaflet and its stylesheet on first use, keeping both out of every other screen. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class LeafletLoader {
   private readonly document = inject(DOCUMENT);
   private leaflet: Promise<typeof Leaflet> | undefined;
