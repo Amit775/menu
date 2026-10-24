@@ -1,0 +1,10 @@
+{
+  "name": "web-users-feature-people",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/users/feature-people/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:users", "type:feature"],
+  "// targets": "to see all targets run: nx show project web-users-feature-people --web",
+  "targets": {}
+}
