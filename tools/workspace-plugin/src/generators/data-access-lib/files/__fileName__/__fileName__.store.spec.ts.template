@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { <%= className %>ApiClient } from './<%= fileName %>.api-client';
 import { <%= className %>Store } from './<%= fileName %>.store';
@@ -12,17 +13,21 @@ describe('<%= className %>Store', () => {
     return TestBed.inject(<%= className %>Store);
   }
 
+  const settle = (): Promise<void> => TestBed.inject(ApplicationRef).whenStable();
+
   it('loads items', async () => {
-    const store = setup({ list: () => Promise.resolve([item]) });
-    await store.load();
+    const store = setup({ list: vi.fn().mockResolvedValue([item]) });
+    store.load();
+    await settle();
     expect(store.items()).toEqual([item]);
     expect(store.count()).toBe(1);
-    expect(store.loading()).toBe(false);
+    expect(store.status()).toBe('loaded');
   });
 
-  it('records an error when loading fails', async () => {
-    const store = setup({ list: () => Promise.reject(new Error('offline')) });
-    await store.load();
-    expect(store.error()).toBe('Could not load <%= fileName %>.');
+  it('reports an error when loading fails', async () => {
+    const store = setup({ list: vi.fn().mockRejectedValue(new Error('offline')) });
+    store.load();
+    await settle();
+    expect(store.status()).toBe('error');
   });
 });
