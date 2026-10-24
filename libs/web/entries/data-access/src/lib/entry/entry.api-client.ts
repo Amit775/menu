@@ -69,6 +69,17 @@ export class EntryApiClient {
     await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
   }
 
+  /** Sets the entry's one photo (ADR 0011); the image is the whole body. */
+  async setPhoto(id: string, photo: Blob): Promise<Entry> {
+    const body = await firstValueFrom(this.http.put<unknown>(`${this.baseUrl}/${id}/photo`, photo));
+    return EntrySchema.parse(body);
+  }
+
+  async removePhoto(id: string): Promise<Entry> {
+    const body = await firstValueFrom(this.http.delete<unknown>(`${this.baseUrl}/${id}/photo`));
+    return EntrySchema.parse(body);
+  }
+
   /** Admin: take someone's entry off public view, or put it back. */
   async setHidden(id: string, hidden: boolean): Promise<void> {
     const input: SetEntryHidden = { hidden };

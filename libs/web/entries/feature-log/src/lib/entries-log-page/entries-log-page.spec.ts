@@ -37,6 +37,11 @@ const sheet: ItemEntries = {
 };
 
 describe('EntriesLogPage', () => {
+  beforeEach(() => {
+    // jsdom has no object URLs.
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:preview'), revokeObjectURL: vi.fn() });
+  });
+
   async function open(url: string, api: Partial<EntryApiClient>, lastVisibility = 'private') {
     TestBed.configureTestingModule({
       providers: [
@@ -275,5 +280,102 @@ describe('EntriesLogPage', () => {
     await harness.fixture.whenStable();
     expect(forItem).toHaveBeenCalledTimes(2);
     expect(harness.routeNativeElement?.querySelector('form')).not.toBeNull();
+  });
+
+  function pickPhoto(element: HTMLElement, photo: Blob): void {
+    const input = element.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!input) {
+      throw new Error('No photo input');
+    }
+    Object.defineProperty(input, 'files', { value: [photo], configurable: true });
+    input.dispatchEvent(new Event('change'));
+  }
+
+  const photoUrl = `/api/photos/${'p'.repeat(22)}`;
+
+  it('uploads a picked photo once the entry is logged', async () => {
+    const created = { ...entry, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10' };
+    const create = vi.fn().mockResolvedValue(created);
+    const setPhoto = vi.fn().mockResolvedValue({ ...created, photoUrl });
+    const { harness, element, field } = await open(`/log/${ITEM_ID}`, { create, setPhoto });
+    expect(field('button.pick').textContent).toContain('הוספת תמונה');
+    const photo = new Blob(['jpeg'], { type: 'image/jpeg' });
+    pickPhoto(element, photo);
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(field('.preview').getAttribute('style')).toContain('blob:preview');
+    });
+    expect(field('button.pick').textContent).toContain('החלפת תמונה');
+    field('form').dispatchEvent(new Event('submit'));
+    await vi.waitFor(() => {
+      expect(TestBed.inject(Router).url).toBe(`/items/${ITEM_ID}/entries`);
+    });
+    expect(setPhoto).toHaveBeenCalledWith(created.id, photo);
+    expect(create.mock.invocationCallOrder[0]).toBeLessThan(
+      setPhoto.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it('shows an edited entry’s photo and removes it on save', async () => {
+    const withPhoto = { ...entry, photoUrl };
+    const update = vi.fn().mockResolvedValue(withPhoto);
+    const removePhoto = vi.fn().mockResolvedValue(entry);
+    const { harness, element, field } = await open(`/log/${ITEM_ID}/${entry.id}`, {
+      forItem: vi.fn().mockResolvedValue({ ...sheet, mine: [withPhoto] }),
+      update,
+      removePhoto,
+    });
+    expect(field('.preview').getAttribute('style')).toContain(photoUrl);
+    (field('button.remove-photo') as HTMLButtonElement).click();
+    harness.detectChanges();
+    expect(element.querySelector('.preview')).toBeNull();
+    field('form').dispatchEvent(new Event('submit'));
+    await vi.waitFor(() => {
+      expect(removePhoto).toHaveBeenCalledWith(entry.id);
+    });
+    expect(update).toHaveBeenCalled();
+  });
+
+  it('leaves the photo alone when it did not change', async () => {
+    const update = vi.fn().mockResolvedValue(entry);
+    const setPhoto = vi.fn();
+    const removePhoto = vi.fn();
+    const { field } = await open(`/log/${ITEM_ID}/${entry.id}`, { update, setPhoto, removePhoto });
+    field('form').dispatchEvent(new Event('submit'));
+    await vi.waitFor(() => {
+      expect(TestBed.inject(Router).url).toBe(`/items/${ITEM_ID}/entries`);
+    });
+    expect(setPhoto).not.toHaveBeenCalled();
+    expect(removePhoto).not.toHaveBeenCalled();
+  });
+
+  it('keeps a logged entry when its photo is refused, and edits it on the next try', async () => {
+    const created = { ...entry, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10' };
+    const create = vi.fn().mockResolvedValue(created);
+    const setPhoto = vi.fn().mockRejectedValueOnce(new HttpErrorResponse({ status: 415 }));
+    const update = vi.fn().mockResolvedValue(created);
+    const { harness, element, field } = await open(`/log/${ITEM_ID}`, {
+      create,
+      setPhoto,
+      update,
+    });
+    pickPhoto(element, new Blob(['gif'], { type: 'image/gif' }));
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(element.querySelector('.preview')).not.toBeNull();
+    });
+    field('form').dispatchEvent(new Event('submit'));
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(element.querySelector('[role="alert"]')?.textContent).toContain('הרשומה נשמרה');
+    });
+    setPhoto.mockResolvedValue({ ...created, photoUrl });
+    field('form').dispatchEvent(new Event('submit'));
+    await vi.waitFor(() => {
+      expect(TestBed.inject(Router).url).toBe(`/items/${ITEM_ID}/entries`);
+    });
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith(created.id, expect.anything());
+    expect(setPhoto).toHaveBeenCalledTimes(2);
   });
 });

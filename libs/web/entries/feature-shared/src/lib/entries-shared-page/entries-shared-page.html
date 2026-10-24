@@ -24,6 +24,11 @@
         <a class="venue" [routerLink]="['/venues', item.venue.id]">{{
           item.venue.name | localize
         }}</a>
+        @if (entry.photoUrl) {
+          <div class="photo">
+            <img [ngSrc]="entry.photoUrl" fill priority [alt]="t().photo" />
+          </div>
+        }
         <ul class="chips">
           @if (entry.rating !== null) {
             <li class="rating" [attr.aria-label]="t().ratingLabel(entry.rating)">

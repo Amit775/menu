@@ -156,4 +156,17 @@ describe('DiscoverItemPage', () => {
     await fixture.whenStable();
     expect(navigate).toHaveBeenCalledWith('/');
   });
+
+  it('puts the item’s photo in the header', async () => {
+    const { element } = await render(
+      vi.fn().mockResolvedValue({
+        ...page,
+        item: { ...item, photoUrl: '/api/photos/pppppppppppppppppppppp' },
+      }),
+    );
+    expect(element.querySelector('.hero')?.classList).toContain('photo');
+    expect(element.querySelector('.hero img')?.getAttribute('src')).toBe(
+      '/api/photos/pppppppppppppppppppppp',
+    );
+  });
 });

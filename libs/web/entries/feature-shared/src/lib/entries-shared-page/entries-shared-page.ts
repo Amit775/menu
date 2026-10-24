@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -22,7 +23,14 @@ import { sharedMessages } from '../shared.messages';
  */
 @Component({
   selector: 'menu-entries-shared-page',
-  imports: [RouterLink, MatButtonModule, MatProgressSpinnerModule, LocalizePipe, ShekelsPipe],
+  imports: [
+    NgOptimizedImage,
+    RouterLink,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    LocalizePipe,
+    ShekelsPipe,
+  ],
   templateUrl: './entries-shared-page.html',
   styleUrl: './entries-shared-page.scss',
   providers: [SharedEntryStore],

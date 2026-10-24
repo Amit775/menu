@@ -5,7 +5,7 @@ import { boundaries, sampleItem, VENUE_ID } from '../testing/feed-fixtures';
 import { ReelCard } from './reel-card';
 
 describe('ReelCard', () => {
-  async function render(share = vi.fn()) {
+  async function render(share = vi.fn(), item = sampleItem(1, { writtenByMe: true })) {
     const siblings = [sampleItem(1), sampleItem(2), sampleItem(3, { score: null })];
     const venue = vi.fn().mockResolvedValue({ sections: [{ items: siblings }] });
     TestBed.configureTestingModule({
@@ -13,7 +13,7 @@ describe('ReelCard', () => {
     });
     TestBed.inject(I18n).setLanguage('he');
     const fixture = TestBed.createComponent(ReelCard);
-    fixture.componentRef.setInput('item', sampleItem(1, { writtenByMe: true }));
+    fixture.componentRef.setInput('item', item);
     await fixture.whenStable();
     return { fixture, element: fixture.nativeElement as HTMLElement, venue };
   }
@@ -96,5 +96,21 @@ describe('ReelCard', () => {
     await fixture.whenStable();
     expect(share).toHaveBeenCalledWith(`/items/${sampleItem(1).id}`, 'פריט 1');
     expect(element.querySelector('[role=status]')?.textContent).toBe('הקישור הועתק');
+  });
+
+  it('fills the card with the item’s photo when it has one', async () => {
+    const { element } = await render(
+      vi.fn(),
+      sampleItem(1, { photoUrl: '/api/photos/pppppppppppppppppppppp' }),
+    );
+    expect(element.querySelector('.backdrop img')?.getAttribute('loading')).toBe('lazy');
+    expect(element.querySelector('.backdrop img')?.getAttribute('src')).toBe(
+      '/api/photos/pppppppppppppppppppppp',
+    );
+  });
+
+  it('stays typographic without a photo', async () => {
+    const { element } = await render();
+    expect(element.querySelector('.backdrop')).toBeNull();
   });
 });

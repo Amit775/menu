@@ -49,4 +49,15 @@ describe('ItemRow', () => {
     expect(element.querySelector('.meta')?.textContent).not.toContain('מוזס');
     expect(element.querySelector('.flag')).toBeNull();
   });
+
+  it('shows a thumbnail of the newest public photo', async () => {
+    const element = await render({ ...item, photoUrl: '/api/photos/pppppppppppppppppppppp' });
+    expect(element.querySelector('.thumb img')?.getAttribute('src')).toBe(
+      '/api/photos/pppppppppppppppppppppp',
+    );
+  });
+
+  it('leaves the thumbnail out without a photo', async () => {
+    expect((await render(item)).querySelector('.thumb')).toBeNull();
+  });
 });
