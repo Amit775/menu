@@ -3,6 +3,7 @@ import { provideRouter, Router, withComponentInputBinding } from '@angular/route
 import { RouterTestingHarness } from '@angular/router/testing';
 import { type Entry, type ItemEntries } from '@menu/shared/contracts';
 import { EntryApiClient } from '@menu/web/entries/data-access';
+import { Roles } from '@menu/web/shared/util-auth';
 import { DeviceShare } from '@menu/web/shared/util-device';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { EntriesSheetPage } from './entries-sheet-page';
@@ -50,7 +51,7 @@ const sheet: ItemEntries = {
 };
 
 describe('EntriesSheetPage', () => {
-  async function open(api: Partial<EntryApiClient>, share = vi.fn()) {
+  async function open(api: Partial<EntryApiClient>, share = vi.fn(), isAdmin = false) {
     TestBed.configureTestingModule({
       providers: [
         provideRouter(
@@ -68,6 +69,7 @@ describe('EntriesSheetPage', () => {
       ],
     });
     TestBed.inject(I18n).setLanguage('he');
+    TestBed.inject(Roles).set({ isAdmin, ownedVenueIds: [] });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(`/items/${ITEM_ID}/entries`, EntriesSheetPage);
     await harness.fixture.whenStable();
@@ -172,5 +174,28 @@ describe('EntriesSheetPage', () => {
     element.querySelector<HTMLButtonElement>('[role="alert"] button')?.click();
     await harness.fixture.whenStable();
     expect(forItem).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets an Admin hide someone’s entry, on the second tap', async () => {
+    const setHidden = vi.fn().mockResolvedValue(undefined);
+    const { harness, element } = await open({ setHidden }, vi.fn(), true);
+    const hide = (): HTMLButtonElement | null =>
+      element.querySelector<HTMLButtonElement>('.others button.hide');
+    hide()?.click();
+    harness.detectChanges();
+    expect(setHidden).not.toHaveBeenCalled();
+    expect(hide()?.textContent.trim()).toBe('להסתיר?');
+    expect(element.querySelector('.others .confirm')?.textContent).toContain('לחצו שוב לאישור');
+    hide()?.click();
+    await vi.waitFor(() => {
+      harness.detectChanges();
+      expect(element.querySelector('.others')).toBeNull();
+    });
+    expect(setHidden).toHaveBeenCalledWith(sheet.others[0]?.id, true);
+  });
+
+  it('does not offer hiding to anyone but an Admin', async () => {
+    const { element } = await open({});
+    expect(element.querySelector('button.hide')).toBeNull();
   });
 });
