@@ -28,6 +28,7 @@ export const entry: Entry = {
   visibility: 'private',
   shareToken: null,
   hidden: false,
+  photoUrl: null,
   createdAt: '2026-10-20T20:00:00.000Z',
   updatedAt: '2026-10-20T20:00:00.000Z',
 };
@@ -42,6 +43,7 @@ export const publicEntry: PublicEntry = {
   pricePaid: null,
   text: 'טוב מאוד',
   authorName: 'דנה',
+  photoUrl: null,
   createdAt: '2026-10-19T20:00:00.000Z',
 };
 

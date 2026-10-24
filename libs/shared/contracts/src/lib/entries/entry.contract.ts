@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AgorotSchema } from '../common/values.contract';
 import { ItemRefSchema } from '../menus/item.contract';
 import { DisplayNameSchema } from '../users/account.contract';
+import { PhotoUrlSchema } from './photo.contract';
 
 /** REST base path: `/api/entries` (the caller's diary, one entry, Admin hide). */
 export const entryPath = 'entries';
@@ -61,6 +62,8 @@ export const EntrySchema = EntryFieldsSchema.extend({
   eatenAt: z.iso.datetime({ offset: true }),
   shareToken: ShareTokenSchema.nullable(),
   hidden: z.boolean(),
+  /** The entry's photo (ADR 0011), or null. */
+  photoUrl: PhotoUrlSchema.nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -93,6 +96,7 @@ export const PublicEntrySchema = EntryFieldsSchema.omit({ visibility: true }).ex
   venueId: z.uuid(),
   eatenAt: z.iso.datetime({ offset: true }),
   authorName: z.union([DisplayNameSchema, z.literal('')]),
+  photoUrl: PhotoUrlSchema.nullable(),
   createdAt: z.iso.datetime(),
 });
 
