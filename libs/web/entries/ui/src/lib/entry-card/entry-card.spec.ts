@@ -91,4 +91,13 @@ describe('EntryCard', () => {
     const element = await render({ ...others, authorName: '' });
     expect(element.querySelector('.who')?.textContent).toBe('משתמש');
   });
+
+  it('shows the entry’s photo, and nothing in its place without one', async () => {
+    expect((await render(others)).querySelector('.photo')).toBeNull();
+    TestBed.resetTestingModule();
+    const element = await render({ ...others, photoUrl: '/api/photos/pppppppppppppppppppppp' });
+    const img = element.querySelector('.photo img');
+    expect(img?.getAttribute('src')).toBe('/api/photos/pppppppppppppppppppppp');
+    expect(img?.getAttribute('alt')).toBe('תמונה מהרשומה');
+  });
 });

@@ -79,6 +79,19 @@ export const ItemEntriesStore = signalStore(
           changes.notify('entries');
           return updated;
         },
+        /** Rejects when the upload fails or the API refuses the image; the entry stays as it was. */
+        async setPhoto(id: string, photo: Blob): Promise<Entry> {
+          const updated = await api.setPhoto(id, photo);
+          replaceMine(store.mine().map((entry) => (entry.id === id ? updated : entry)));
+          changes.notify('entries');
+          return updated;
+        },
+        async removePhoto(id: string): Promise<Entry> {
+          const updated = await api.removePhoto(id);
+          replaceMine(store.mine().map((entry) => (entry.id === id ? updated : entry)));
+          changes.notify('entries');
+          return updated;
+        },
         async remove(id: string): Promise<void> {
           await api.remove(id);
           replaceMine(store.mine().filter((entry) => entry.id !== id));

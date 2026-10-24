@@ -1,4 +1,4 @@
-import { Location } from '@angular/common';
+import { Location, NgOptimizedImage } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -24,6 +24,7 @@ import { itemMessages } from '../item.messages';
 @Component({
   selector: 'menu-discover-item-page',
   imports: [
+    NgOptimizedImage,
     RouterLink,
     MatButtonModule,
     MatChipsModule,
