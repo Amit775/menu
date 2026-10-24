@@ -1,0 +1,89 @@
+@if (failed()) {
+  <p class="error" role="alert">{{ t().saveFailed }}</p>
+}
+@for (view of sections(); track view.section.id) {
+  <section class="section" [attr.aria-label]="view.label">
+    <header>
+      @if (renaming() === view.section.id) {
+        <form class="rename" [formGroup]="renameForm" (ngSubmit)="rename(view.section)">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ t().renameLabel }}</mat-label>
+            <input matInput formControlName="name" maxlength="80" />
+          </mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="busy()">{{ t().save }}</button>
+          <button mat-button type="button" (click)="renaming.set(null)">{{ t().cancel }}</button>
+        </form>
+      } @else {
+        <h3>{{ view.label }}</h3>
+        <button
+          mat-icon-button
+          type="button"
+          class="up"
+          [disabled]="view.first || busy()"
+          [attr.aria-label]="t().sectionUp(view.label)"
+          (click)="move(view.section, -1)"
+        >
+          <mat-icon aria-hidden="true">arrow_upward</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          class="down"
+          [disabled]="view.last || busy()"
+          [attr.aria-label]="t().sectionDown(view.label)"
+          (click)="move(view.section, 1)"
+        >
+          <mat-icon aria-hidden="true">arrow_downward</mat-icon>
+        </button>
+        <button mat-button type="button" class="rename-start" (click)="startRename(view.section)">
+          {{ t().rename }}
+        </button>
+      }
+    </header>
+    @if (view.rows.length === 0) {
+      <p class="empty">{{ t().emptySection }}</p>
+    } @else {
+      <ul>
+        @for (row of view.rows; track row.item.id) {
+          <li>
+            <span class="names">
+              <span class="name">{{ row.item.name | localize }}</span>
+              <span class="facts">{{ row.facts }}</span>
+            </span>
+            <a mat-button [routerLink]="['items', row.item.id]">{{ t().edit }}</a>
+            <button
+              mat-button
+              type="button"
+              class="archive"
+              [disabled]="busy()"
+              (click)="archive(row.item)"
+            >
+              {{ confirmingArchive() === row.item.id ? t().confirmArchive : t().archive }}
+            </button>
+            <p class="hint" role="status">
+              @if (confirmingArchive() === row.item.id) {
+                {{ t().archiveHint }}
+              }
+            </p>
+          </li>
+        }
+      </ul>
+    }
+    <a
+      mat-stroked-button
+      class="add-item"
+      [routerLink]="['items', 'new']"
+      [queryParams]="{ sectionId: view.section.id }"
+    >
+      <mat-icon aria-hidden="true">add</mat-icon>{{ t().addItem }}
+    </a>
+  </section>
+}
+
+<form class="new-section" [formGroup]="newSectionForm" (ngSubmit)="addSection()">
+  <mat-form-field appearance="outline">
+    <mat-label>{{ t().newSection }}</mat-label>
+    <input matInput formControlName="name" maxlength="80" />
+  </mat-form-field>
+  <button mat-stroked-button type="submit" [disabled]="busy()">{{ t().addSection }}</button>
+</form>
