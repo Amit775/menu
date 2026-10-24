@@ -9,8 +9,8 @@ import { ItemEntriesStore } from '@menu/web/entries/data-access';
 import { EntryCard } from '@menu/web/entries/ui';
 import { Roles } from '@menu/web/shared/util-auth';
 import { DeviceShare } from '@menu/web/shared/util-device';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { sheetMessages } from '../sheet.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { sheetI18n } from '../sheet.i18n';
 
 type Notice = 'copied' | 'share-failed' | 'update-failed';
 
@@ -39,7 +39,7 @@ export class EntriesSheetPage {
   private readonly location = inject(Location);
   private readonly deviceShare = inject(DeviceShare);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(sheetMessages);
+  protected readonly t = injectTranslate(sheetI18n);
   protected readonly roles = inject(Roles);
 
   /** The item's `:id` route parameter. */

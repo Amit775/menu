@@ -5,8 +5,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { DiaryStore } from '@menu/web/entries/data-access';
 import { EntryCard } from '@menu/web/entries/ui';
-import { I18n, injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { diaryMessages } from '../diary.messages';
+import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { diaryI18n } from '../diary.i18n';
 
 /**
  * The user's diary (`/diary`, from the profile): every entry, newest first,
@@ -30,7 +30,7 @@ import { diaryMessages } from '../diary.messages';
 export class EntriesDiaryPage {
   protected readonly store = inject(DiaryStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(diaryMessages);
+  protected readonly t = injectTranslate(diaryI18n);
 
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',

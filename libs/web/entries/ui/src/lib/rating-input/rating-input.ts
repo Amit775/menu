@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
-import { MessagesPipe } from '@menu/web/shared/util-i18n';
-import { entriesUiMessages } from '../ui.messages';
+import { injectTranslate } from '@menu/web/shared/util-i18n';
+import { uiI18n } from '../ui.i18n';
 
 let nextId = 0;
 
@@ -10,7 +10,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'menu-rating-input',
-  imports: [MessagesPipe],
+
   templateUrl: './rating-input.html',
   styleUrl: './rating-input.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +21,7 @@ export class RatingInput {
 
   protected readonly name = `menu-rating-${String(nextId++)}`;
   protected readonly stars = [1, 2, 3, 4, 5];
-  protected readonly messages = entriesUiMessages;
+  protected readonly t = injectTranslate(uiI18n);
 
   protected choose(star: number, event: MouseEvent): void {
     // A keyboard selection also fires click, with no pointer position.

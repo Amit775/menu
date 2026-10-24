@@ -1,6 +1,6 @@
-<p class="intro">{{ t().pendingIntro }}</p>
+<p class="intro">{{ t('pendingIntro') }}</p>
 @if (rows().length === 0) {
-  <p class="empty">{{ t().noPending }}</p>
+  <p class="empty">{{ t('noPending') }}</p>
 } @else {
   <ul>
     @for (row of rows(); track row.item.id) {
@@ -14,7 +14,7 @@
         @if (merging() === item.id) {
           <div class="merge">
             <mat-form-field appearance="outline">
-              <mat-label>{{ t().mergeInto }}</mat-label>
+              <mat-label>{{ t('mergeInto') }}</mat-label>
               <mat-select [formControl]="mergeTarget">
                 @for (target of store.approved(); track target.id) {
                   <mat-option [value]="target.id">{{ target.name | localize }}</mat-option>
@@ -29,9 +29,9 @@
                 [disabled]="!mergeTarget.value || busy().has(item.id)"
                 (click)="merge(item)"
               >
-                {{ t().confirmMerge }}
+                {{ t('confirmMerge') }}
               </button>
-              <button mat-button type="button" (click)="cancelMerge()">{{ t().cancel }}</button>
+              <button mat-button type="button" (click)="cancelMerge()">{{ t('cancel') }}</button>
             </div>
           </div>
         } @else {
@@ -43,7 +43,7 @@
               [disabled]="busy().has(item.id)"
               (click)="decide(item, 'approve')"
             >
-              {{ t().approve }}
+              {{ t('approve') }}
             </button>
             <button
               mat-stroked-button
@@ -52,7 +52,7 @@
               [disabled]="busy().has(item.id) || store.approved().length === 0"
               (click)="startMerge(item)"
             >
-              {{ t().merge }}
+              {{ t('merge') }}
             </button>
             <button
               mat-stroked-button
@@ -61,17 +61,17 @@
               [disabled]="busy().has(item.id)"
               (click)="decide(item, 'reject')"
             >
-              {{ confirmingReject() === item.id ? t().confirmReject : t().reject }}
+              {{ confirmingReject() === item.id ? t('confirmReject') : t('reject') }}
             </button>
           </div>
         }
         <p class="hint" role="status">
           @if (confirmingReject() === item.id) {
-            {{ t().rejectHint }}
+            {{ t('rejectHint') }}
           }
         </p>
         @if (failed().has(item.id)) {
-          <p class="error" role="alert">{{ t().decisionFailed }}</p>
+          <p class="error" role="alert">{{ t('decisionFailed') }}</p>
         }
       </li>
     }

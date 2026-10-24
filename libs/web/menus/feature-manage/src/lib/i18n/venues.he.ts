@@ -1,0 +1,15 @@
+export const he = {
+  title: 'המקומות שלי',
+  admin: 'מנהל · כל המקומות',
+  owner: 'בעלים',
+  newVenue: 'מקום חדש',
+  tags: 'תגיות',
+  people: 'אנשים',
+  waiting: '{count, plural, =1 {פריט אחד ממתין לאישור} other {# פריטים ממתינים לאישור}}',
+  pending: 'לאישור · {count}',
+  hidden: 'מוסתר',
+  empty: 'עוד אין מקומות.',
+  loading: 'טוען…',
+  loadFailed: 'לא הצלחנו לטעון את המקומות.',
+  retry: 'לנסות שוב',
+};

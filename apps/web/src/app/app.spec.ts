@@ -1,4 +1,5 @@
 import { DOCUMENT } from '@angular/common';
+import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Roles } from '@menu/web/shared/util-auth';
@@ -38,7 +39,7 @@ describe('App', () => {
   it('switches the navigation to English', async () => {
     const element = await render();
     TestBed.inject(I18n).setLanguage('en');
-    TestBed.tick();
+    await TestBed.inject(ApplicationRef).whenStable();
     expect(element.querySelector('nav')?.getAttribute('aria-label')).toBe('Navigation');
     expect(TestBed.inject(DOCUMENT).documentElement.dir).toBe('ltr');
   });

@@ -9,7 +9,7 @@ Logging, editing or deleting an entry (the `entries` domain) changes what the di
 
 ## Decision
 
-Add `web-shared-util-events` (`platform:web`, `scope:shared`, `type:util`) with one service, `DataChanges`. A domain that writes data calls `notify(topic)`; a domain that shows it watches `version(topic)`, a signal, and reloads when it moves. Topics are a closed union (`'entries'` for now), so each new one is a reviewed change.
+Add `web-shared-util-events` (`platform:web`, `scope:shared`, `type:util`) with one service, `DataChanges`. A domain that writes data calls `notify(topic)`; a domain that shows it subscribes to `on(topic)`, an observable, and reloads on each change. (It was a version signal read by an `effect()` until 2026-10-24; effects are not used in this codebase.) Topics are a closed union (`'entries'` for now), so each new one is a reviewed change.
 
 The events carry no payload. A reader always refetches from the API, which stays the only source of truth, so no domain learns another's types.
 

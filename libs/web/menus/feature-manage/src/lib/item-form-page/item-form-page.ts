@@ -16,8 +16,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { type Item, type LocalizedText } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
-import { injectMessages, LocalizePipe } from '@menu/web/shared/util-i18n';
-import { itemFormMessages } from '../item-form.messages';
+import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { itemFormI18n } from '../item-form.i18n';
 
 interface ItemModel {
   nameHe: string;
@@ -59,7 +59,7 @@ export class ItemFormPage {
 
   protected readonly store = inject(VenueManagerStore);
   private readonly router = inject(Router);
-  protected readonly t = injectMessages(itemFormMessages);
+  protected readonly t = injectTranslate(itemFormI18n);
 
   protected readonly saving = signal(false);
   protected readonly failed = signal(false);
