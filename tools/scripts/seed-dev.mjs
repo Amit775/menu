@@ -6,7 +6,6 @@
 
 const api = process.env.SEED_API_URL ?? 'http://localhost:3000/api';
 
-/** `dev:<uid>:<name>` tokens; `admin` is listed in ADMIN_FIREBASE_UIDS. */
 const people = {
   admin: 'admin:Admin',
   owner: 'dana:Dana',

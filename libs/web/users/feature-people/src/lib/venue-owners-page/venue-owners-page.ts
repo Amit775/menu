@@ -11,11 +11,6 @@ import { PeopleStore } from '@menu/web/users/data-access';
 import { I18n, injectTranslate, RelativeDatePipe } from '@menu/web/shared/util-i18n';
 import { peopleI18n } from '../people.i18n';
 
-/**
- * J7 (Admin, `/manage/people/owners/:venueId`): who owns one venue. Grant an
- * account ownership, or take it away with a second tap. The venue's name lives
- * in the menus domain, so the page links back to the venue instead.
- */
 @Component({
   selector: 'menu-venue-owners-page',
   imports: [
@@ -34,7 +29,6 @@ import { peopleI18n } from '../people.i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VenueOwnersPage {
-  /** The `:venueId` route parameter. */
   readonly venueId = input.required<string>();
 
   protected readonly store = inject(PeopleStore);

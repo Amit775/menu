@@ -23,10 +23,6 @@ interface AccountState {
 
 const initialState: AccountState = { account: null, loading: false, error: null };
 
-/**
- * The signed-in account, app-wide. Loads after sign-in, clears on sign-out, and
- * applies the account's language and roles (`Roles`, ADR 0010) to the app.
- */
 export const AccountStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
@@ -80,7 +76,6 @@ export const AccountStore = signalStore(
             return false;
           }
         },
-        /** Switches the app at once; saved to the account when signed in. */
         async setLanguage(language: Language): Promise<void> {
           i18n.setLanguage(language);
           if (store.account()) {

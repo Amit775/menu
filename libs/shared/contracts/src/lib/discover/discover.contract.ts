@@ -5,7 +5,6 @@ import { MenuSectionSchema } from '../menus/menu-section.contract';
 import { TagSchema } from '../menus/tag.contract';
 import { VenueSchema } from '../menus/venue.contract';
 
-/** REST base path: `/api/discover`. Read-only views built from menus and entries. */
 export const discoverPath = 'discover';
 
 /** Fewer rated entries than this and an item shows no score (and no ratio): noise, and a diner could be identified. */
@@ -13,14 +12,12 @@ export const SCORE_FLOOR = 3;
 
 const QueryNumber = z.coerce.number();
 
-/** `?tagIds=a,b`: every listed tag must apply. */
 const TagIdsQuery = z
   .string()
   .optional()
   .transform((value) => (value ? value.split(',').filter(Boolean) : []))
   .pipe(z.array(z.uuid()).max(10));
 
-/** Where the caller is, when they shared it. Both or neither. */
 const NearQuerySchema = z.object({
   lat: QueryNumber.min(-90).max(90).optional(),
   lng: QueryNumber.min(-180).max(180).optional(),
@@ -49,7 +46,6 @@ export const FeedQuerySchema = NearQuerySchema.extend({
 
 export type FeedQuery = z.infer<typeof FeedQuerySchema>;
 
-/** `GET /api/discover/map`: the same filters as the feed, one pin per venue. */
 export const MapQuerySchema = NearQuerySchema.extend({
   radiusKm: QueryNumber.positive().max(100).default(5),
   tagIds: TagIdsQuery,
@@ -57,12 +53,10 @@ export const MapQuerySchema = NearQuerySchema.extend({
 
 export type MapQuery = z.infer<typeof MapQuerySchema>;
 
-/** `?lat=&lng=` on venue and item pages, for the distance. */
 export const NearQuery = NearQuerySchema.refine(bothOrNeither, 'Send lat and lng together.');
 
 export type Near = z.infer<typeof NearQuery>;
 
-/** `GET /api/discover/search?q=`. */
 export const SearchQuerySchema = z.object({ q: z.string().trim().min(1).max(60) });
 
 export type SearchQuery = z.infer<typeof SearchQuerySchema>;
@@ -89,7 +83,6 @@ export const DiscoverItemSchema = z.object({
   ratingCount: z.number().int().min(0),
   wouldOrderAgainPercent: z.number().int().min(0).max(100).nullable(),
   latestPrice: AgorotSchema.nullable(),
-  /** The photo of the item's newest public entry that has one (ADR 0011), or null. */
   photoUrl: PhotoUrlSchema.nullable(),
   writtenByMe: z.boolean(),
 });
@@ -98,7 +91,6 @@ export type DiscoverItem = z.infer<typeof DiscoverItemSchema>;
 
 export const FeedSchema = z.object({
   items: z.array(DiscoverItemSchema),
-  /** Pass as `offset` for the next page; null at the end. */
   nextOffset: z.number().int().min(0).nullable(),
 });
 
@@ -114,19 +106,16 @@ export const MapPinSchema = z.object({
 
 export type MapPin = z.infer<typeof MapPinSchema>;
 
-/** `GET /api/discover/venues/:id`: the venue page, menu first. */
 export const VenuePageSchema = z.object({
   venue: VenueSchema,
   distanceMeters: z.number().min(0).nullable(),
   topItems: z.array(DiscoverItemSchema).max(3),
   sections: z.array(z.object({ section: MenuSectionSchema, items: z.array(DiscoverItemSchema) })),
-  /** "Your N entries here"; 0 for visitors. */
   myEntryCount: z.number().int().min(0),
 });
 
 export type VenuePage = z.infer<typeof VenuePageSchema>;
 
-/** Average price per month, only for months with at least `SCORE_FLOOR` prices. */
 export const PricePointSchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
   averagePrice: AgorotSchema,
@@ -135,7 +124,6 @@ export const PricePointSchema = z.object({
 
 export type PricePoint = z.infer<typeof PricePointSchema>;
 
-/** `GET /api/discover/items/:id`: the item page (public entries come from the entries sheet). */
 export const ItemPageSchema = z.object({
   item: DiscoverItemSchema,
   archived: z.boolean(),
@@ -154,10 +142,6 @@ export const SearchResultsSchema = z.object({
 
 export type SearchResults = z.infer<typeof SearchResultsSchema>;
 
-/**
- * `GET /api/discover/venues/:id/insights` (the venue's Owner or an Admin).
- * Entries that are not public are only counted, and only from the floor up.
- */
 export const VenueInsightsSchema = z.object({
   items: z.array(
     z.object({

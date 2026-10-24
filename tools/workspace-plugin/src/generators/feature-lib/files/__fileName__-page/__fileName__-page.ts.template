@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
-/** Routed page for <%= domain %>/<%= name %>. Inject stores from data-access; render with ui components. */
 @Component({
   selector: 'menu-<%= fileName %>-page',
   imports: [],

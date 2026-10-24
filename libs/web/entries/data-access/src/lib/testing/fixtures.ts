@@ -7,7 +7,6 @@ import {
   type PublicEntry,
 } from '@menu/shared/contracts';
 
-/** Contract-valid data for the entries specs. */
 export const ITEM_ID = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
 export const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
 

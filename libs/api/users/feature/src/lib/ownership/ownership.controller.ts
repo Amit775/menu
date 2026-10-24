@@ -12,7 +12,6 @@ import {
 } from '@menu/shared/contracts';
 import { OwnershipService } from './ownership.service';
 
-/** `/api/ownerships` (Admin only): who owns which venue. */
 @Controller(ownershipPath)
 @AdminOnly()
 export class OwnershipController {

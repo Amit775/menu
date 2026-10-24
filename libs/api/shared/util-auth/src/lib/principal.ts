@@ -1,8 +1,6 @@
 import { type Language } from '@menu/shared/contracts';
 
-/** Who the sign-in provider says the caller is, before we look them up. */
 export interface VerifiedIdentity {
-  /** The provider's stable user id (Firebase uid). */
   uid: string;
   name?: string;
 }
@@ -18,7 +16,6 @@ export interface Principal {
   ownedVenueIds: readonly string[];
 }
 
-/** True for an Admin or an Owner of this venue: the spec's `Venue.canEditMenu(account)`. */
 export function canEditVenue(principal: Principal | null, venueId: string): boolean {
   return principal !== null && (principal.isAdmin || principal.ownedVenueIds.includes(venueId));
 }

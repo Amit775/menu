@@ -14,7 +14,6 @@ import {
 } from '@menu/shared/contracts';
 import { TagService } from './tag.service';
 
-/** `/api/tags`: anyone reads the vocabulary; Admins edit it. */
 @Controller(tagPath)
 export class TagController {
   constructor(private readonly service: TagService) {}

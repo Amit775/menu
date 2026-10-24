@@ -5,7 +5,6 @@ import { Roles } from '@menu/web/shared/util-auth';
 import { injectTranslate } from '@menu/web/shared/util-i18n';
 import { appI18n } from './app.i18n';
 
-/** Layout shell: the routed screen above a bottom navigation bar. */
 @Component({
   selector: 'menu-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, MatIconModule],
@@ -15,6 +14,5 @@ import { appI18n } from './app.i18n';
 })
 export class App {
   protected readonly t = injectTranslate(appI18n);
-  /** Owners and Admins get a third tab for their venues. */
   protected readonly roles = inject(Roles);
 }

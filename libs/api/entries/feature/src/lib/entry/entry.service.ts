@@ -22,10 +22,6 @@ import { deletePhoto } from '../photo/photo-bytes';
 import { newCapabilityId } from './capability-id';
 import { DiaryEntry } from './diary-entry';
 
-/**
- * Diary entries. Items are looked up through the menus catalog port and author
- * names through the users directory port (ADR 0004).
- */
 @Injectable()
 export class EntryService {
   private readonly logger = new Logger(EntryService.name);
@@ -37,7 +33,6 @@ export class EntryService {
     @Inject(PHOTO_STORAGE) private readonly photos: PhotoStorage,
   ) {}
 
-  /** The entries sheet: the caller's own entries, then other people's public ones. */
   async listForItem(principal: Principal | null, itemId: string): Promise<ItemEntries> {
     const item = await this.findItem(principal, itemId);
     const [refs, mine, others] = await Promise.all([
@@ -76,7 +71,6 @@ export class EntryService {
     return new DiaryEntry(record).toContract();
   }
 
-  /** The caller's own entries, each with its item and venue names. */
   async diary(principal: Principal, query: DiaryQuery): Promise<EntryWithItem[]> {
     const records = await this.repository.listByAuthor(principal.accountId, query);
     const refs = await this.catalog.refsFor(records.map((record) => record.itemId));
@@ -126,7 +120,6 @@ export class EntryService {
     return this.repository.setHidden(id, hidden, newCapabilityId());
   }
 
-  /** What a share link shows to anyone holding it. An unknown token reads as removed. */
   async shared(token: string): Promise<SharedEntryView> {
     const record = await this.repository.findByShareToken(token);
     if (!record) {

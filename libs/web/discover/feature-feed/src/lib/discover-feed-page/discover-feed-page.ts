@@ -23,13 +23,8 @@ import { VenueMap } from '../map/venue-map';
 import { ReelCard } from '../reels/reel-card';
 import { SearchPanel } from '../search/search-panel';
 
-/** Load the next page when this few cards are left. */
 const PREFETCH = 3;
 
-/**
- * The discover home: a full-screen reels feed (swipe sideways for the next item)
- * a ranked list, or a map of venues, with filters and search on top.
- */
 @Component({
   selector: 'menu-discover-feed-page',
   imports: [
@@ -55,9 +50,7 @@ export class DiscoverFeedPage {
   private readonly dialog = inject(MatDialog);
   private readonly track = viewChild<ElementRef<HTMLElement>>('track');
 
-  /** By score the list splits off items without enough ratings; other orders are one list. */
   protected readonly splitByRanking = computed(() => this.store.filters().sort === 'score');
-  /** Items (or the map) are on screen and a newer request is on its way. */
   protected readonly refreshing = computed(
     () =>
       this.store.status() === 'loading' &&
@@ -103,7 +96,6 @@ export class DiscoverFeedPage {
     void this.store.setView(view);
   }
 
-  /** Reels: work out which card is showing, prepare its venue strip, and fetch ahead. */
   protected scrolled(element: HTMLElement): void {
     const index = Math.round(Math.abs(element.scrollLeft) / Math.max(element.clientWidth, 1));
     if (index !== this.store.reelIndex()) {

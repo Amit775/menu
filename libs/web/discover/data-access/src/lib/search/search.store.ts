@@ -9,7 +9,6 @@ interface SearchState {
   status: 'idle' | 'loading' | 'loaded' | 'error';
 }
 
-/** Search across items, venues and tags. Provide it in the screen that searches. */
 export const SearchStore = signalStore(
   withState<SearchState>({ text: '', results: null, status: 'idle' }),
   withMethods((store, api = inject(DiscoverApiClient)) => {

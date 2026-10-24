@@ -20,10 +20,6 @@ import { InsightsTable } from '../venue-manager/insights-table';
 import { MenuEditor } from '../venue-manager/menu-editor';
 import { PendingQueue } from '../venue-manager/pending-queue';
 
-/**
- * J6 (`/manage/venues/:id`): one venue for its Owner or an Admin. Opens on the
- * pending queue when something waits, otherwise on the menu.
- */
 @Component({
   selector: 'menu-venue-manager-page',
   imports: [
@@ -53,7 +49,6 @@ export class VenueManagerPage {
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );
 
-  /** Picked when a venue loads (pending when something waits), then only by the user. */
   protected readonly tab = linkedSignal<string | null | undefined, number>({
     source: () => (this.store.status() === 'loaded' ? this.store.venue()?.id : null),
     computation: () => untracked(() => (this.store.pending().length > 0 ? 0 : 1)),

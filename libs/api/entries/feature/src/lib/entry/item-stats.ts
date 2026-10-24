@@ -18,7 +18,6 @@ function newer(a: EntryFact, b: EntryFact): boolean {
   return byEaten !== 0 ? byEaten > 0 : a.createdAt.getTime() > b.createdAt.getTime();
 }
 
-/** The latest fact per author among those `has` accepts. */
 function latestPerAuthor(
   facts: readonly EntryFact[],
   has: (fact: EntryFact) => boolean,
@@ -66,7 +65,6 @@ function priceHistory(facts: readonly EntryFact[]): PricePoint[] {
     }));
 }
 
-/** Sums one item's unhidden entries under the privacy rule (see `countable`). */
 export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {
   const rated = countable(latestPerAuthor(facts, (fact) => fact.rating !== null));
   const answered = countable(latestPerAuthor(facts, (fact) => fact.wouldOrderAgain !== null));
@@ -92,7 +90,6 @@ export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {
   };
 }
 
-/** Groups facts by item and summarizes each. */
 export function summarizeByItem(facts: readonly EntryFact[]): Map<string, ItemEntryStats> {
   const byItem = new Map<string, EntryFact[]>();
   for (const fact of facts) {

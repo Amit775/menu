@@ -5,7 +5,6 @@ import { AccountRepository } from '@menu/api/users/data-access';
 import { AccountModule } from './account.module';
 import { AccountService } from './account.service';
 
-/** Token "<uid>" signs in as that uid; anything else is invalid. */
 class FakeVerifier implements TokenVerifier {
   verify(token: string): Promise<VerifiedIdentity> {
     return token.startsWith('uid-')

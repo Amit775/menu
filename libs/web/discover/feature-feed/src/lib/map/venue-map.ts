@@ -27,7 +27,6 @@ import { MapPins } from './map-pins';
   imports: [RouterLink, MatButtonModule, MatIconModule, LocalizePipe, MapPins],
   templateUrl: './venue-map.html',
   styleUrl: './venue-map.scss',
-  // Pins are drawn by Leaflet outside this component's view, so its styles are global (scoped by selector).
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(keydown.escape)': 'close()' },
@@ -94,7 +93,6 @@ export class VenueMap {
     const map = L.map(element).setView(TEL_AVIV, 12);
     L.tileLayer(OSM_TILES, { maxZoom: 19, attribution: OSM_ATTRIBUTION }).addTo(map);
     if (typeof ResizeObserver === 'function') {
-      // Leaflet only follows window resizes; the bars above the map come and go.
       this.resize = new ResizeObserver(() => map.invalidateSize());
       this.resize.observe(element);
     }

@@ -32,13 +32,11 @@ const entry = {
 };
 const itemRef = { id: item.id, name: item.name, listPrice: 6800, venue };
 const token = 'shareTokenShareToken00';
-/** A 1x1 PNG, enough for the browser to load and lay out. */
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
   'base64',
 );
 
-/** The API and the outside world, stubbed: this checks the built web app on its own. */
 async function stubBackends(page: Page): Promise<void> {
   await page.route('**/api/**', (route) => route.fulfill({ status: 404, json: {} }));
   await page.route('**/api/discover/feed**', (route) =>

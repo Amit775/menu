@@ -2,7 +2,6 @@ import { computed, inject, Service, signal } from '@angular/core';
 import { type ActivatedRouteSnapshot, type CanActivateFn, Router } from '@angular/router';
 import { Auth } from './auth';
 
-/** What the signed-in account may manage: every venue as an Admin, or the venues it owns. */
 export interface RoleGrants {
   isAdmin: boolean;
   ownedVenueIds: readonly string[];
@@ -21,11 +20,9 @@ export class Roles {
   private readonly grants = signal<RoleGrants | null>(null);
   private waiting: (() => void)[] = [];
 
-  /** False until the account has loaded (or failed to). */
   readonly known = computed(() => this.grants() !== null);
   readonly isAdmin = computed(() => this.grants()?.isAdmin ?? false);
   readonly ownedVenueIds = computed(() => this.grants()?.ownedVenueIds ?? []);
-  /** An Admin or the Owner of at least one venue. */
   readonly canManage = computed(() => this.isAdmin() || this.ownedVenueIds().length > 0);
 
   set(grants: RoleGrants | null): void {
@@ -43,7 +40,6 @@ export class Roles {
     return this.isAdmin() || this.ownedVenueIds().includes(venueId);
   }
 
-  /** Resolves once the account's roles are known. */
   whenKnown(): Promise<void> {
     return this.known()
       ? Promise.resolve()
@@ -70,16 +66,10 @@ function roleGuard(
   };
 }
 
-/** The manage pages: Owners and Admins. Others go back to their profile. */
 export const managerGuard: CanActivateFn = roleGuard((roles) => roles.canManage(), '/profile');
 
-/** Admin-only pages (venues, tags, people). Owners go back to their venues. */
 export const adminGuard: CanActivateFn = roleGuard((roles) => roles.isAdmin(), '/manage');
 
-/**
- * One venue's manage pages (`:id`): its Owners and Admins. Other Owners go back
- * to their venues; the API would refuse their changes anyway.
- */
 export const venueManagerGuard: CanActivateFn = roleGuard(
   (roles, route) => roles.canEditVenue(route.paramMap.get('id') ?? ''),
   '/manage',
