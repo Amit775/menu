@@ -4,11 +4,20 @@ name: Deploy web
 # pull request, the live channel on main. Skipped until the repository
 # variable FIREBASE_PROJECT_ID and the secret FIREBASE_SERVICE_ACCOUNT exist
 # (see docs/deployment.md).
+#
+# Firebase Auth only accepts sign-ins from its authorized domains, which take
+# no wildcards, so the auth-domains job keeps one entry per preview channel. It
+# runs after each preview deploy, when a PR closes (deleting that PR's channel
+# first) and daily, to drop the domains of channels that expired.
 
 on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, closed]
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
 
 permissions:
   checks: write
@@ -16,7 +25,8 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: deploy-web-${{ github.ref }}
+  # The event name keeps the scheduled cleanup from cancelling a live deploy.
+  group: deploy-web-${{ github.event_name == 'pull_request' && 'pr' || github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -24,7 +34,9 @@ jobs:
     # Fork PRs get no secrets, so they cannot deploy a preview.
     if: >-
       vars.FIREBASE_PROJECT_ID != '' &&
-      (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+      (github.event_name == 'push' ||
+       (github.event_name == 'pull_request' && github.event.action != 'closed' &&
+        github.event.pull_request.head.repo.full_name == github.repository))
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'push' && 'production' || 'preview' }}
     steps:
@@ -59,3 +71,90 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: ${{ vars.FIREBASE_PROJECT_ID }}
           channelId: live
+
+  auth-domains:
+    needs: deploy
+    # After a successful preview deploy, on PR close (deploy is skipped) and on
+    # the schedule. Never on main pushes: the live domain is permanent.
+    if: >-
+      always() && vars.FIREBASE_PROJECT_ID != '' &&
+      (needs.deploy.result == 'success' || needs.deploy.result == 'skipped') &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # The authorized domain list is replaced as a whole, so one writer at a
+    # time. A queued run that gets replaced loses nothing: every run rebuilds
+    # the list from the channels that exist.
+    concurrency:
+      group: firebase-auth-domains
+      cancel-in-progress: false
+    env:
+      PROJECT: ${{ vars.FIREBASE_PROJECT_ID }}
+      CLOSED_PR: ${{ github.event.action == 'closed' && github.event.pull_request.number || '' }}
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Sync preview domains
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s inherit_errexit
+          api=(-H "Authorization: Bearer $(gcloud auth print-access-token)" -H "x-goog-user-project: $PROJECT" -H "Content-Type: application/json")
+          hosting=https://firebasehosting.googleapis.com/v1beta1
+          config="https://identitytoolkit.googleapis.com/admin/v2/projects/$PROJECT/config"
+
+          # curl that prints the URL and the API's error body when a call fails.
+          call() {
+            local out
+            if ! out=$(curl -sS --fail-with-body "${api[@]}" "$@"); then
+              echo "Request failed: ${*: -1}" >&2
+              echo "$out" >&2
+              return 1
+            fi
+            printf '%s\n' "$out"
+          }
+
+          # Every channel of the default site, one JSON object per line.
+          channels() {
+            local token='' page
+            while :; do
+              page=$(call "$hosting/sites/$PROJECT/channels?pageSize=100&pageToken=$token")
+              jq -c '.channels // [] | .[]' <<<"$page"
+              token=$(jq -r '.nextPageToken // empty' <<<"$page")
+              [ -n "$token" ] || break
+            done
+          }
+
+          # The deploy action names a PR's channel pr<number>-<branch>.
+          if [ -n "$CLOSED_PR" ]; then
+            closing=$(channels | jq -r --arg prefix "pr$CLOSED_PR-" 'select(.name | split("/") | last | startswith($prefix)) | .name')
+            for name in $closing; do
+              call -X DELETE "$hosting/$name" >/dev/null
+              echo "Deleted channel $name"
+            done
+          fi
+
+          # Skips the closed PR's channels too, in case the listing still shows them.
+          previews=$(channels | jq -r --arg closed "${CLOSED_PR:+pr$CLOSED_PR-}" \
+            'select((.name | endswith("/channels/live")) or ($closed != "" and (.name | split("/") | last | startswith($closed))) | not) | .url | ltrimstr("https://")' |
+            jq -cRn '[inputs | select(. != "")]')
+          current=$(call "$config" | jq -c '.authorizedDomains // []')
+          # Keep every domain that is not a preview (<project>--*.web.app), then add the existing channels' ones.
+          desired=$(jq -cn --argjson current "$current" --argjson previews "$previews" --arg prefix "$PROJECT--" \
+            '[$current[] | select((startswith($prefix) and endswith(".web.app")) | not)] + ($previews | sort)')
+
+          if [ "$(jq -c 'sort' <<<"$current")" = "$(jq -c 'sort' <<<"$desired")" ]; then
+            echo "Authorized domains are up to date: $current"
+            exit 0
+          fi
+          echo "Adding: $(jq -cn --argjson a "$desired" --argjson b "$current" '$a - $b')"
+          echo "Removing: $(jq -cn --argjson a "$current" --argjson b "$desired" '$a - $b')"
+          jq -n --argjson domains "$desired" '{authorizedDomains: $domains}' |
+            call -X PATCH --data @- "$config?updateMask=authorizedDomains" >/dev/null
