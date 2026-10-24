@@ -112,6 +112,49 @@
           ></textarea>
         </mat-form-field>
 
+        <div class="photo">
+          <span id="photo-label">{{ t().photo }}</span>
+          <input
+            #photoInput
+            class="visually-hidden"
+            type="file"
+            accept="image/*"
+            tabindex="-1"
+            aria-labelledby="photo-label"
+            (change)="pickPhoto(photoInput)"
+          />
+          @if (photoBackground(); as background) {
+            <div
+              class="preview"
+              role="img"
+              [attr.aria-label]="t().photoAlt"
+              [style.background-image]="background"
+            ></div>
+          }
+          <div class="photo-actions">
+            <button
+              mat-stroked-button
+              type="button"
+              class="pick"
+              [disabled]="saving() || preparingPhoto()"
+              (click)="photoInput.click()"
+            >
+              {{ pickLabel() }}
+            </button>
+            @if (photoPreview()) {
+              <button
+                mat-button
+                type="button"
+                class="remove-photo"
+                [disabled]="saving()"
+                (click)="removePhoto()"
+              >
+                {{ t().removePhoto }}
+              </button>
+            }
+          </div>
+        </div>
+
         <div class="visibility">
           <span id="visibility-label">{{ t().visibility }}</span>
           <mat-button-toggle-group formControlName="visibility" aria-labelledby="visibility-label">
@@ -128,9 +171,20 @@
           @case ('failed') {
             <p class="error" role="alert">{{ t().saveFailed }}</p>
           }
+          @case ('photoRejected') {
+            <p class="error" role="alert">{{ t().photoRejected }}</p>
+          }
+          @case ('photoFailed') {
+            <p class="error" role="alert">{{ t().photoFailed }}</p>
+          }
         }
 
-        <button mat-flat-button class="save" type="submit" [disabled]="saving()">
+        <button
+          mat-flat-button
+          class="save"
+          type="submit"
+          [disabled]="saving() || preparingPhoto()"
+        >
           {{ saving() ? t().saving : t().save }}
         </button>
         @if (editing()) {

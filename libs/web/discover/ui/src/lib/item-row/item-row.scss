@@ -17,6 +17,20 @@ a:focus-visible {
   border-bottom-style: dashed;
 }
 
+.thumb {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container);
+
+  img {
+    object-fit: cover;
+  }
+}
+
 .text {
   display: flex;
   flex: 1;

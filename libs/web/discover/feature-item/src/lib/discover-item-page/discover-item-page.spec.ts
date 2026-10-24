@@ -22,6 +22,7 @@ describe('DiscoverItemPage', () => {
     ratingCount: 12,
     wouldOrderAgainPercent: 92,
     latestPrice: 6800,
+    photoUrl: null,
     writtenByMe: false,
   };
   const page: ItemPage = {
@@ -94,6 +95,7 @@ describe('DiscoverItemPage', () => {
       ratingCount: 0,
       wouldOrderAgainPercent: null,
       latestPrice: null,
+      photoUrl: null,
     };
     const { element } = await render(
       vi.fn().mockResolvedValue({ ...page, item: quiet, archived: true, priceHistory: [] }),
@@ -153,5 +155,18 @@ describe('DiscoverItemPage', () => {
     element.querySelector<HTMLButtonElement>('button[aria-label="חזרה"]')?.click();
     await fixture.whenStable();
     expect(navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('puts the item’s photo in the header', async () => {
+    const { element } = await render(
+      vi.fn().mockResolvedValue({
+        ...page,
+        item: { ...item, photoUrl: '/api/photos/pppppppppppppppppppppp' },
+      }),
+    );
+    expect(element.querySelector('.hero')?.classList).toContain('photo');
+    expect(element.querySelector('.hero img')?.getAttribute('src')).toBe(
+      '/api/photos/pppppppppppppppppppppp',
+    );
   });
 });

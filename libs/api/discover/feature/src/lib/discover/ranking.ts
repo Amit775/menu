@@ -9,6 +9,7 @@ export const EMPTY_STATS: ItemStats = {
   publicEntryCount: 0,
   otherEntryCount: null,
   latestPublicPrice: null,
+  latestPublicPhotoUrl: null,
   priceHistory: [],
 };
 

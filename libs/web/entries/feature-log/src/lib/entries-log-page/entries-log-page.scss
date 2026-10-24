@@ -121,6 +121,36 @@ legend,
   }
 }
 
+.photo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  > span {
+    font: var(--mat-sys-title-small);
+  }
+}
+
+.preview {
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container) center / cover no-repeat;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .visibility {
   display: flex;
   flex-direction: column;

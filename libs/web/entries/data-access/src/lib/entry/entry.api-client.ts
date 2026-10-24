@@ -5,6 +5,7 @@ import {
   type DiaryQuery,
   type Entry,
   entryPath,
+  entryPhotoPath,
   EntrySchema,
   type EntryWithItem,
   EntryWithItemSchema,
@@ -67,6 +68,17 @@ export class EntryApiClient {
 
   async remove(id: string): Promise<void> {
     await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
+  }
+
+  /** Sets the entry's one photo (ADR 0011); the image is the whole body. */
+  async setPhoto(id: string, photo: Blob): Promise<Entry> {
+    const body = await firstValueFrom(this.http.put<unknown>(`/api/${entryPhotoPath(id)}`, photo));
+    return EntrySchema.parse(body);
+  }
+
+  async removePhoto(id: string): Promise<Entry> {
+    const body = await firstValueFrom(this.http.delete<unknown>(`/api/${entryPhotoPath(id)}`));
+    return EntrySchema.parse(body);
   }
 
   /** Admin: take someone's entry off public view, or put it back. */

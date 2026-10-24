@@ -19,6 +19,7 @@ describe('EntryCard', () => {
     visibility: 'private',
     shareToken: null,
     hidden: false,
+    photoUrl: null,
     createdAt: yesterday,
     updatedAt: yesterday,
   };
@@ -32,6 +33,7 @@ describe('EntryCard', () => {
     pricePaid: null,
     text: '',
     authorName: 'דנה',
+    photoUrl: null,
     createdAt: yesterday,
   };
 
@@ -88,5 +90,14 @@ describe('EntryCard', () => {
   it('falls back to a neutral name when the author has none', async () => {
     const element = await render({ ...others, authorName: '' });
     expect(element.querySelector('.who')?.textContent).toBe('משתמש');
+  });
+
+  it('shows the entry’s photo, and nothing in its place without one', async () => {
+    expect((await render(others)).querySelector('.photo')).toBeNull();
+    TestBed.resetTestingModule();
+    const element = await render({ ...others, photoUrl: '/api/photos/pppppppppppppppppppppp' });
+    const img = element.querySelector('.photo img');
+    expect(img?.getAttribute('src')).toBe('/api/photos/pppppppppppppppppppppp');
+    expect(img?.getAttribute('alt')).toBe('תמונה מהרשומה');
   });
 });

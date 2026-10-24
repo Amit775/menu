@@ -1,4 +1,8 @@
-<div class="hero">
+@let photoUrl = store.page()?.item?.photoUrl;
+<div class="hero" [class.photo]="photoUrl">
+  @if (photoUrl) {
+    <img [ngSrc]="photoUrl" fill priority alt="" />
+  }
   <button mat-icon-button type="button" [attr.aria-label]="t().back" (click)="back()">
     <mat-icon aria-hidden="true">{{ backIcon() }}</mat-icon>
   </button>

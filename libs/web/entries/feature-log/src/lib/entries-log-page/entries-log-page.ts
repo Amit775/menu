@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   ElementRef,
   inject,
@@ -26,7 +27,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { type Entry, type EntryVisibility, type UpdateEntry } from '@menu/shared/contracts';
-import { ItemEntriesStore, LastVisibility } from '@menu/web/entries/data-access';
+import { ItemEntriesStore, LastVisibility, PhotoShrinker } from '@menu/web/entries/data-access';
 import { RatingInput } from '@menu/web/entries/ui';
 import { injectMessages, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
 import { logMessages } from '../log.messages';
@@ -42,11 +43,18 @@ function notInFuture(control: AbstractControl<string>): ValidationErrors | null 
   return Date.parse(iso) > Date.now() + 60_000 ? { future: true } : null;
 }
 
-type SaveError = 'failed' | 'closed';
+type SaveError = 'failed' | 'closed' | 'photoRejected' | 'photoFailed';
+
+/** What the form will do to the entry's photo on save. */
+type PhotoChange =
+  | { kind: 'keep' }
+  | { kind: 'set'; photo: Blob; preview: string }
+  | { kind: 'remove' };
 
 /**
  * J3: log what I ate, or edit an entry (`/log/:itemId[/:entryId]`). One screen:
- * rating, would order again, price paid (prefilled), when, a note and who sees it.
+ * rating, would order again, price paid (prefilled), when, a note, a photo and
+ * who sees it. The photo goes up after the entry is saved (ADR 0011).
  */
 @Component({
   selector: 'menu-entries-log-page',
@@ -73,6 +81,7 @@ export class EntriesLogPage {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly shrinker = inject(PhotoShrinker);
   protected readonly t = injectMessages(logMessages);
 
   /** The `:itemId` route parameter. */
@@ -109,16 +118,43 @@ export class EntriesLogPage {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<SaveError | null>(null);
   protected readonly confirmingDelete = signal(false);
+  protected readonly photoChange = signal<PhotoChange>({ kind: 'keep' });
+  /** A picked photo is being made smaller. */
+  protected readonly preparingPhoto = signal(false);
+  /** The entry this form logged, when its photo then failed: trying again edits it. */
+  private readonly created = signal<string | undefined>(undefined);
   private filled = false;
   /** The price the form opened with, in agorot: sent as is unless the user changes it. */
   private prefilled: number | null = null;
 
   /** The entry being edited, once the sheet is here; undefined for a new one. */
   protected readonly editing = computed<Entry | null | undefined>(() => {
-    const id = this.entryId();
+    const id = this.entryId() ?? this.created();
     return id === undefined
       ? undefined
       : (this.store.mine().find((entry) => entry.id === id) ?? null);
+  });
+
+  /** What the photo box shows: the picked photo, the saved one, or nothing. */
+  protected readonly photoPreview = computed(() => {
+    const change = this.photoChange();
+    if (change.kind === 'set') {
+      return change.preview;
+    }
+    return change.kind === 'remove' ? null : (this.editing()?.photoUrl ?? null);
+  });
+
+  protected readonly photoBackground = computed(() => {
+    const preview = this.photoPreview();
+    return preview === null ? null : `url(${preview})`;
+  });
+
+  protected readonly pickLabel = computed(() => {
+    const t = this.t();
+    if (this.preparingPhoto()) {
+      return t.preparingPhoto;
+    }
+    return this.photoPreview() === null ? t.addPhoto : t.changePhoto;
   });
 
   protected readonly status = computed(() =>
@@ -126,6 +162,9 @@ export class EntriesLogPage {
   );
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      this.changePhoto({ kind: 'keep' });
+    });
     effect(() => {
       const itemId = this.itemId();
       untracked(() => {
@@ -163,12 +202,32 @@ export class EntriesLogPage {
     }
   }
 
+  protected async pickPhoto(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    // Cleared, so picking the same file again still counts as a change.
+    input.value = '';
+    if (!file) {
+      return;
+    }
+    this.preparingPhoto.set(true);
+    try {
+      const photo = await this.shrinker.shrink(file);
+      this.changePhoto({ kind: 'set', photo, preview: URL.createObjectURL(photo) });
+    } finally {
+      this.preparingPhoto.set(false);
+    }
+  }
+
+  protected removePhoto(): void {
+    this.changePhoto({ kind: this.editing()?.photoUrl ? 'remove' : 'keep' });
+  }
+
   protected retry(): void {
     void this.store.load(this.itemId());
   }
 
   protected async save(): Promise<void> {
-    if (this.saving()) {
+    if (this.saving() || this.preparingPhoto()) {
       return;
     }
     if (this.form.invalid) {
@@ -198,17 +257,29 @@ export class EntriesLogPage {
     if (eatenAt !== null && (!editing || this.eatenAt.dirty)) {
       input.eatenAt = eatenAt;
     }
+    let saved: Entry;
     try {
-      if (editing) {
-        await this.store.update(editing.id, input);
-      } else {
-        await this.store.create(this.itemId(), input);
-      }
-      void this.router.navigate(['/items', this.itemId(), 'entries'], { replaceUrl: true });
+      saved = editing
+        ? await this.store.update(editing.id, input)
+        : await this.store.create(this.itemId(), input);
     } catch (error) {
       this.saveError.set(
         error instanceof HttpErrorResponse && error.status === 403 ? 'closed' : 'failed',
       );
+      this.saving.set(false);
+      return;
+    }
+    try {
+      await this.savePhoto(saved.id);
+      void this.router.navigate(['/items', this.itemId(), 'entries'], { replaceUrl: true });
+    } catch (error) {
+      this.saveError.set(
+        error instanceof HttpErrorResponse && (error.status === 413 || error.status === 415)
+          ? 'photoRejected'
+          : 'photoFailed',
+      );
+      // The entry exists now: trying again edits it rather than logging it twice.
+      this.created.set(saved.id);
     } finally {
       this.saving.set(false);
     }
@@ -235,6 +306,25 @@ export class EntriesLogPage {
     }
   }
 
+  private async savePhoto(entryId: string): Promise<void> {
+    const change = this.photoChange();
+    if (change.kind === 'set') {
+      await this.store.setPhoto(entryId, change.photo);
+    } else if (change.kind === 'remove') {
+      await this.store.removePhoto(entryId);
+    }
+    this.changePhoto({ kind: 'keep' });
+  }
+
+  /** Swaps the pending photo change, letting go of the old preview. */
+  private changePhoto(change: PhotoChange): void {
+    const previous = this.photoChange();
+    if (previous.kind === 'set') {
+      URL.revokeObjectURL(previous.preview);
+    }
+    this.photoChange.set(change);
+  }
+
   private fill(entry: Entry): void {
     this.rating.set(entry.rating);
     this.wouldOrderAgain.set(entry.wouldOrderAgain);
@@ -259,6 +349,8 @@ export class EntriesLogPage {
     this.wouldOrderAgain.set(null);
     this.saveError.set(null);
     this.confirmingDelete.set(false);
+    this.changePhoto({ kind: 'keep' });
+    this.created.set(undefined);
     this.form.reset({
       price: null,
       eatenAt: toLocalInput(new Date()),

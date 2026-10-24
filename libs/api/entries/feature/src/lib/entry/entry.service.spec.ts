@@ -1,6 +1,11 @@
 import { ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { type EntryRecord, EntryRepository } from '@menu/api/entries/data-access';
+import {
+  type EntryRecord,
+  EntryRepository,
+  MemoryPhotoStorage,
+  PHOTO_STORAGE,
+} from '@menu/api/entries/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { AUTHOR_DIRECTORY, type EntryTarget, ITEM_CATALOG } from '@menu/api/shared/util-ports';
 import { EntryService } from './entry.service';
@@ -37,20 +42,27 @@ describe('EntryService', () => {
       visibility: 'private',
       shareToken: null,
       hidden: false,
+      photoUrl: null,
+      photoId: null,
+      photoType: null,
       createdAt: '2026-10-20T20:00:00.000Z',
       updatedAt: '2026-10-20T20:00:00.000Z',
       ...overrides,
     };
   }
 
+  let photos = new MemoryPhotoStorage();
+
   async function setup(
     repository: Partial<Record<keyof EntryRepository, unknown>>,
     target: EntryTarget | null = item,
     refs = new Map([['i1', itemRef]]),
   ): Promise<EntryService> {
+    photos = new MemoryPhotoStorage();
     const moduleRef = await Test.createTestingModule({
       providers: [
         EntryService,
+        { provide: PHOTO_STORAGE, useValue: photos },
         { provide: EntryRepository, useValue: repository },
         {
           provide: ITEM_CATALOG,
@@ -174,6 +186,24 @@ describe('EntryService', () => {
       expect(update.mock.calls[0]?.[2]).toEqual({ visibility: 'public' });
     });
 
+    it('gives the photo a new id when the entry’s audience narrows', async () => {
+      const shown = record({
+        visibility: 'public',
+        shareToken: 'abcdefghijklmnopqrstuv',
+        photoId: 'oldPhotoIdoldPhotoId00',
+        photoType: 'image/jpeg',
+      });
+      const update = vi.fn().mockResolvedValue(shown);
+      const service = await setup({ findById: vi.fn().mockResolvedValue(shown), update });
+      await service.update(author, 'e1', { visibility: 'private' });
+      const changes = update.mock.calls[0]?.[2] as { photoId?: string };
+      expect(changes.photoId).toMatch(/^[\w-]{22}$/);
+      expect(changes.photoId).not.toBe('oldPhotoIdoldPhotoId00');
+      update.mockClear();
+      await service.update(author, 'e1', { text: 'עוד' });
+      expect(update.mock.calls[0]?.[2]).toEqual({ text: 'עוד' });
+    });
+
     it('fails with 404 for someone else’s entry', async () => {
       const service = await setup({
         findById: vi.fn().mockResolvedValue(record()),
@@ -188,10 +218,23 @@ describe('EntryService', () => {
     await expect(service.remove(other, 'e1')).rejects.toThrow(NotFoundException);
   });
 
-  it('hides an entry without saying whether it exists', async () => {
+  it('deletes the photo with the entry', async () => {
+    const service = await setup({ delete: vi.fn().mockResolvedValue(true) });
+    await photos.put('entries/e1', { bytes: Buffer.from([1]), type: 'image/jpeg' });
+    await service.remove(author, 'e1');
+    expect(photos.photos.size).toBe(0);
+  });
+
+  it('deletes the entry even when its stored photo cannot be removed', async () => {
+    const service = await setup({ delete: vi.fn().mockResolvedValue(true) });
+    vi.spyOn(photos, 'delete').mockRejectedValueOnce(new Error('bucket down'));
+    await expect(service.remove(author, 'e1')).resolves.toBeUndefined();
+  });
+
+  it('hides an entry without saying whether it exists, with a fresh photo id', async () => {
     const setHidden = vi.fn().mockResolvedValue(undefined);
     await expect((await setup({ setHidden })).setHidden('e1', true)).resolves.toBeUndefined();
-    expect(setHidden).toHaveBeenCalledWith('e1', true);
+    expect(setHidden).toHaveBeenCalledWith('e1', true, expect.stringMatching(/^[\w-]{22}$/));
   });
 
   it('lists the diary with each entry’s item and venue', async () => {

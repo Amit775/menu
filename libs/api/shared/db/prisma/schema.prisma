@@ -181,6 +181,10 @@ model Entry {
   visibility      EntryVisibility @default(private)
   shareToken      String?         @unique @map("share_token")
   hiddenAt        DateTime?       @map("hidden_at")
+  /// Capability id of the photo (ADR 0011); changes when the photo or its audience changes.
+  photoId         String?         @unique @map("photo_id")
+  /// The stored photo's content type.
+  photoType       String?         @map("photo_type")
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
 

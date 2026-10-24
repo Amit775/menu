@@ -6,11 +6,24 @@ import {
   type DiaryQuery,
   type Entry,
   type EntryVisibility,
+  type PhotoType,
+  PhotoTypeSchema,
+  photoUrl,
   type UpdateEntry,
 } from '@menu/shared/contracts';
 
-/** An entry as the API sees it internally: the author's view plus who wrote it. */
-export type EntryRecord = Entry & { authorId: string };
+/** An entry as the API sees it internally: the author's view plus who wrote it and its photo. */
+export type EntryRecord = Entry & {
+  authorId: string;
+  photoId: string | null;
+  photoType: PhotoType | null;
+};
+
+/** A photo's capability id and stored type (ADR 0011). */
+export interface PhotoRef {
+  photoId: string;
+  photoType: PhotoType;
+}
 
 export interface NewEntry {
   authorId: string;
@@ -33,11 +46,12 @@ export interface EntryFact {
   wouldOrderAgain: boolean | null;
   pricePaid: number | null;
   visibility: EntryVisibility;
+  photoId: string | null;
   eatenAt: Date;
   createdAt: Date;
 }
 
-export type EntryChanges = UpdateEntry & { shareToken?: string };
+export type EntryChanges = UpdateEntry & { shareToken?: string; photoId?: string };
 
 interface EntryRow {
   id: string;
@@ -52,6 +66,8 @@ interface EntryRow {
   visibility: EntryVisibility;
   shareToken: string | null;
   hiddenAt: Date | null;
+  photoId: string | null;
+  photoType: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -73,6 +89,24 @@ export class EntryRepository {
   async findById(id: string): Promise<EntryRecord | null> {
     const row = await this.prisma.entry.findUnique({ where: { id } });
     return row ? toRecord(row) : null;
+  }
+
+  async findByPhotoId(photoId: string): Promise<EntryRecord | null> {
+    const row = await this.prisma.entry.findUnique({ where: { photoId } });
+    return row ? toRecord(row) : null;
+  }
+
+  /** Sets or removes the photo. Null when the entry is gone or not this author's. */
+  async setPhoto(
+    id: string,
+    authorId: string,
+    photo: PhotoRef | null,
+  ): Promise<EntryRecord | null> {
+    const { count } = await this.prisma.entry.updateMany({
+      where: { id, authorId },
+      data: photo ?? { photoId: null, photoType: null },
+    });
+    return count === 0 ? null : this.findById(id);
   }
 
   async findByShareToken(shareToken: string): Promise<EntryRecord | null> {
@@ -127,11 +161,20 @@ export class EntryRepository {
    * Hides or shows an entry others can read. A private entry is left alone and
    * nothing is returned, so the caller cannot learn whether it exists.
    */
-  async setHidden(id: string, hidden: boolean): Promise<void> {
-    await this.prisma.entry.updateMany({
-      where: { id, visibility: { not: 'private' } },
-      data: { hiddenAt: hidden ? new Date() : null },
-    });
+  async setHidden(id: string, hidden: boolean, newPhotoId: string): Promise<void> {
+    const where = { id, visibility: { not: 'private' as const } };
+    await this.prisma.$transaction([
+      this.prisma.entry.updateMany({ where, data: { hiddenAt: hidden ? new Date() : null } }),
+      // Photo ids handed out while it was visible stop working (ADR 0011).
+      ...(hidden
+        ? [
+            this.prisma.entry.updateMany({
+              where: { ...where, photoId: { not: null } },
+              data: { photoId: newPhotoId },
+            }),
+          ]
+        : []),
+    ]);
   }
 
   /** Every unhidden entry, for aggregates. Fine at friends scale; a stored score can replace it. */
@@ -145,6 +188,7 @@ export class EntryRepository {
         wouldOrderAgain: true,
         pricePaid: true,
         visibility: true,
+        photoId: true,
         eatenAt: true,
         createdAt: true,
       },
@@ -188,6 +232,9 @@ function toRecord(row: EntryRow): EntryRecord {
     visibility: row.visibility,
     shareToken: row.shareToken,
     hidden: row.hiddenAt !== null,
+    photoUrl: row.photoId ? photoUrl(row.photoId) : null,
+    photoId: row.photoId,
+    photoType: row.photoType === null ? null : PhotoTypeSchema.parse(row.photoType),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

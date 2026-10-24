@@ -15,12 +15,15 @@ describe('EntryRepository', () => {
     visibility: 'private',
     shareToken: null,
     hiddenAt: null,
+    photoId: null,
+    photoType: null,
     createdAt: new Date('2026-10-20T20:00:00.000Z'),
     updatedAt: new Date('2026-10-20T20:00:00.000Z'),
   };
 
   function repositoryWith(entry: Record<string, unknown>): EntryRepository {
-    return new EntryRepository({ entry } as unknown as PrismaService);
+    const $transaction = (operations: Promise<unknown>[]) => Promise.all(operations);
+    return new EntryRepository({ entry, $transaction } as unknown as PrismaService);
   }
 
   it('maps a row to a record, with the hidden flag', async () => {
@@ -30,6 +33,7 @@ describe('EntryRepository', () => {
       authorId: 'a1',
       eatenAt: '2026-10-20T19:30:00.000Z',
       hidden: true,
+      photoUrl: null,
     });
   });
 
@@ -69,9 +73,48 @@ describe('EntryRepository', () => {
 
   it('never hides a private entry', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 0 });
-    await repositoryWith({ updateMany }).setHidden('e1', true);
+    await repositoryWith({ updateMany }).setHidden('e1', true, 'newPhotoIdnewPhotoId00');
     expect(updateMany.mock.calls[0]?.[0]).toMatchObject({
       where: { id: 'e1', visibility: { not: 'private' } },
+    });
+  });
+
+  it('gives a hidden entry’s photo a new id, and leaves it on un-hide', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const repository = repositoryWith({ updateMany });
+    await repository.setHidden('e1', true, 'newPhotoIdnewPhotoId00');
+    expect(updateMany.mock.calls[1]?.[0]).toEqual({
+      where: { id: 'e1', visibility: { not: 'private' }, photoId: { not: null } },
+      data: { photoId: 'newPhotoIdnewPhotoId00' },
+    });
+    updateMany.mockClear();
+    await repository.setHidden('e1', false, 'otherPhotoIdotherPhot0');
+    expect(updateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps a photo to its URL', async () => {
+    const findUnique = vi
+      .fn()
+      .mockResolvedValue({ ...row, photoId: 'abcdefghijklmnopqrstuv', photoType: 'image/png' });
+    await expect(
+      repositoryWith({ findUnique }).findByPhotoId('abcdefghijklmnopqrstuv'),
+    ).resolves.toMatchObject({
+      photoUrl: '/api/photos/abcdefghijklmnopqrstuv',
+      photoType: 'image/png',
+    });
+    expect(findUnique).toHaveBeenCalledWith({ where: { photoId: 'abcdefghijklmnopqrstuv' } });
+  });
+
+  it('sets and clears a photo on the author’s own entry only', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 });
+    const repository = repositoryWith({ updateMany });
+    const photo = { photoId: 'abcdefghijklmnopqrstuv', photoType: 'image/jpeg' as const };
+    await expect(repository.setPhoto('e1', 'a2', photo)).resolves.toBeNull();
+    expect(updateMany).toHaveBeenCalledWith({ where: { id: 'e1', authorId: 'a2' }, data: photo });
+    await repository.setPhoto('e1', 'a2', null);
+    expect(updateMany).toHaveBeenLastCalledWith({
+      where: { id: 'e1', authorId: 'a2' },
+      data: { photoId: null, photoType: null },
     });
   });
 

@@ -88,7 +88,16 @@ After that, every merge to `main` builds the image, applies Prisma migrations, d
 
 Preview channels use the same `/api/**` rewrite, so PR previews talk to the production API and database. A staging service can come later.
 
-## 6. Later
+## 6. Store entry photos in Cloud Storage
+
+Photos (ADR 0011) live in the project's default Firebase Storage bucket, `menu-b29eb.firebasestorage.app`. Only the API touches it, through the Admin SDK; browsers get photos from `/api/photos/...`. Until this is done, uploading a photo fails with a 500 and everything else works.
+
+1. **Create the bucket**: https://console.firebase.google.com/project/menu-b29eb/storage, **Get started**, **Start in production mode** (the default rules refuse every client, which is what we want), location **`europe-west1`**.
+2. **Let the API use it**: https://console.cloud.google.com/storage/browser?project=menu-b29eb, open `menu-b29eb.firebasestorage.app`, **Permissions > Grant access**: `menu-api@menu-b29eb.iam.gserviceaccount.com`, role **Storage Object Admin**.
+
+A different bucket can be set with `PHOTO_BUCKET` on the Cloud Run service. Locally and in e2e, `PHOTO_DIR` keeps photos in a folder instead.
+
+## 7. Later
 
 - Custom domain: **Hosting > Add custom domain**.
 - Keyless deploys: replace the JSON key with Workload Identity Federation (`google-github-actions/auth` supports both).

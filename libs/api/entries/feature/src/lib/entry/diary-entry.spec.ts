@@ -25,6 +25,9 @@ describe('DiaryEntry', () => {
     visibility: 'shared',
     shareToken: 'abcdefghijklmnopqrstuv',
     hidden: false,
+    photoUrl: null,
+    photoId: null,
+    photoType: null,
     createdAt: '2026-10-20T20:00:00.000Z',
     updatedAt: '2026-10-20T20:00:00.000Z',
   };
@@ -82,5 +85,20 @@ describe('DiaryEntry', () => {
         status: 'removed',
       });
     });
+  });
+
+  it('needs a new photo id only when readers are taken away', () => {
+    const withPhoto = new DiaryEntry({
+      ...record,
+      visibility: 'public',
+      photoId: 'abcdefghijklmnopqrstuv',
+      photoType: 'image/jpeg',
+      photoUrl: '/api/photos/abcdefghijklmnopqrstuv',
+    });
+    expect(withPhoto.narrowsTo('shared')).toBe(true);
+    expect(withPhoto.narrowsTo('private')).toBe(true);
+    expect(withPhoto.narrowsTo('public')).toBe(false);
+    expect(new DiaryEntry(record).narrowsTo('private')).toBe(false);
+    expect(withPhoto.toPublic('דנה').photoUrl).toBe('/api/photos/abcdefghijklmnopqrstuv');
   });
 });

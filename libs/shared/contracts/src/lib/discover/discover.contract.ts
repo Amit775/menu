@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PhotoUrlSchema } from '../entries/photo.contract';
 import { AgorotSchema, GeoPointSchema, LocalizedTextSchema } from '../common/values.contract';
 import { MenuSectionSchema } from '../menus/menu-section.contract';
 import { TagSchema } from '../menus/tag.contract';
@@ -88,6 +89,8 @@ export const DiscoverItemSchema = z.object({
   ratingCount: z.number().int().min(0),
   wouldOrderAgainPercent: z.number().int().min(0).max(100).nullable(),
   latestPrice: AgorotSchema.nullable(),
+  /** The photo of the item's newest public entry that has one (ADR 0011), or null. */
+  photoUrl: PhotoUrlSchema.nullable(),
   writtenByMe: z.boolean(),
 });
 

@@ -21,12 +21,19 @@ describe('Entry contract', () => {
     visibility: 'private',
     shareToken: null,
     hidden: false,
+    photoUrl: '/api/photos/abcdefghijklmnopqrstuv',
     createdAt: '2026-10-20T20:00:00.000Z',
     updatedAt: '2026-10-20T20:00:00.000Z',
   };
 
   it('accepts a valid entry', () => {
     expect(EntrySchema.parse(valid)).toEqual(valid);
+  });
+
+  it('rejects a photo served from anywhere but the API', () => {
+    expect(EntrySchema.safeParse({ ...valid, photoUrl: 'https://example.com/a.jpg' }).success).toBe(
+      false,
+    );
   });
 
   it('rejects a rating outside 1 to 5', () => {
@@ -90,6 +97,7 @@ describe('Entry contract', () => {
       pricePaid: 6800,
       text: '',
       authorName: 'דנה',
+      photoUrl: null,
       createdAt: valid.createdAt,
     };
     expect(SharedEntryViewSchema.parse({ status: 'visible', entry, item }).status).toBe('visible');

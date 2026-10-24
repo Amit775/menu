@@ -22,6 +22,7 @@ const visible: SharedEntryView = {
     pricePaid: 6800,
     text: 'Cooked medium like I asked.',
     authorName: 'Noa',
+    photoUrl: null,
     createdAt: '2026-10-22T20:00:00.000Z',
   },
   item: {
@@ -126,5 +127,17 @@ describe('EntriesSharedPage', () => {
     element.querySelector<HTMLButtonElement>('[role="alert"] button')?.click();
     await harness.fixture.whenStable();
     expect(harness.routeNativeElement?.querySelector('article')).not.toBeNull();
+  });
+
+  it('shows the shared entry’s photo', async () => {
+    const { element } = await open(
+      vi.fn().mockResolvedValue({
+        ...visible,
+        entry: { ...visible.entry, photoUrl: '/api/photos/pppppppppppppppppppppp' },
+      }),
+    );
+    expect(element.querySelector('article .photo img')?.getAttribute('src')).toBe(
+      '/api/photos/pppppppppppppppppppppp',
+    );
   });
 });
