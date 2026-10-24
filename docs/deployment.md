@@ -88,7 +88,16 @@ After that, every merge to `main` builds the image, applies Prisma migrations, d
 
 Preview channels use the same `/api/**` rewrite, so PR previews talk to the production API and database. A staging service can come later.
 
-## 6. Store entry photos in Cloud Storage
+## 6. Turn on sign-in (done 2026-10-23)
+
+The web app signs in with Firebase Authentication (ADR 0007) and reads its config from Hosting's `/__/firebase/init.json`, so nothing is copied into the repo.
+
+1. https://console.firebase.google.com/project/menu-b29eb/authentication/providers: enable **Google** and **Phone**.
+2. **Project settings > General > Your apps**: register a web app. Hosting serves its config.
+3. **Authentication > Settings > Authorized domains** already lists `menu-b29eb.web.app` and `localhost`; add a custom domain here when there is one.
+4. Optional, for manual checks: **Phone > Phone numbers for testing** adds a number with a fixed code. Keep the code out of the repo and out of tests.
+
+## 7. Store entry photos in Cloud Storage
 
 Photos (ADR 0011) live in the project's default Firebase Storage bucket, `menu-b29eb.firebasestorage.app`. Only the API touches it, through the Admin SDK; browsers get photos from `/api/photos/...`. Until this is done, uploading a photo fails with a 500 and everything else works.
 
@@ -97,7 +106,18 @@ Photos (ADR 0011) live in the project's default Firebase Storage bucket, `menu-b
 
 A different bucket can be set with `PHOTO_BUCKET` on the Cloud Run service. Locally and in e2e, `PHOTO_DIR` keeps photos in a folder instead.
 
-## 7. Later
+## 8. Make yourself the first Admin
+
+Admins approve venues and items, edit tags and grant roles; after the first one, Admins promote others in the app (**Manage > People**).
+
+1. Sign in once on https://menu-b29eb.web.app.
+2. https://console.firebase.google.com/project/menu-b29eb/authentication/users: copy your **User UID**.
+3. https://console.cloud.google.com/run/detail/europe-west1/menu-api/revisions?project=menu-b29eb, **Edit & deploy new revision > Variables & Secrets > Add variable**: `ADMIN_FIREBASE_UIDS` = your UID (comma-separated for several). Deploy. Later deploys from CI keep the variable.
+4. Reload the site: your next request makes you an Admin and **Manage** appears.
+
+A UID in that list is an Admin on every request, so another Admin cannot take the role away while it is listed. Remove it from the list once other Admins exist if you want that.
+
+## 9. Later
 
 - Custom domain: **Hosting > Add custom domain**.
 - Keyless deploys: replace the JSON key with Workload Identity Federation (`google-github-actions/auth` supports both).
