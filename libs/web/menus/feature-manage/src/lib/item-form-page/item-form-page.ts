@@ -107,6 +107,13 @@ export class ItemFormPage {
     this.store.reload();
   }
 
+  private listPrice(shekels: number | null, opened: number | null): number | null {
+    if (shekels === (opened === null ? null : Math.round(opened / 100))) {
+      return opened;
+    }
+    return shekels === null ? null : shekels * 100;
+  }
+
   protected async save(): Promise<void> {
     const model = this.model();
     const sectionId = model.section;
@@ -120,11 +127,7 @@ export class ItemFormPage {
     const input = {
       sectionId,
       name: this.localizedName(model),
-      listPrice: this.form.price().dirty()
-        ? model.price === null
-          ? null
-          : model.price * 100
-        : (editing?.listPrice ?? null),
+      listPrice: this.listPrice(model.price, editing?.listPrice ?? null),
       tagIds: model.tags,
     };
     try {
