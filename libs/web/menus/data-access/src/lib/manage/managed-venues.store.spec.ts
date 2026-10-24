@@ -59,4 +59,19 @@ describe('ManagedVenuesStore', () => {
     expect(createVenue).toHaveBeenCalledWith(input);
     expect(store.rows().map((row) => row.venue.id)).toContain(other.id);
   });
+
+  it('rejects a venue the API refuses and leaves the list alone', async () => {
+    const store = setup(
+      {
+        venues: vi.fn().mockResolvedValue([venue]),
+        pending: vi.fn().mockResolvedValue([]),
+        createVenue: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 400 })),
+      },
+      true,
+    );
+    await store.load();
+    const input = { name: other.name, address: other.address, location: other.location };
+    await expect(store.create(input)).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.rows().map((row) => row.venue.id)).toEqual([VENUE_ID]);
+  });
 });
