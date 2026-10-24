@@ -7,6 +7,7 @@ import {
   type Entry,
   type EntryVisibility,
   type PhotoType,
+  PhotoTypeSchema,
   photoUrl,
   type UpdateEntry,
 } from '@menu/shared/contracts';
@@ -161,17 +162,19 @@ export class EntryRepository {
    * nothing is returned, so the caller cannot learn whether it exists.
    */
   async setHidden(id: string, hidden: boolean, newPhotoId: string): Promise<void> {
-    await this.prisma.entry.updateMany({
-      where: { id, visibility: { not: 'private' } },
-      data: { hiddenAt: hidden ? new Date() : null },
-    });
-    if (hidden) {
+    const where = { id, visibility: { not: 'private' as const } };
+    await this.prisma.$transaction([
+      this.prisma.entry.updateMany({ where, data: { hiddenAt: hidden ? new Date() : null } }),
       // Photo ids handed out while it was visible stop working (ADR 0011).
-      await this.prisma.entry.updateMany({
-        where: { id, visibility: { not: 'private' }, photoId: { not: null } },
-        data: { photoId: newPhotoId },
-      });
-    }
+      ...(hidden
+        ? [
+            this.prisma.entry.updateMany({
+              where: { ...where, photoId: { not: null } },
+              data: { photoId: newPhotoId },
+            }),
+          ]
+        : []),
+    ]);
   }
 
   /** Every unhidden entry, for aggregates. Fine at friends scale; a stored score can replace it. */
@@ -231,7 +234,7 @@ function toRecord(row: EntryRow): EntryRecord {
     hidden: row.hiddenAt !== null,
     photoUrl: row.photoId ? photoUrl(row.photoId) : null,
     photoId: row.photoId,
-    photoType: row.photoType as PhotoType | null,
+    photoType: row.photoType === null ? null : PhotoTypeSchema.parse(row.photoType),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

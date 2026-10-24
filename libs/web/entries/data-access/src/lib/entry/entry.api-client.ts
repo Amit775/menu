@@ -5,6 +5,7 @@ import {
   type DiaryQuery,
   type Entry,
   entryPath,
+  entryPhotoPath,
   EntrySchema,
   type EntryWithItem,
   EntryWithItemSchema,
@@ -71,12 +72,12 @@ export class EntryApiClient {
 
   /** Sets the entry's one photo (ADR 0011); the image is the whole body. */
   async setPhoto(id: string, photo: Blob): Promise<Entry> {
-    const body = await firstValueFrom(this.http.put<unknown>(`${this.baseUrl}/${id}/photo`, photo));
+    const body = await firstValueFrom(this.http.put<unknown>(`/api/${entryPhotoPath(id)}`, photo));
     return EntrySchema.parse(body);
   }
 
   async removePhoto(id: string): Promise<Entry> {
-    const body = await firstValueFrom(this.http.delete<unknown>(`${this.baseUrl}/${id}/photo`));
+    const body = await firstValueFrom(this.http.delete<unknown>(`/api/${entryPhotoPath(id)}`));
     return EntrySchema.parse(body);
   }
 
