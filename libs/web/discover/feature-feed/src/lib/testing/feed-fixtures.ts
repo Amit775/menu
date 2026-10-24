@@ -19,6 +19,7 @@ export function sampleItem(n: number, changes: Partial<DiscoverItem> = {}): Disc
     ratingCount: 12,
     wouldOrderAgainPercent: 90,
     latestPrice: 6800,
+    photoUrl: null,
     writtenByMe: false,
     ...changes,
   };

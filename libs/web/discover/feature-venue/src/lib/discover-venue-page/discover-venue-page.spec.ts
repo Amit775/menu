@@ -21,6 +21,7 @@ describe('DiscoverVenuePage', () => {
     ratingCount: 12,
     wouldOrderAgainPercent: 92,
     latestPrice: 6800,
+    photoUrl: null,
     writtenByMe: false,
   };
   const page: VenuePage = {
