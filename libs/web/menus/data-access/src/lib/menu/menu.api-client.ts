@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
   type CreateItem,
   type CreateMenuSection,
@@ -41,7 +41,7 @@ export type NewVenue = Partial<CreateVenue> & Pick<CreateVenue, 'name' | 'addres
  * tag vocabulary and a venue's insights. Every response is validated against
  * the shared contract.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class MenuApiClient {
   private readonly http = inject(HttpClient);
 
