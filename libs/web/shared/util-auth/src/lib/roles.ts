@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { type CanActivateFn, Router } from '@angular/router';
+import { type ActivatedRouteSnapshot, type CanActivateFn, Router } from '@angular/router';
 import { Auth } from './auth';
 
 /** What the signed-in account may manage: every venue as an Admin, or the venues it owns. */
@@ -53,8 +53,11 @@ export class Roles {
   }
 }
 
-function roleGuard(allowed: (roles: Roles) => boolean, fallback: string): CanActivateFn {
-  return async (_route, state) => {
+function roleGuard(
+  allowed: (roles: Roles, route: ActivatedRouteSnapshot) => boolean,
+  fallback: string,
+): CanActivateFn {
+  return async (route, state) => {
     const auth = inject(Auth);
     const roles = inject(Roles);
     const router = inject(Router);
@@ -63,7 +66,7 @@ function roleGuard(allowed: (roles: Roles) => boolean, fallback: string): CanAct
       return router.createUrlTree(['/sign-in'], { queryParams: { returnUrl: state.url } });
     }
     await roles.whenKnown();
-    return allowed(roles) || router.createUrlTree([fallback]);
+    return allowed(roles, route) || router.createUrlTree([fallback]);
   };
 }
 
@@ -72,3 +75,12 @@ export const managerGuard: CanActivateFn = roleGuard((roles) => roles.canManage(
 
 /** Admin-only pages (venues, tags, people). Owners go back to their venues. */
 export const adminGuard: CanActivateFn = roleGuard((roles) => roles.isAdmin(), '/manage');
+
+/**
+ * One venue's manage pages (`:id`): its Owners and Admins. Other Owners go back
+ * to their venues; the API would refuse their changes anyway.
+ */
+export const venueManagerGuard: CanActivateFn = roleGuard(
+  (roles, route) => roles.canEditVenue(route.paramMap.get('id') ?? ''),
+  '/manage',
+);
