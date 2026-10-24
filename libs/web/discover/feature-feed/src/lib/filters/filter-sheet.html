@@ -1,12 +1,12 @@
 <section>
   <header>
-    <h2 id="filters-title">{{ t().filters }}</h2>
-    <button mat-button type="button" (click)="close()">{{ t().close }}</button>
+    <h2 id="filters-title">{{ t('filters') }}</h2>
+    <button mat-button type="button" (click)="close()">{{ t('close') }}</button>
   </header>
 
   <form [formGroup]="form" (ngSubmit)="apply()">
     @if (store.tags().length > 0) {
-      <h3 id="tags-label">{{ t().tags }}</h3>
+      <h3 id="tags-label">{{ t('tags') }}</h3>
       <mat-chip-listbox multiple formControlName="tagIds" aria-labelledby="tags-label">
         @for (tag of store.tags(); track tag.id) {
           <mat-chip-option [value]="tag.id">{{ tag.name | localize }}</mat-chip-option>
@@ -15,25 +15,25 @@
     }
 
     <mat-form-field appearance="outline">
-      <mat-label>{{ t().radius }}</mat-label>
+      <mat-label>{{ t('radius') }}</mat-label>
       <mat-select formControlName="radiusKm">
         @for (km of radiusOptions; track km) {
-          <mat-option [value]="km">{{ t().radiusOption(km) }}</mat-option>
+          <mat-option [value]="km">{{ t('radiusOption', { km }) }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
 
-    <h3 id="sort-label">{{ t().sort }}</h3>
+    <h3 id="sort-label">{{ t('sort') }}</h3>
     <mat-button-toggle-group formControlName="sort" aria-labelledby="sort-label">
-      <mat-button-toggle value="score">{{ t().byScore }}</mat-button-toggle>
-      <mat-button-toggle value="distance">{{ t().byDistance }}</mat-button-toggle>
-      <mat-button-toggle value="price">{{ t().byPrice }}</mat-button-toggle>
+      <mat-button-toggle value="score">{{ t('byScore') }}</mat-button-toggle>
+      <mat-button-toggle value="distance">{{ t('byDistance') }}</mat-button-toggle>
+      <mat-button-toggle value="price">{{ t('byPrice') }}</mat-button-toggle>
     </mat-button-toggle-group>
 
     <mat-form-field appearance="outline">
-      <mat-label>{{ t().maxPrice }}</mat-label>
+      <mat-label>{{ t('maxPrice') }}</mat-label>
       <mat-select formControlName="maxPrice">
-        <mat-option [value]="null">{{ t().anyPrice }}</mat-option>
+        <mat-option [value]="null">{{ t('anyPrice') }}</mat-option>
         @for (price of priceOptions; track price) {
           <mat-option [value]="price">{{ price | shekels }}</mat-option>
         }
@@ -41,8 +41,8 @@
     </mat-form-field>
 
     <div class="actions">
-      <button mat-button type="button" (click)="reset()">{{ t().reset }}</button>
-      <button mat-flat-button type="submit">{{ t().apply }}</button>
+      <button mat-button type="button" (click)="reset()">{{ t('reset') }}</button>
+      <button mat-flat-button type="submit">{{ t('apply') }}</button>
     </div>
   </form>
 </section>

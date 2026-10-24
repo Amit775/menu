@@ -10,8 +10,8 @@ import { RouterLink } from '@angular/router';
 import { type Language } from '@menu/shared/contracts';
 import { AccountStore } from '@menu/web/users/data-access';
 import { Auth } from '@menu/web/shared/util-auth';
-import { I18n, injectMessages } from '@menu/web/shared/util-i18n';
-import { profileMessages } from '../profile.messages';
+import { I18n, injectTranslate } from '@menu/web/shared/util-i18n';
+import { profileI18n } from '../profile.i18n';
 
 @Component({
   selector: 'menu-profile-page',
@@ -33,7 +33,7 @@ export class ProfilePage {
   protected readonly auth = inject(Auth);
   protected readonly store = inject(AccountStore);
   protected readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(profileMessages);
+  protected readonly t = injectTranslate(profileI18n);
 
   private readonly name = linkedSignal(() => this.store.account()?.displayName ?? '');
   protected readonly nameField = form(this.name, (path) => {

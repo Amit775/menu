@@ -16,8 +16,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FeedStore, type FeedView } from '@menu/web/discover/data-access';
 import { ItemRow } from '@menu/web/discover/ui';
-import { I18n, injectMessages } from '@menu/web/shared/util-i18n';
-import { feedMessages } from '../feed.messages';
+import { I18n, injectTranslate } from '@menu/web/shared/util-i18n';
+import { feedI18n } from '../feed.i18n';
 import { FilterSheet } from '../filters/filter-sheet';
 import { VenueMap } from '../map/venue-map';
 import { ReelCard } from '../reels/reel-card';
@@ -49,7 +49,7 @@ const PREFETCH = 3;
 export class DiscoverFeedPage {
   protected readonly store = inject(FeedStore);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(feedMessages);
+  protected readonly t = injectTranslate(feedI18n);
 
   private readonly sheet = inject(MatBottomSheet);
   private readonly dialog = inject(MatDialog);
@@ -68,7 +68,7 @@ export class DiscoverFeedPage {
   );
   protected readonly filterLabel = computed(() => {
     const tag = this.store.primaryTag();
-    return tag ? `${this.t().filter} · ${this.i18n.pick(tag.name)}` : this.t().filter;
+    return tag ? `${this.t('filter')} · ${this.i18n.pick(tag.name)}` : this.t('filter');
   });
 
   constructor() {
@@ -87,12 +87,12 @@ export class DiscoverFeedPage {
   }
 
   protected openFilters(): void {
-    this.sheet.open(FilterSheet, { ariaLabel: this.t().filters });
+    this.sheet.open(FilterSheet, { ariaLabel: this.t('filters') });
   }
 
   protected openSearch(): void {
     this.dialog.open(SearchPanel, {
-      ariaLabel: this.t().search,
+      ariaLabel: this.t('search'),
       width: '100vw',
       maxWidth: '100vw',
       height: '100dvh',

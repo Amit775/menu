@@ -1,36 +1,36 @@
-<p class="intro">{{ t().insightsIntro }}</p>
+<p class="intro">{{ t('insightsIntro') }}</p>
 @if (failed()) {
   <div class="state" role="alert">
-    {{ t().insightsFailed }}
-    <button type="button" class="retry" (click)="load()">{{ t().retry }}</button>
+    {{ t('insightsFailed') }}
+    <button type="button" class="retry" (click)="load()">{{ t('retry') }}</button>
   </div>
 } @else if (!store.insights()) {
   <div class="state" role="status">
-    <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+    <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
   </div>
 } @else {
   <dl class="tiles">
     <div>
-      <dt>{{ t().publicEntries }}</dt>
+      <dt>{{ t('publicEntries') }}</dt>
       <dd class="public">{{ tiles().public }}</dd>
     </div>
     <div>
-      <dt>{{ t().privateEntries }}</dt>
+      <dt>{{ t('privateEntries') }}</dt>
       <dd class="other">{{ tiles().other }}</dd>
     </div>
     <div>
-      <dt>{{ t().topItem }}</dt>
+      <dt>{{ t('topItem') }}</dt>
       <dd class="top">{{ tiles().top }}</dd>
     </div>
   </dl>
   <table>
     <thead>
       <tr>
-        <th scope="col">{{ t().item }}</th>
-        <th scope="col">{{ t().score }}</th>
-        <th scope="col">{{ t().publicCount }}</th>
-        <th scope="col">{{ t().otherCount }}</th>
-        <th scope="col">{{ t().again }}</th>
+        <th scope="col">{{ t('item') }}</th>
+        <th scope="col">{{ t('score') }}</th>
+        <th scope="col">{{ t('publicCount') }}</th>
+        <th scope="col">{{ t('otherCount') }}</th>
+        <th scope="col">{{ t('again') }}</th>
       </tr>
     </thead>
     <tbody>

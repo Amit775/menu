@@ -10,61 +10,61 @@
       <mat-icon aria-hidden="true">tune</mat-icon>
       {{ filterLabel() }}
     </button>
-    <button mat-icon-button type="button" [attr.aria-label]="t().search" (click)="openSearch()">
+    <button mat-icon-button type="button" [attr.aria-label]="t('search')" (click)="openSearch()">
       <mat-icon aria-hidden="true">search</mat-icon>
     </button>
     <mat-button-toggle-group
       hideSingleSelectionIndicator
-      [attr.aria-label]="t().views"
+      [attr.aria-label]="t('views')"
       [value]="store.view()"
       (change)="setView($event.value)"
     >
-      <mat-button-toggle value="reels" [aria-label]="t().reels">
+      <mat-button-toggle value="reels" [aria-label]="t('reels')">
         <mat-icon aria-hidden="true">view_carousel</mat-icon>
       </mat-button-toggle>
-      <mat-button-toggle value="list" [aria-label]="t().list">
+      <mat-button-toggle value="list" [aria-label]="t('list')">
         <mat-icon aria-hidden="true">view_list</mat-icon>
       </mat-button-toggle>
-      <mat-button-toggle value="map" [aria-label]="t().map">
+      <mat-button-toggle value="map" [aria-label]="t('map')">
         <mat-icon aria-hidden="true">map</mat-icon>
       </mat-button-toggle>
     </mat-button-toggle-group>
   </header>
   @if (refreshing()) {
-    <mat-progress-bar mode="indeterminate" [attr.aria-label]="t().loading" />
+    <mat-progress-bar mode="indeterminate" [attr.aria-label]="t('loading')" />
   }
 
   @if (store.view() === 'map') {
     @if (store.status() === 'error') {
       <p class="reel-error" role="alert">
-        {{ t().loadFailed }}
-        <button mat-button type="button" (click)="store.reload()">{{ t().retry }}</button>
+        {{ t('loadFailed') }}
+        <button mat-button type="button" (click)="store.reload()">{{ t('retry') }}</button>
       </p>
     }
     <menu-venue-map />
   } @else if (store.status() === 'error' && store.items().length === 0) {
     <div class="state" role="alert">
-      {{ t().loadFailed }}
-      <button mat-button type="button" (click)="store.reload()">{{ t().retry }}</button>
+      {{ t('loadFailed') }}
+      <button mat-button type="button" (click)="store.reload()">{{ t('retry') }}</button>
     </div>
   } @else if (store.status() === 'loading' && store.items().length === 0) {
     <div class="state" role="status">
-      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+      <mat-spinner diameter="32" [attr.aria-label]="t('loading')" />
     </div>
   } @else if (store.status() === 'loaded' && store.items().length === 0) {
     <div class="state" role="status">
-      {{ t().empty }}
+      {{ t('empty') }}
       @if (store.filterCount() > 0) {
         <button mat-button type="button" (click)="store.resetFilters()">
-          {{ t().clearFilters }}
+          {{ t('clearFilters') }}
         </button>
       }
     </div>
   } @else if (store.view() === 'reels') {
     @if (pageFailed()) {
       <p class="reel-error" role="alert">
-        {{ t().loadMoreFailed }}
-        <button mat-button type="button" (click)="store.loadMore()">{{ t().retry }}</button>
+        {{ t('loadMoreFailed') }}
+        <button mat-button type="button" (click)="store.loadMore()">{{ t('retry') }}</button>
       </p>
     }
     <div class="reel-track" #track (scroll)="scrolled(track)">
@@ -76,7 +76,11 @@
     <div class="list">
       <p class="summary">
         {{
-          t().summary(store.items().length, store.nextOffset() !== null, store.filters().radiusKm)
+          t('summary', {
+            count: store.items().length,
+            more: store.nextOffset() !== null,
+            radiusKm: store.filters().radiusKm,
+          })
         }}
       </p>
       @if (splitByRanking()) {
@@ -84,7 +88,7 @@
           <menu-item-row [item]="item" />
         }
         @if (store.unranked().length > 0) {
-          <p class="divider">{{ t().notEnoughRatings }}</p>
+          <p class="divider">{{ t('notEnoughRatings') }}</p>
           @for (item of store.unranked(); track item.id) {
             <menu-item-row [item]="item" />
           }
@@ -96,12 +100,12 @@
       }
       @if (pageFailed()) {
         <p class="divider" role="alert">
-          {{ t().loadMoreFailed }}
-          <button mat-button type="button" (click)="store.loadMore()">{{ t().retry }}</button>
+          {{ t('loadMoreFailed') }}
+          <button mat-button type="button" (click)="store.loadMore()">{{ t('retry') }}</button>
         </p>
       } @else if (store.nextOffset() !== null) {
         <button mat-button type="button" class="more" (click)="store.loadMore()">
-          {{ t().loadMore }}
+          {{ t('loadMore') }}
         </button>
       }
     </div>

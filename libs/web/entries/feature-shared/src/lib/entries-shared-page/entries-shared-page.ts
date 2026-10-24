@@ -5,8 +5,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { SharedEntryStore } from '@menu/web/entries/data-access';
 import { Auth } from '@menu/web/shared/util-auth';
-import { I18n, injectMessages, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
-import { sharedMessages } from '../shared.messages';
+import { I18n, injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
+import { sharedI18n } from '../shared.i18n';
 
 /**
  * J5: what a share link (`/e/:token`) shows to anyone: the entry with its
@@ -32,7 +32,7 @@ export class EntriesSharedPage {
   protected readonly store = inject(SharedEntryStore);
   protected readonly auth = inject(Auth);
   private readonly i18n = inject(I18n);
-  protected readonly t = injectMessages(sharedMessages);
+  protected readonly t = injectTranslate(sharedI18n);
 
   /** The `:token` route parameter. */
   readonly token = input.required<string>();
