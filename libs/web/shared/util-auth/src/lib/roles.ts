@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
 import { type ActivatedRouteSnapshot, type CanActivateFn, Router } from '@angular/router';
 import { Auth } from './auth';
 
@@ -16,7 +16,7 @@ export const NO_ROLES: RoleGrants = { isAdmin: false, ownedVenueIds: [] };
  * other domains read them here instead of importing users. The API enforces
  * every permission again; these only shape the UI.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class Roles {
   private readonly grants = signal<RoleGrants | null>(null);
   private waiting: (() => void)[] = [];

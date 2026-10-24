@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import {
   discoverPath,
   type Feed,
@@ -50,7 +50,7 @@ function nearParams(near: GeoPoint | null): Record<string, ParamValue> {
 }
 
 /** HTTP access to `/api/discover` (and the tag vocabulary). Every response is validated against the shared contract. */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class DiscoverApiClient {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `/api/${discoverPath}`;

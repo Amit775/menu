@@ -1,12 +1,12 @@
 import { DOCUMENT } from '@angular/common';
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 
 /**
  * Per-device preferences (language, last visibility). Reaches localStorage through
  * DOCUMENT so it stays safe on the server and in Capacitor, and never throws:
  * private windows and blocked storage simply remember nothing.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class BrowserStorage {
   private readonly storage = inject(DOCUMENT).defaultView?.localStorage ?? null;
 
