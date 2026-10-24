@@ -49,6 +49,7 @@ describe('Discover contract', () => {
       ratingCount: 1,
       wouldOrderAgainPercent: null,
       latestPrice: 6800,
+      photoUrl: null,
       writtenByMe: true,
     };
     expect(DiscoverItemSchema.parse(item)).toEqual(item);

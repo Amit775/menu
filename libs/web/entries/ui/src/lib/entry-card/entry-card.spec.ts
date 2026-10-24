@@ -19,6 +19,7 @@ describe('EntryCard', () => {
     visibility: 'private',
     shareToken: null,
     hidden: false,
+    photoUrl: null,
     createdAt: yesterday,
     updatedAt: yesterday,
   };
@@ -32,6 +33,7 @@ describe('EntryCard', () => {
     pricePaid: null,
     text: '',
     authorName: 'דנה',
+    photoUrl: null,
     createdAt: yesterday,
   };
 
