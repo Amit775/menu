@@ -97,7 +97,7 @@ The web app signs in with Firebase Authentication (ADR 0007) and reads its confi
 3. **Authentication > Settings > Authorized domains** already lists `menu-b29eb.web.app` and `localhost`; add a custom domain here when there is one.
 4. Optional, for manual checks: **Phone > Phone numbers for testing** adds a number with a fixed code. Keep the code out of the repo and out of tests.
 
-## 7. Store entry photos in Cloud Storage
+## 7. Store entry photos in Cloud Storage (done 2026-10-24)
 
 Photos (ADR 0011) live in the project's default Firebase Storage bucket, `menu-b29eb.firebasestorage.app`. Only the API touches it, through the Admin SDK; browsers get photos from `/api/photos/...`. Until this is done, uploading a photo fails with a 500 and everything else works.
 
