@@ -56,6 +56,7 @@
       "@menu/web/entries/feature-shared": ["./libs/web/entries/feature-shared/src/index.ts"],
       "@menu/web/menus/data-access": ["./libs/web/menus/data-access/src/index.ts"],
       "@menu/web/menus/feature-add-item": ["./libs/web/menus/feature-add-item/src/index.ts"],
+      "@menu/web/menus/feature-manage": ["./libs/web/menus/feature-manage/src/index.ts"],
       "@menu/web/shared/util-map": ["./libs/web/shared/util-map/src/index.ts"]
     }
   },
