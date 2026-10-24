@@ -37,8 +37,9 @@ export class PendingQueue {
   private readonly i18n = inject(I18n);
   protected readonly t = injectMessages(venueManagerMessages);
 
-  protected readonly busy = signal<string | null>(null);
-  protected readonly failed = signal<string | null>(null);
+  /** Items with a decision in flight, and items whose last decision failed. */
+  protected readonly busy = signal<ReadonlySet<string>>(new Set());
+  protected readonly failed = signal<ReadonlySet<string>>(new Set());
   protected readonly confirmingReject = signal<string | null>(null);
   protected readonly merging = signal<string | null>(null);
   protected readonly mergeTarget = new FormControl<string | null>(null);
@@ -73,16 +74,16 @@ export class PendingQueue {
   }
 
   private async run(item: Item, action: () => Promise<void>): Promise<void> {
-    this.busy.set(item.id);
-    this.failed.set(null);
+    this.busy.update((ids) => adding(ids, item.id));
+    this.failed.update((ids) => removing(ids, item.id));
     this.confirmingReject.set(null);
     try {
       await action();
-      this.merging.set(null);
+      this.merging.update((id) => (id === item.id ? null : id));
     } catch {
-      this.failed.set(item.id);
+      this.failed.update((ids) => adding(ids, item.id));
     } finally {
-      this.busy.set(null);
+      this.busy.update((ids) => removing(ids, item.id));
     }
   }
 
@@ -99,4 +100,12 @@ export class PendingQueue {
       tags,
     );
   }
+}
+
+function adding(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
+  return new Set([...ids, id]);
+}
+
+function removing(ids: ReadonlySet<string>, id: string): ReadonlySet<string> {
+  return new Set([...ids].filter((other) => other !== id));
 }

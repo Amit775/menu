@@ -5,7 +5,7 @@ import {
   effect,
   inject,
   input,
-  signal,
+  linkedSignal,
   untracked,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -54,23 +54,21 @@ export class VenueManagerPage {
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );
 
-  private readonly chosenTab = signal<number | null>(null);
-  protected readonly tab = computed(
-    () => this.chosenTab() ?? (this.store.pending().length > 0 ? 0 : 1),
-  );
+  /** Picked when a venue loads (pending when something waits), then only by the user. */
+  protected readonly tab = linkedSignal<string | null | undefined, number>({
+    source: () => (this.store.status() === 'loaded' ? this.store.venue()?.id : null),
+    computation: () => untracked(() => (this.store.pending().length > 0 ? 0 : 1)),
+  });
 
   constructor() {
     effect(() => {
       const id = this.id();
-      untracked(() => {
-        this.chosenTab.set(null);
-        void this.store.load(id);
-      });
+      untracked(() => void this.store.load(id));
     });
   }
 
   protected choose(index: number): void {
-    this.chosenTab.set(index);
+    this.tab.set(index);
   }
 
   protected retry(): void {

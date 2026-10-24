@@ -26,7 +26,7 @@
                 mat-flat-button
                 type="button"
                 class="confirm-merge"
-                [disabled]="!mergeTarget.value || busy() === item.id"
+                [disabled]="!mergeTarget.value || busy().has(item.id)"
                 (click)="merge(item)"
               >
                 {{ t().confirmMerge }}
@@ -40,7 +40,7 @@
               mat-flat-button
               type="button"
               class="approve"
-              [disabled]="busy() === item.id"
+              [disabled]="busy().has(item.id)"
               (click)="decide(item, 'approve')"
             >
               {{ t().approve }}
@@ -49,7 +49,7 @@
               mat-stroked-button
               type="button"
               class="merge-start"
-              [disabled]="busy() === item.id || store.approved().length === 0"
+              [disabled]="busy().has(item.id) || store.approved().length === 0"
               (click)="startMerge(item)"
             >
               {{ t().merge }}
@@ -58,7 +58,7 @@
               mat-stroked-button
               type="button"
               class="reject"
-              [disabled]="busy() === item.id"
+              [disabled]="busy().has(item.id)"
               (click)="decide(item, 'reject')"
             >
               {{ confirmingReject() === item.id ? t().confirmReject : t().reject }}
@@ -70,7 +70,7 @@
             {{ t().rejectHint }}
           }
         </p>
-        @if (failed() === item.id) {
+        @if (failed().has(item.id)) {
           <p class="error" role="alert">{{ t().decisionFailed }}</p>
         }
       </li>
