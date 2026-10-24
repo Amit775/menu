@@ -70,7 +70,7 @@ describe('EntriesSharedPage', () => {
     const shared = vi.fn().mockResolvedValue(visible);
     const { element } = await open(shared);
     expect(shared).toHaveBeenCalledWith(TOKEN);
-    expect(element.querySelector('.by')?.textContent).toBe('Noa shared a note with you');
+    expect(element.querySelector('.by')?.textContent.trim()).toBe('Noa shared a note with you');
     expect(element.querySelector('h1 a')?.getAttribute('href')).toBe(`/items/${ITEM_ID}`);
     expect(element.querySelector('h1')?.textContent).toContain('Classic Burger');
     expect(element.querySelector('.venue')?.textContent).toBe('Burger 24');
