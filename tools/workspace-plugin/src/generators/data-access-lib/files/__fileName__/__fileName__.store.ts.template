@@ -28,7 +28,11 @@ export const <%= className %>Store = signalStore(
     },
     async create(input: Create<%= className %>): Promise<void> {
       const created = await api.create(input);
-      _items.update((items) => [...(items ?? []), created]);
+      if (_items.hasValue()) {
+        _items.set([..._items.value(), created]);
+      } else {
+        _items.reload();
+      }
     },
   })),
 );
