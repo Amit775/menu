@@ -16,6 +16,7 @@ describe('ItemRow', () => {
     ratingCount: 12,
     wouldOrderAgainPercent: 92,
     latestPrice: 6800,
+    photoUrl: null,
     writtenByMe: true,
   };
 

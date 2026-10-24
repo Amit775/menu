@@ -22,6 +22,7 @@ const visible: SharedEntryView = {
     pricePaid: 6800,
     text: 'Cooked medium like I asked.',
     authorName: 'Noa',
+    photoUrl: null,
     createdAt: '2026-10-22T20:00:00.000Z',
   },
   item: {
