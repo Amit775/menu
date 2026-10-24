@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EntryRepository } from '@menu/api/entries/data-access';
 import { withoutUndefined } from '@menu/api/shared/util';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -14,6 +14,7 @@ import {
   type CreateEntry,
   type DiaryQuery,
   type Entry,
+  type EntryWithItem,
   type ItemEntries,
   type SharedEntryView,
   type UpdateEntry,
@@ -31,6 +32,8 @@ function newShareToken(): string {
  */
 @Injectable()
 export class EntryService {
+  private readonly logger = new Logger(EntryService.name);
+
   constructor(
     private readonly repository: EntryRepository,
     @Inject(ITEM_CATALOG) private readonly catalog: ItemCatalog,
@@ -40,12 +43,19 @@ export class EntryService {
   /** The entries sheet: the caller's own entries, then other people's public ones. */
   async listForItem(principal: Principal | null, itemId: string): Promise<ItemEntries> {
     const item = await this.findItem(principal, itemId);
-    const [mine, others] = await Promise.all([
+    const [refs, mine, others] = await Promise.all([
+      this.catalog.refsFor([itemId]),
       principal ? this.repository.listByAuthor(principal.accountId, { itemId }) : [],
       item.isPublic ? this.repository.listPublicByItem(itemId, principal?.accountId ?? null) : [],
     ]);
+    const ref = refs.get(itemId);
+    if (!ref) {
+      throw new NotFoundException('Item not found.');
+    }
     const names = await this.authors.displayNames(others.map((entry) => entry.authorId));
     return {
+      item: ref,
+      itemIsPublic: item.isPublic,
       mine: mine.map((record) => new DiaryEntry(record).toContract()),
       others: others.map((record) =>
         new DiaryEntry(record).toPublic(names.get(record.authorId) ?? ''),
@@ -69,9 +79,19 @@ export class EntryService {
     return new DiaryEntry(record).toContract();
   }
 
-  async diary(principal: Principal, query: DiaryQuery): Promise<Entry[]> {
+  /** The caller's own entries, each with its item and venue names. */
+  async diary(principal: Principal, query: DiaryQuery): Promise<EntryWithItem[]> {
     const records = await this.repository.listByAuthor(principal.accountId, query);
-    return records.map((record) => new DiaryEntry(record).toContract());
+    const refs = await this.catalog.refsFor(records.map((record) => record.itemId));
+    return records.flatMap((record) => {
+      const item = refs.get(record.itemId);
+      if (!item) {
+        // Items and venues are archived, never deleted, so this is a data bug to look at.
+        this.logger.warn(`Diary entry ${record.id} names item ${record.itemId}, which is gone.`);
+        return [];
+      }
+      return [{ ...new DiaryEntry(record).toContract(), item }];
+    });
   }
 
   async get(principal: Principal, id: string): Promise<Entry> {
@@ -112,9 +132,12 @@ export class EntryService {
       return { status: 'removed' };
     }
     const entry = new DiaryEntry(record);
-    const item = await this.catalog.findForEntries(null, record.itemId);
+    const target = await this.catalog.findForEntries(null, record.itemId);
+    const item = target?.isPublic
+      ? ((await this.catalog.refsFor([record.itemId])).get(record.itemId) ?? null)
+      : null;
     const names = await this.authors.displayNames([record.authorId]);
-    return entry.sharedView(names.get(record.authorId) ?? '', item?.isPublic ?? false);
+    return entry.sharedView(names.get(record.authorId) ?? '', item);
   }
 
   private async findItem(principal: Principal | null, itemId: string): Promise<EntryTarget> {

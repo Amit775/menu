@@ -1,0 +1,80 @@
+<header>
+  <a class="brand" routerLink="/">{{ t().brand }}</a>
+  @if (auth.status() === 'signed-out') {
+    <a mat-button routerLink="/sign-in">{{ t().signIn }}</a>
+  }
+</header>
+
+@switch (store.status()) {
+  @case ('loading') {
+    <div class="state" role="status">
+      <mat-spinner diameter="32" [attr.aria-label]="t().loading" />
+    </div>
+  }
+  @case ('loaded') {
+    @let view = store.view();
+    @if (view?.status === 'visible') {
+      @let entry = view.entry;
+      @let item = view.item;
+      <p class="by">{{ t().sharedBy(entry.authorName) }}</p>
+      <article>
+        <h1>
+          <a [routerLink]="['/items', item.id]">{{ item.name | localize }}</a>
+        </h1>
+        <a class="venue" [routerLink]="['/venues', item.venue.id]">{{
+          item.venue.name | localize
+        }}</a>
+        <ul class="chips">
+          @if (entry.rating !== null) {
+            <li class="rating" [attr.aria-label]="t().ratingLabel(entry.rating)">
+              {{ t().rating(entry.rating) }}
+            </li>
+          }
+          @if (entry.wouldOrderAgain !== null) {
+            <li>{{ entry.wouldOrderAgain ? t().wouldOrderAgain : t().wouldNotOrderAgain }}</li>
+          }
+          @if (entry.pricePaid !== null) {
+            <li>{{ t().paid(entry.pricePaid | shekels) }}</li>
+          }
+          <li>
+            <time [attr.datetime]="entry.eatenAt">{{ eatenOn() }}</time>
+          </li>
+        </ul>
+        @if (entry.text) {
+          <p class="text">{{ entry.text }}</p>
+        }
+      </article>
+
+      @if (auth.status() === 'signed-out') {
+        <aside class="prompt">
+          <h2>{{ t().promptTitle }}</h2>
+          <p>{{ t().promptText }}</p>
+          <a mat-flat-button routerLink="/sign-in">{{ t().promptAction }}</a>
+        </aside>
+      }
+
+      <a class="everyone" mat-stroked-button [routerLink]="['/items', item.id]">
+        {{ t().whatEveryoneSays(item.name | localize) }}
+      </a>
+
+      <p class="footer">{{ t().footer(entry.authorName) }}</p>
+    } @else {
+      <div class="state" role="status">
+        {{ view?.status === 'private' ? t().privateNow : t().removed }}
+        <a mat-button routerLink="/">{{ t().toFeed }}</a>
+      </div>
+    }
+  }
+  @case ('not-found') {
+    <div class="state" role="status">
+      {{ t().removed }}
+      <a mat-button routerLink="/">{{ t().toFeed }}</a>
+    </div>
+  }
+  @default {
+    <div class="state" role="alert">
+      {{ t().loadFailed }}
+      <button mat-button type="button" (click)="retry()">{{ t().retry }}</button>
+    </div>
+  }
+}

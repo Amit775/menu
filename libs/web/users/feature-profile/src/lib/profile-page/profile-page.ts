@@ -16,6 +16,7 @@ import {
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
@@ -25,7 +26,7 @@ import { Auth } from '@menu/web/shared/util-auth';
 import { I18n, injectMessages } from '@menu/web/shared/util-i18n';
 import { profileMessages } from '../profile.messages';
 
-/** The profile tab: sign-in prompt, or the account's name, language and sign-out. The diary joins later. */
+/** The profile tab: sign-in prompt, or the way to the diary, the account's name, language and sign-out. */
 
 /** Required, and more than spaces: the API trims the name. */
 const required: ValidatorFn = (control) =>
@@ -40,6 +41,7 @@ const required: ValidatorFn = (control) =>
     MatButtonModule,
     MatButtonToggleModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
   ],

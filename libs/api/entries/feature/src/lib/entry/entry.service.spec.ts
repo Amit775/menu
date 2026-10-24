@@ -1,4 +1,4 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { type EntryRecord, EntryRepository } from '@menu/api/entries/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -9,6 +9,12 @@ describe('EntryService', () => {
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const other: Principal = { ...author, accountId: 'a2' };
   const item: EntryTarget = { id: 'i1', venueId: 'v1', isPublic: true, acceptsEntry: true };
+  const itemRef = {
+    id: 'i1',
+    name: { he: 'המבורגר' },
+    listPrice: 6800,
+    venue: { id: 'v1', name: { he: 'מוזס' } },
+  };
   const input = {
     rating: 4,
     wouldOrderAgain: true,
@@ -40,12 +46,19 @@ describe('EntryService', () => {
   async function setup(
     repository: Partial<Record<keyof EntryRepository, unknown>>,
     target: EntryTarget | null = item,
+    refs = new Map([['i1', itemRef]]),
   ): Promise<EntryService> {
     const moduleRef = await Test.createTestingModule({
       providers: [
         EntryService,
         { provide: EntryRepository, useValue: repository },
-        { provide: ITEM_CATALOG, useValue: { findForEntries: vi.fn().mockResolvedValue(target) } },
+        {
+          provide: ITEM_CATALOG,
+          useValue: {
+            findForEntries: vi.fn().mockResolvedValue(target),
+            refsFor: vi.fn().mockResolvedValue(refs),
+          },
+        },
         {
           provide: AUTHOR_DIRECTORY,
           useValue: { displayNames: vi.fn().mockResolvedValue(new Map([['a2', 'דנה']])) },
@@ -98,6 +111,8 @@ describe('EntryService', () => {
       const sheet = await (
         await setup({ listByAuthor, listPublicByItem })
       ).listForItem(author, 'i1');
+      expect(sheet.item).toEqual(itemRef);
+      expect(sheet.itemIsPublic).toBe(true);
       expect(sheet.mine.map((entry) => entry.id)).toEqual(['e1']);
       expect(sheet.others).toEqual([expect.objectContaining({ id: 'e2', authorName: 'דנה' })]);
       expect(listPublicByItem).toHaveBeenCalledWith('i1', 'a1');
@@ -109,8 +124,19 @@ describe('EntryService', () => {
         { listByAuthor: vi.fn().mockResolvedValue([]), listPublicByItem },
         { ...item, isPublic: false },
       );
-      await service.listForItem(author, 'i1');
+      const sheet = await service.listForItem(author, 'i1');
       expect(listPublicByItem).not.toHaveBeenCalled();
+      expect(sheet.itemIsPublic).toBe(false);
+    });
+
+    it('reads as not found when the item cannot be named', async () => {
+      const empty = vi.fn().mockResolvedValue([]);
+      const service = await setup(
+        { listByAuthor: empty, listPublicByItem: empty },
+        item,
+        new Map(),
+      );
+      await expect(service.listForItem(author, 'i1')).rejects.toThrow(NotFoundException);
     });
 
     it('shows visitors public entries only', async () => {
@@ -119,7 +145,12 @@ describe('EntryService', () => {
         listByAuthor,
         listPublicByItem: vi.fn().mockResolvedValue([]),
       });
-      await expect(service.listForItem(null, 'i1')).resolves.toEqual({ mine: [], others: [] });
+      await expect(service.listForItem(null, 'i1')).resolves.toEqual({
+        item: itemRef,
+        itemIsPublic: true,
+        mine: [],
+        others: [],
+      });
       expect(listByAuthor).not.toHaveBeenCalled();
     });
   });
@@ -163,6 +194,23 @@ describe('EntryService', () => {
     expect(setHidden).toHaveBeenCalledWith('e1', true);
   });
 
+  it('lists the diary with each entry’s item and venue', async () => {
+    const listByAuthor = vi
+      .fn()
+      .mockResolvedValue([record(), record({ id: 'e2', itemId: 'gone' })]);
+    const diary = await (await setup({ listByAuthor })).diary(author, { venueId: 'v1' });
+    expect(listByAuthor).toHaveBeenCalledWith('a1', { venueId: 'v1' });
+    expect(diary).toEqual([expect.objectContaining({ id: 'e1', item: itemRef })]);
+  });
+
+  it('warns about a diary entry whose item cannot be named', async () => {
+    const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const listByAuthor = vi.fn().mockResolvedValue([record({ id: 'e2', itemId: 'gone' })]);
+    await (await setup({ listByAuthor })).diary(author, {});
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('e2'));
+    warn.mockRestore();
+  });
+
   describe('a share link', () => {
     const shared = record({
       authorId: 'a2',
@@ -175,6 +223,7 @@ describe('EntryService', () => {
       await expect(service.shared('abcdefghijklmnopqrstuv')).resolves.toMatchObject({
         status: 'visible',
         entry: { authorName: 'דנה' },
+        item: itemRef,
       });
     });
 

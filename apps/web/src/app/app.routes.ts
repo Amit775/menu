@@ -3,6 +3,31 @@ import { type Route } from '@angular/router';
 // Feature libs register lazy routes here (the feature-lib generator adds them).
 export const appRoutes: Route[] = [
   {
+    path: 'venues/:id/add-item',
+    loadChildren: () =>
+      import('@menu/web/menus/feature-add-item').then((m) => m.webMenusFeatureAddItemRoutes),
+  },
+  {
+    path: 'e/:token',
+    loadChildren: () =>
+      import('@menu/web/entries/feature-shared').then((m) => m.webEntriesFeatureSharedRoutes),
+  },
+  {
+    path: 'diary',
+    loadChildren: () =>
+      import('@menu/web/entries/feature-diary').then((m) => m.webEntriesFeatureDiaryRoutes),
+  },
+  {
+    path: 'items/:id/entries',
+    loadChildren: () =>
+      import('@menu/web/entries/feature-sheet').then((m) => m.webEntriesFeatureSheetRoutes),
+  },
+  {
+    path: 'log',
+    loadChildren: () =>
+      import('@menu/web/entries/feature-log').then((m) => m.webEntriesFeatureLogRoutes),
+  },
+  {
     path: 'profile',
     loadChildren: () =>
       import('@menu/web/users/feature-profile').then((m) => m.webUsersFeatureProfileRoutes),

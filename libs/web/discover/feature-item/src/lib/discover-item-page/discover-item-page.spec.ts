@@ -5,7 +5,8 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 import { webDiscoverFeatureItemRoutes } from '../lib.routes';
 import { type DiscoverItem, type ItemPage } from '@menu/shared/contracts';
-import { DeviceLocation, DeviceShare, DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DeviceLocation, DeviceShare } from '@menu/web/shared/util-device';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { DiscoverItemPage } from './discover-item-page';
 
@@ -72,8 +73,18 @@ describe('DiscoverItemPage', () => {
       '12',
     ]);
     expect(element.querySelector('menu-price-history')).not.toBeNull();
-    expect(element.querySelector('section h2')?.textContent).toBe('עוד טעים במוזס');
+    expect(element.querySelector('section:not(.people) h2')?.textContent).toBe('עוד טעים במוזס');
     expect(element.querySelector('menu-item-row')?.textContent).toContain('צ׳יפס');
+  });
+
+  it('leads to what people say and to logging the item', async () => {
+    const { element } = await render(vi.fn().mockResolvedValue(page));
+    expect(element.querySelector('.people a')?.getAttribute('href')).toBe(
+      `/items/${item.id}/entries`,
+    );
+    const log = element.querySelector('a.log');
+    expect(log?.getAttribute('href')).toBe(`/log/${item.id}`);
+    expect(log?.textContent).toContain('אכלתי את זה');
   });
 
   it('explains a missing score and an archived item', async () => {
@@ -90,6 +101,7 @@ describe('DiscoverItemPage', () => {
     expect(element.querySelector('.score')?.textContent).toContain('היו הראשונים');
     expect(element.querySelector('[role=note]')?.textContent).toContain('כבר לא בתפריט');
     expect(element.querySelector('menu-price-history')).toBeNull();
+    expect(element.querySelector('a.log')).toBeNull();
   });
 
   it('says when the item does not exist', async () => {

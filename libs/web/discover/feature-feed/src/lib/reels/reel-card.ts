@@ -10,7 +10,8 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { type DiscoverItem } from '@menu/shared/contracts';
-import { DeviceShare, FeedStore } from '@menu/web/discover/data-access';
+import { FeedStore } from '@menu/web/discover/data-access';
+import { DeviceShare } from '@menu/web/shared/util-device';
 import { ScoreBadge } from '@menu/web/discover/ui';
 import {
   DistancePipe,

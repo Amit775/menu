@@ -37,6 +37,15 @@ describe('ItemRepository', () => {
     await expect(repository.findById('i1')).resolves.toEqual(record);
   });
 
+  it('finds items by id, without a query for none', async () => {
+    const findMany = vi.fn().mockResolvedValue([row]);
+    const repository = new ItemRepository({ item: { findMany } } as unknown as PrismaService);
+    await expect(repository.findByIds([])).resolves.toEqual([]);
+    expect(findMany).not.toHaveBeenCalled();
+    await expect(repository.findByIds(['i1'])).resolves.toEqual([record]);
+    expect(findMany.mock.calls[0]?.[0]).toMatchObject({ where: { id: { in: ['i1'] } } });
+  });
+
   it("lists the menu plus the caller's own submissions", async () => {
     const findMany = vi.fn().mockResolvedValue([]);
     const repository = new ItemRepository({ item: { findMany } } as unknown as PrismaService);

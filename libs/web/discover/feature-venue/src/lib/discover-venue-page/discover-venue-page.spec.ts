@@ -2,7 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { type DiscoverItem, type VenuePage } from '@menu/shared/contracts';
-import { DeviceLocation, DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DiscoverApiClient } from '@menu/web/discover/data-access';
+import { DeviceLocation } from '@menu/web/shared/util-device';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { DiscoverVenuePage } from './discover-venue-page';
 
@@ -77,7 +78,12 @@ describe('DiscoverVenuePage', () => {
     expect(element.querySelector('.address')?.textContent).toContain('1.2 ק״מ');
     const links = [...element.querySelectorAll('.actions a')].map((a) => a.getAttribute('href'));
     expect(links).toEqual(['https://waze.com/ul?ll=32.0641,34.7744&navigate=yes', 'tel:035664949']);
-    expect(element.querySelector('.mine')?.textContent).toBe('2 רשומות שלך כאן');
+    const mine = element.querySelector('a.mine');
+    expect(mine?.textContent).toBe('2 רשומות שלך כאן');
+    expect(mine?.getAttribute('href')).toBe(`/diary?venueId=${page.venue.id}`);
+    expect(element.querySelector('a.add-item')?.getAttribute('href')).toBe(
+      `/venues/${page.venue.id}/add-item`,
+    );
     expect(element.querySelector('h3')?.textContent).toBe('עיקריות');
     expect(element.querySelectorAll('menu-item-row')).toHaveLength(2);
   });

@@ -27,6 +27,16 @@ describe('ReelCard', () => {
     expect(element.querySelector('.flag')?.textContent).toBe('יש לך רשומה');
   });
 
+  it('opens what people say and the log form for the item', async () => {
+    const { element } = await render();
+    const entries = element.querySelector('.side a.side-item:not(.log)');
+    expect(entries?.getAttribute('href')).toBe(`/items/${sampleItem(1).id}/entries`);
+    expect(entries?.getAttribute('aria-label')).toBe('מה אומרים: 12 רשומות');
+    const log = element.querySelector('a.log');
+    expect(log?.getAttribute('href')).toBe(`/log/${sampleItem(1).id}`);
+    expect(log?.textContent).toContain('אכלתי');
+  });
+
   it('steps through the venue’s other items from the edges', async () => {
     const { fixture, element, venue } = await render();
     element.querySelector<HTMLButtonElement>('.edge.end')?.click();

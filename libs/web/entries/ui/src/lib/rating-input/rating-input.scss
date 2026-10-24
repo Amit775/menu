@@ -1,0 +1,68 @@
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend {
+  margin-bottom: 8px;
+  font: var(--mat-sys-title-small);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.stars {
+  display: flex;
+  gap: 8px;
+}
+
+label {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  height: 48px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  font-size: 20px;
+  color: var(--mat-sys-outline);
+  cursor: pointer;
+}
+
+label.on {
+  border-color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-on-surface);
+  color: var(--mat-sys-surface);
+}
+
+label:has(input:focus-visible) {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
+input,
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.visually-hidden {
+  opacity: 1;
+}
+
+.clear {
+  margin-top: 4px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-primary);
+  cursor: pointer;
+}

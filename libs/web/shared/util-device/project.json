@@ -1,0 +1,10 @@
+{
+  "name": "web-shared-util-device",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/shared/util-device/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:shared", "type:util"],
+  "// targets": "to see all targets run: nx show project web-shared-util-device --web",
+  "targets": {}
+}

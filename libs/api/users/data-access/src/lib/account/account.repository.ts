@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@menu/api/shared/db';
+import { isPrismaError, PrismaErrorCode, PrismaService } from '@menu/api/shared/db';
 import { withoutUndefined } from '@menu/api/shared/util';
 import {
   type Account,
@@ -39,20 +39,36 @@ export class AccountRepository {
    * signed-in request does not write; `input` only applies to a new account.
    */
   async findOrCreateByFirebaseUid(input: NewAccount): Promise<Account> {
-    const existing = await this.prisma.account.findUnique({
-      where: { firebaseUid: input.firebaseUid },
-      include: withOwnerships,
-    });
+    const existing = await this.findByFirebaseUid(input.firebaseUid);
     if (existing) {
-      return toAccount(existing);
+      return existing;
     }
-    const row = await this.prisma.account.upsert({
-      where: { firebaseUid: input.firebaseUid },
-      create: input,
-      update: {},
+    try {
+      const row = await this.prisma.account.upsert({
+        where: { firebaseUid: input.firebaseUid },
+        create: input,
+        update: {},
+        include: withOwnerships,
+      });
+      return toAccount(row);
+    } catch (error) {
+      // A new user's first requests arrive together; one of them creates the account.
+      const created = isPrismaError(error, PrismaErrorCode.UniqueViolation)
+        ? await this.findByFirebaseUid(input.firebaseUid)
+        : null;
+      if (!created) {
+        throw error;
+      }
+      return created;
+    }
+  }
+
+  private async findByFirebaseUid(firebaseUid: string): Promise<Account | null> {
+    const row = await this.prisma.account.findUnique({
+      where: { firebaseUid },
       include: withOwnerships,
     });
-    return toAccount(row);
+    return row ? toAccount(row) : null;
   }
 
   async findById(id: string): Promise<Account | null> {

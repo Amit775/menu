@@ -1,6 +1,7 @@
 import { computed, effect, inject, untracked } from '@angular/core';
 import { type DiscoverItem, type GeoPoint, type MapPin, type Tag } from '@menu/shared/contracts';
 import { Auth } from '@menu/web/shared/util-auth';
+import { DataChanges } from '@menu/web/shared/util-events';
 import {
   patchState,
   signalStore,
@@ -10,7 +11,7 @@ import {
   withState,
 } from '@ngrx/signals';
 import { DiscoverApiClient } from '../api/discover.api-client';
-import { DeviceLocation } from '../location/device-location';
+import { DeviceLocation } from '@menu/web/shared/util-device';
 
 export type FeedView = 'reels' | 'list' | 'map';
 export type FeedSort = 'score' | 'distance' | 'price';
@@ -87,9 +88,13 @@ export const FeedStore = signalStore(
   })),
   withMethods((store, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => {
     let request = 0;
+    /** Set by a refresh that should leave the user on the reel they were watching. */
+    let keepReel = false;
 
-    async function fetchPage(offset: number): Promise<void> {
+    /** `keep` leaves the user on their reel; any other fetch forgets an earlier ask to. */
+    async function fetchPage(offset: number, keep = false): Promise<void> {
       const current = ++request;
+      keepReel = false;
       patchState(store, { status: 'loading' });
       try {
         const near = await location.locate();
@@ -112,8 +117,9 @@ export const FeedStore = signalStore(
         if (current !== request) {
           return;
         }
+        const reelIndex = keep && store.reelIndex() < page.items.length ? store.reelIndex() : 0;
         patchState(store, {
-          ...(offset === 0 ? { reelIndex: 0 } : {}),
+          ...(offset === 0 ? { reelIndex } : {}),
           items: offset === 0 ? page.items : [...store.items(), ...page.items],
           nextOffset: page.nextOffset,
           near,
@@ -130,7 +136,7 @@ export const FeedStore = signalStore(
       /** The first page, unless it is already here. */
       async load(): Promise<void> {
         if (store.status() === 'idle' || store.status() === 'error') {
-          await fetchPage(0);
+          await fetchPage(0, keepReel);
         }
       },
       async reload(): Promise<void> {
@@ -164,8 +170,9 @@ export const FeedStore = signalStore(
        * Marks the feed out of date (another account, a new entry): the next
        * `load()` fetches again, with fresh scores and "you wrote about this" flags.
        */
-      invalidate(): void {
+      invalidate(options: { keepReel?: boolean } = {}): void {
         request++;
+        keepReel = options.keepReel ?? false;
         patchState(store, { status: 'idle', venueItems: {} });
       },
       async loadTags(): Promise<void> {
@@ -192,7 +199,7 @@ export const FeedStore = signalStore(
     };
   }),
   withHooks({
-    onInit(store, auth = inject(Auth)) {
+    onInit(store, auth = inject(Auth), changes = inject(DataChanges)) {
       let account: string | null | undefined;
       effect(() => {
         const uid = auth.status() === 'loading' ? undefined : (auth.user()?.uid ?? null);
@@ -205,6 +212,17 @@ export const FeedStore = signalStore(
           }
           account = uid;
         });
+      });
+      const entries = changes.version('entries');
+      let seen = entries();
+      effect(() => {
+        const version = entries();
+        if (version !== seen) {
+          seen = version;
+          untracked(() => {
+            store.invalidate({ keepReel: true });
+          });
+        }
       });
     },
   }),

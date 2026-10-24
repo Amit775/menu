@@ -79,6 +79,11 @@
           <menu-price-history [points]="page.priceHistory" />
         }
 
+        <section class="people">
+          <h2>{{ t().whatPeopleSay }}</h2>
+          <a [routerLink]="['/items', item.id, 'entries']">{{ t().allEntries }}</a>
+        </section>
+
         @if (page.alsoGoodHere.length > 0) {
           <section>
             <h2>{{ t().alsoGoodAt(item.venue.name | localize) }}</h2>
@@ -86,6 +91,12 @@
               <menu-item-row [item]="other" [showVenue]="false" />
             }
           </section>
+        }
+        @if (!page.archived) {
+          <a mat-flat-button class="log" [routerLink]="['/log', item.id]">
+            <mat-icon aria-hidden="true">add</mat-icon>
+            {{ t().logIt }}
+          </a>
         }
       </article>
     }

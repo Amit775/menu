@@ -81,6 +81,18 @@ export class ItemRepository {
     return row ? toRecord(row) : null;
   }
 
+  /** These items in any state; unknown ids are left out. */
+  async findByIds(ids: readonly string[]): Promise<ItemRecord[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    const rows = await this.prisma.item.findMany({
+      where: { id: { in: [...ids] } },
+      include: withTags,
+    });
+    return rows.map(toRecord);
+  }
+
   /** Adds the item at the end of its section. */
   async create(input: NewItem): Promise<ItemRecord> {
     const row = await this.prisma.$transaction(async (tx) => {

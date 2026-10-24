@@ -2,6 +2,8 @@ import {
   CreateEntrySchema,
   DiaryQuerySchema,
   EntrySchema,
+  EntryWithItemSchema,
+  ItemEntriesSchema,
   SharedEntryViewSchema,
   UpdateEntrySchema,
 } from './entry.contract';
@@ -63,5 +65,41 @@ describe('Entry contract', () => {
   it('describes a link to an entry made private without its content', () => {
     expect(SharedEntryViewSchema.parse({ status: 'private' })).toEqual({ status: 'private' });
     expect(SharedEntryViewSchema.safeParse({ status: 'visible' }).success).toBe(false);
+  });
+
+  const item = {
+    id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+    name: { he: 'המבורגר' },
+    listPrice: null,
+    venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס' } },
+  };
+
+  it('names the item and venue of a diary line', () => {
+    expect(EntryWithItemSchema.parse({ ...valid, item }).item.venue.name.he).toBe('מוזס');
+    expect(EntryWithItemSchema.safeParse(valid).success).toBe(false);
+  });
+
+  it('shows a visible shared entry with its item', () => {
+    const entry = {
+      id: valid.id,
+      itemId: valid.itemId,
+      venueId: valid.venueId,
+      eatenAt: valid.eatenAt,
+      rating: 4,
+      wouldOrderAgain: true,
+      pricePaid: 6800,
+      text: '',
+      authorName: 'דנה',
+      createdAt: valid.createdAt,
+    };
+    expect(SharedEntryViewSchema.parse({ status: 'visible', entry, item }).status).toBe('visible');
+    expect(SharedEntryViewSchema.safeParse({ status: 'visible', entry }).success).toBe(false);
+  });
+
+  it('names the item above its entries sheet', () => {
+    const sheet = { item, itemIsPublic: true, mine: [valid], others: [] };
+    expect(ItemEntriesSchema.parse(sheet).item.name.he).toBe('המבורגר');
+    expect(ItemEntriesSchema.safeParse({ mine: [], others: [] }).success).toBe(false);
+    expect(ItemEntriesSchema.safeParse({ item, mine: [], others: [] }).success).toBe(false);
   });
 });

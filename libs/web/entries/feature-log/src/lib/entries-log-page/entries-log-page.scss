@@ -1,0 +1,161 @@
+:host {
+  display: block;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 16px 32px;
+}
+
+header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+
+  button {
+    justify-self: start;
+  }
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+  font-weight: 700;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 0;
+  text-align: center;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 20px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.names {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font: var(--mat-sys-title-medium);
+  font-weight: 700;
+}
+
+.meta,
+.hint {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend,
+.visibility span {
+  margin-bottom: 8px;
+  font: var(--mat-sys-title-small);
+}
+
+.choices {
+  display: flex;
+  gap: 8px;
+
+  button {
+    flex: 1;
+    height: 44px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-label-large);
+    cursor: pointer;
+  }
+
+  button[aria-pressed='true'] {
+    border-color: var(--mat-sys-on-surface);
+    background: var(--mat-sys-on-surface);
+    color: var(--mat-sys-surface);
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.hint {
+  margin: -16px 0 0;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.visibility {
+  display: flex;
+  flex-direction: column;
+
+  mat-button-toggle-group {
+    flex-wrap: wrap;
+  }
+}
+
+.error {
+  margin: 0;
+  color: var(--mat-sys-error);
+}
+
+.save {
+  height: 52px;
+  border-radius: 14px;
+}
+
+.pending {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font: var(--mat-sys-body-medium);
+}
+
+.delete-hint {
+  margin: 0;
+  text-align: center;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+
+  &:empty {
+    display: none;
+  }
+}

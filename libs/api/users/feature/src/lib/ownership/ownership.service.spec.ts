@@ -11,7 +11,9 @@ describe('OwnershipService', () => {
     venueId: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   };
 
-  async function setup(repository: Partial<Record<keyof OwnershipRepository, unknown>>): Promise<OwnershipService> {
+  async function setup(
+    repository: Partial<Record<keyof OwnershipRepository, unknown>>,
+  ): Promise<OwnershipService> {
     const moduleRef = await Test.createTestingModule({
       providers: [OwnershipService, { provide: OwnershipRepository, useValue: repository }],
     }).compile();

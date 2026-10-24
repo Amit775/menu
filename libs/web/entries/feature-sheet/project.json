@@ -1,0 +1,10 @@
+{
+  "name": "web-entries-feature-sheet",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/entries/feature-sheet/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:entries", "type:feature"],
+  "// targets": "to see all targets run: nx show project web-entries-feature-sheet --web",
+  "targets": {}
+}
