@@ -13,7 +13,7 @@ const item = {
   score: 4.6,
   ratingCount: 12,
   wouldOrderAgainPercent: 92,
-  latestPrice: 6800,
+  latestPrice: { value: 68, currency: 'ILS' as const },
   photoUrl,
   writtenByMe: false,
 };
@@ -24,13 +24,18 @@ const entry = {
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 5,
   wouldOrderAgain: true,
-  pricePaid: 6800,
+  pricePaid: { value: 68, currency: 'ILS' as const },
   text: 'מדיום מושלם',
   authorName: 'נועה',
   photoUrl,
   createdAt: '2026-10-20T20:00:00.000Z',
 };
-const itemRef = { id: item.id, name: item.name, listPrice: 6800, venue };
+const itemRef = {
+  id: item.id,
+  name: item.name,
+  listPrice: { value: 68, currency: 'ILS' as const },
+  venue,
+};
 const token = 'shareTokenShareToken00';
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
@@ -51,7 +56,9 @@ async function stubBackends(page: Page): Promise<void> {
         item,
         archived: false,
         tags: [],
-        priceHistory: [{ month: '2026-09', averagePrice: 6500, count: 3 }],
+        priceHistory: [
+          { month: '2026-09', averagePrice: { value: 65, currency: 'ILS' as const }, count: 3 },
+        ],
         alsoGoodHere: [],
       },
     }),

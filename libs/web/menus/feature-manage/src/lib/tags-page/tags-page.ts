@@ -14,7 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
-import { type LocalizedText, type Tag, type TagKind, TagKindSchema } from '@menu/shared/contracts';
+import { type Text, type Tag, type TagKind, TagKindSchema } from '@menu/shared/contracts';
 import { TagsStore } from '@menu/web/menus/data-access';
 import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { tagsI18n } from '../tags.i18n';
@@ -143,11 +143,9 @@ export class TagsPage {
     }
   }
 
-  private named(form: { getRawValue(): { nameHe: string; nameEn: string } }): LocalizedText {
+  private named(form: { getRawValue(): { nameHe: string; nameEn: string } }): Text {
     const { nameHe, nameEn } = form.getRawValue();
-    const he = nameHe.trim();
-    const en = nameEn.trim();
-    return en ? { he, en } : { he };
+    return { he: nameHe.trim(), en: nameEn.trim() || null };
   }
 
   private async run(action: () => Promise<void>): Promise<boolean> {

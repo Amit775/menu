@@ -19,7 +19,7 @@ const visible: SharedEntryView = {
     eatenAt: '2026-10-22T19:30:00.000Z',
     rating: 5,
     wouldOrderAgain: true,
-    pricePaid: 6800,
+    pricePaid: { value: 68, currency: 'ILS' as const },
     text: 'Cooked medium like I asked.',
     authorName: 'Noa',
     photoUrl: null,
@@ -28,7 +28,7 @@ const visible: SharedEntryView = {
   item: {
     id: ITEM_ID,
     name: { he: 'המבורגר הקלאסי', en: 'Classic Burger' },
-    listPrice: 6800,
+    listPrice: { value: 68, currency: 'ILS' as const },
     venue: {
       id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
       name: { he: 'בורגר 24', en: 'Burger 24' },

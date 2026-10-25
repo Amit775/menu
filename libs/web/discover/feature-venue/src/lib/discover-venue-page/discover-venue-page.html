@@ -27,7 +27,7 @@
       <article>
         <h1>{{ page.venue.name | localize }}</h1>
         <p class="address">
-          {{ page.venue.address }}
+          {{ page.venue.address | localize }}
           @if (page.distanceMeters !== null) {
             · {{ page.distanceMeters | distance }}
           }

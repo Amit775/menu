@@ -71,8 +71,8 @@
             <input
               matInput
               type="number"
-              inputmode="numeric"
-              step="1"
+              inputmode="decimal"
+              step="0.01"
               [formField]="form.price"
               aria-describedby="price-hint"
             />
@@ -93,10 +93,10 @@
         </div>
         <p id="price-hint" class="hint">
           @if (store.lastPaid(); as lastPaid) {
-            {{ t('lastPaid', { price: lastPaid | shekels }) }}
+            {{ t('lastPaid', { price: lastPaid | price }) }}
           }
           @if (sheet.item.listPrice !== null) {
-            {{ t('listPrice', { price: sheet.item.listPrice | shekels }) }}
+            {{ t('listPrice', { price: sheet.item.listPrice | price }) }}
           }
         </p>
 
