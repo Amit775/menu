@@ -1,17 +1,42 @@
-import { type LocalizedText } from '@menu/shared/contracts';
+import {
+  type Currency,
+  LongTextSchema,
+  type Price,
+  type Text,
+  TextSchema,
+} from '@menu/shared/contracts';
+import { Prisma } from '../generated/prisma/client';
 
-/** `LocalizedText` is stored as `<name>_he` and a nullable `<name>_en` column. */
-export interface LocalizedColumns {
-  nameHe: string;
-  nameEn: string | null;
+// A nullable Json column is cleared with DbNull; a plain null would store the JSON value null.
+export const DbNull = Prisma.DbNull;
+
+export interface DecimalColumn {
+  toNumber(): number;
 }
 
-export function toLocalized(row: LocalizedColumns): LocalizedText {
-  return row.nameEn === null ? { he: row.nameHe } : { he: row.nameHe, en: row.nameEn };
+export function readText(column: unknown): Text {
+  return TextSchema.parse(column);
 }
 
-export function fromLocalized(text: LocalizedText): LocalizedColumns {
-  return { nameHe: text.he, nameEn: text.en ?? null };
+export function readLongText(column: unknown): Text {
+  return LongTextSchema.parse(column);
+}
+
+export function readPrice(value: DecimalColumn | null, currency: Currency | null): Price | null {
+  if (value === null && currency === null) {
+    return null;
+  }
+  if (value === null || currency === null) {
+    throw new Error('A price needs both its value and its currency.');
+  }
+  return { value: value.toNumber(), currency };
+}
+
+export function writePrice(price: Price | null): {
+  value: number | null;
+  currency: Currency | null;
+} {
+  return { value: price?.value ?? null, currency: price?.currency ?? null };
 }
 
 export const PrismaErrorCode = {
