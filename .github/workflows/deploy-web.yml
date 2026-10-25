@@ -1,20 +1,21 @@
 name: Deploy web
 
-# Builds apps/web and deploys it to Firebase Hosting: a preview channel per
-# pull request, the live channel on main. Skipped until the repository
+# Builds apps/web and deploys it to Firebase Hosting: a preview channel for
+# each pull request labelled `preview`, the live channel on main. Skipped until the repository
 # variable FIREBASE_PROJECT_ID and the secret FIREBASE_SERVICE_ACCOUNT exist
 # (see docs/deployment.md).
 #
 # Firebase Auth only accepts sign-ins from its authorized domains, which take
 # no wildcards, so the auth-domains job keeps one entry per preview channel. It
-# runs after each preview deploy, when a PR closes (deleting that PR's channel
-# first) and daily, to drop the domains of channels that expired.
+# runs after each preview deploy, when a preview PR closes or loses the label
+# (deleting that PR's channel first) and daily, to drop the domains of channels
+# that expired.
 
 on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened, labeled, unlabeled, closed]
   schedule:
     - cron: '17 3 * * *'
   workflow_dispatch:
@@ -26,17 +27,27 @@ permissions:
 
 concurrency:
   # The event name keeps the scheduled cleanup from cancelling a live deploy.
-  group: deploy-web-${{ github.event_name == 'pull_request' && 'pr' || github.event_name }}-${{ github.ref }}
+  # Adding or removing any other label gets its own group, so it cannot cancel
+  # a running preview deploy.
+  group: >-
+    deploy-web-${{ github.event_name == 'pull_request' && 'pr' || github.event_name }}-${{ github.ref }}${{
+    (github.event.action == 'labeled' || github.event.action == 'unlabeled') &&
+    github.event.label.name != 'preview' && format('-{0}', github.run_id) || '' }}
   cancel-in-progress: true
 
 jobs:
   deploy:
-    # Fork PRs get no secrets, so they cannot deploy a preview.
+    # Previews are opt-in through the `preview` label, so a stack of small PRs
+    # does not fill Hosting with channels. Fork PRs get no secrets, so they
+    # cannot deploy a preview.
     if: >-
       vars.FIREBASE_PROJECT_ID != '' &&
       (github.event_name == 'push' ||
-       (github.event_name == 'pull_request' && github.event.action != 'closed' &&
-        github.event.pull_request.head.repo.full_name == github.repository))
+       (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        contains(github.event.pull_request.labels.*.name, 'preview') &&
+        github.event.action != 'closed' && github.event.action != 'unlabeled' &&
+        (github.event.action != 'labeled' || github.event.label.name == 'preview')))
     runs-on: ubuntu-latest
     environment: ${{ github.event_name == 'push' && 'production' || 'preview' }}
     steps:
@@ -74,13 +85,17 @@ jobs:
 
   auth-domains:
     needs: deploy
-    # After a successful preview deploy, on PR close (deploy is skipped) and on
-    # the schedule. Never on main pushes: the live domain is permanent.
+    # After a successful preview deploy, when a preview PR closes or loses the
+    # label (deploy is skipped) and on the schedule. Never on main pushes: the
+    # live domain is permanent.
     if: >-
       always() && vars.FIREBASE_PROJECT_ID != '' &&
-      (needs.deploy.result == 'success' || needs.deploy.result == 'skipped') &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
-       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
+       (github.event_name == 'pull_request' && needs.deploy.result == 'success') ||
+       (github.event_name == 'pull_request' && needs.deploy.result == 'skipped' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        ((github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'preview')) ||
+         (github.event.action == 'unlabeled' && github.event.label.name == 'preview'))))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # The authorized domain list is replaced as a whole, so one writer at a
@@ -91,7 +106,8 @@ jobs:
       cancel-in-progress: false
     env:
       PROJECT: ${{ vars.FIREBASE_PROJECT_ID }}
-      CLOSED_PR: ${{ github.event.action == 'closed' && github.event.pull_request.number || '' }}
+      # The PR whose preview goes away: closed, or the label was removed.
+      CLOSED_PR: ${{ (github.event.action == 'closed' || github.event.action == 'unlabeled') && github.event.pull_request.number || '' }}
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2

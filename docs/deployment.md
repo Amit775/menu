@@ -43,7 +43,7 @@ Try it locally: `pnpm nx build web && firebase emulators:start --only hosting`, 
    - **Variables** tab: `FIREBASE_PROJECT_ID` = your project id.
 4. Delete the downloaded JSON file.
 5. Optional: in **Settings > Environments**, add required reviewers to `production` so deploys to the live site wait for your approval. The workflow already uses the `production` and `preview` environments.
-6. **Sign-in on previews.** Firebase Auth only accepts sign-ins from its authorized domains and takes no wildcards, so the `auth-domains` job in `deploy-web.yml` adds each preview channel's domain (`menu-b29eb--pr<n>-...web.app`) after the deploy, deletes the PR's channel and its domain when the PR closes, and drops expired channels' domains daily. It only touches `menu-b29eb--*.web.app` entries. Give `github-deployer` permission to edit the list with a custom role, narrower than **Firebase Authentication Admin** (which also manages users):
+6. **Sign-in on previews.** Firebase Auth only accepts sign-ins from its authorized domains and takes no wildcards, so the `auth-domains` job in `deploy-web.yml` adds each preview channel's domain (`menu-b29eb--pr<n>-...web.app`) after the deploy, deletes the PR's channel and its domain when the PR closes or loses the `preview` label, and drops expired channels' domains daily. It only touches `menu-b29eb--*.web.app` entries. Give `github-deployer` permission to edit the list with a custom role, narrower than **Firebase Authentication Admin** (which also manages users):
    - https://console.cloud.google.com/iam-admin/roles/create?project=menu-b29eb: title `Auth Domains Editor`, ID `authDomainsEditor`, stage **General Availability**, **Add permissions**: `firebaseauth.configs.get` and `firebaseauth.configs.update`. Create.
    - https://console.cloud.google.com/iam-admin/iam?project=menu-b29eb: edit `github-deployer`, **Add another role** > `Auth Domains Editor`. Save.
    - Listing and deleting channels is already covered by **Firebase Hosting Admin**. Until the role is granted, the job fails with `403` and previews still deploy.
@@ -51,7 +51,7 @@ Try it locally: `pnpm nx build web && firebase emulators:start --only hosting`, 
 
 Shortcut: `firebase init hosting:github` creates the service account and uploads a secret for you, but it names the secret `FIREBASE_SERVICE_ACCOUNT_<PROJECT_ID>` and writes its own workflow files. If you use it, rename the secret to `FIREBASE_SERVICE_ACCOUNT` and delete the workflows it generates.
 
-Once both are set, every same-repo PR gets a preview URL comment and every merge to `main` deploys the live site. Until then the deploy workflow is skipped and shows as such.
+Once both are set, every merge to `main` deploys the live site, and a same-repo PR gets a preview channel and a URL comment once it has the `preview` label. Adding the label deploys right away and every push after that redeploys; removing it deletes the channel. PRs without the label get no preview, so a stack of small PRs does not create one channel each. Until then the deploy workflow is skipped and shows as such.
 
 ## 5. Run the API on Cloud Run with Cloud SQL
 

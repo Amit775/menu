@@ -9,7 +9,7 @@ The web app is a static build of `apps/web` (`dist/apps/web/browser`) served by 
 
 ## Rules
 
-- **Never deploy.** Do not run `firebase deploy`, `firebase hosting:channel:deploy`, `firebase use` or anything that changes the Firebase project. CI deploys: a preview channel per PR, the live site on `main`. If a command would deploy, stop and ask the user.
+- **Never deploy.** Do not run `firebase deploy`, `firebase hosting:channel:deploy`, `firebase use` or anything that changes the Firebase project. CI deploys: a preview channel for each PR labelled `preview`, the live site on `main`. If a command would deploy, stop and ask the user.
 - Do not add `firebase-tools` or the Firebase JS SDK to `package.json` (hard rule 6). The deploy action ships its own CLI. Using Firebase services from the app (Auth, Storage, ...) needs an ADR first.
 - Never commit service account keys or tokens. The project id lives in `.firebaserc` and the `FIREBASE_PROJECT_ID` repo variable; the key lives only in the `FIREBASE_SERVICE_ACCOUNT` secret.
 - Keep `/index.html` uncached and hashed assets immutable. Angular's production build hashes file names (`outputHashing: all`), which is what makes the long cache safe.
@@ -24,7 +24,7 @@ The web app is a static build of `apps/web` (`dist/apps/web/browser`) served by 
    firebase emulators:start --only hosting   # http://localhost:5002
    ```
    If the CLI is not installed (cloud sessions), skip this and say so; the PR preview deploy is the check.
-3. Open a PR. The `Deploy web` workflow comments a preview URL on it. Check the change there (headers with `curl -I <url>`, routes by loading deep links).
+3. Open a PR and add the `preview` label. The `Deploy web` workflow then comments a preview URL on it. Check the change there (headers with `curl -I <url>`, routes by loading deep links).
 
 ## API on Cloud Run
 
