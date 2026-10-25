@@ -40,15 +40,18 @@ describe('Discover contract', () => {
   it('accepts an item without a score yet', () => {
     const item = {
       id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
-      name: { he: 'המבורגר' },
-      venue: { id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10', name: { he: 'הבורגר של משה' } },
+      name: { he: 'המבורגר', en: null },
+      venue: {
+        id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+        name: { he: 'הבורגר של משה', en: null },
+      },
       sectionId: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
       tagIds: [],
       distanceMeters: 420,
       score: null,
       ratingCount: 1,
       wouldOrderAgainPercent: null,
-      latestPrice: 6800,
+      latestPrice: { value: 68, currency: 'ILS' },
       photoUrl: null,
       writtenByMe: true,
     };
@@ -57,7 +60,11 @@ describe('Discover contract', () => {
 
   it('rejects a price point under the anonymity floor', () => {
     expect(
-      PricePointSchema.safeParse({ month: '2026-10', averagePrice: 6800, count: 2 }).success,
+      PricePointSchema.safeParse({
+        month: '2026-10',
+        averagePrice: { value: 68, currency: 'ILS' },
+        count: 2,
+      }).success,
     ).toBe(false);
   });
 });
