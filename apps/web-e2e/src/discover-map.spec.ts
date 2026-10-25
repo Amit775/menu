@@ -3,7 +3,7 @@ import { expect, type Page, test } from '@playwright/test';
 const venue = { id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס', en: 'Moses' } };
 const item = {
   id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
-  name: { he: 'המבורגר הבית' },
+  name: { he: 'המבורגר הבית', en: null },
   venue,
   sectionId: '5c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
   tagIds: [],
@@ -11,7 +11,7 @@ const item = {
   score: 4.6,
   ratingCount: 12,
   wouldOrderAgainPercent: 92,
-  latestPrice: 6800,
+  latestPrice: { value: 68, currency: 'ILS' as const },
   photoUrl: null,
   writtenByMe: false,
 };

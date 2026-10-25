@@ -7,7 +7,11 @@ import { entry, ITEM_ID, publicEntry, sheet, settle } from '../testing/fixtures'
 import { ItemEntriesStore } from './item-entries.store';
 
 describe('ItemEntriesStore', () => {
-  const older = { ...entry, id: '2e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', pricePaid: 5900 };
+  const older = {
+    ...entry,
+    id: '2e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
+    pricePaid: { value: 59, currency: 'ILS' as const },
+  };
 
   function setup(api: Partial<EntryApiClient>) {
     const remember = vi.fn();
@@ -39,7 +43,7 @@ describe('ItemEntriesStore', () => {
     });
     store.load(() => ITEM_ID);
     await settle();
-    expect(store.lastPaid()).toBe(5900);
+    expect(store.lastPaid()).toEqual({ value: 59, currency: 'ILS' });
   });
 
   it('reads an unknown item as not found', async () => {

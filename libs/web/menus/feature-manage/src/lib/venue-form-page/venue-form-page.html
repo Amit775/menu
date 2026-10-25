@@ -35,11 +35,15 @@
         <input matInput dir="ltr" lang="en" [formField]="form.nameEn" />
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>{{ t('address') }}</mat-label>
-        <input matInput [formField]="form.address" />
-        @if (form.address().invalid()) {
+        <mat-label>{{ t('addressHe') }}</mat-label>
+        <input matInput dir="rtl" lang="he" [formField]="form.addressHe" />
+        @if (form.addressHe().invalid()) {
           <mat-error>{{ t('addressRequired') }}</mat-error>
         }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('addressEn') }}</mat-label>
+        <input matInput dir="ltr" lang="en" [formField]="form.addressEn" />
       </mat-form-field>
 
       <menu-pin-picker [point]="point()" [label]="t('map')" (picked)="place($event)" />
