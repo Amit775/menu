@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LocalizedTextSchema } from '../common/values.contract';
+import { TextSchema } from '../common/values.contract';
 
 export function menuSectionPath(venueId: string): string {
   return `venues/${venueId}/sections`;
@@ -10,7 +10,7 @@ export const menuSectionRoute = 'venues/:venueId/sections';
 export const MenuSectionSchema = z.object({
   id: z.uuid(),
   venueId: z.uuid(),
-  name: LocalizedTextSchema,
+  name: TextSchema,
   position: z.number().int().min(0),
 });
 
