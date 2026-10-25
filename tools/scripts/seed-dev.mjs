@@ -53,11 +53,11 @@ const tags = {
   spicy: await tag('spicy', 'חריף', 'Spicy', 'flavour'),
 };
 
-// [he, en, price in agorot, tags, section index, entries as [who, rating, again, days ago]]
+// [he, en, price in shekels, tags, section index, entries as [who, rating, again, days ago]]
 const venues = [
   {
     name: { he: 'מוזס', en: 'Moses' },
-    address: 'רוטשילד 35, תל אביב',
+    address: { he: 'רוטשילד 35, תל אביב', en: null },
     location: { lat: 32.0641, lng: 34.7744 },
     phone: '03-566 4949',
     sections: [
@@ -68,7 +68,7 @@ const venues = [
       [
         'המבורגר הבית',
         'House burger',
-        6800,
+        68,
         [tags.burger],
         0,
         [
@@ -81,7 +81,7 @@ const venues = [
       [
         'צ׳יזבורגר',
         'Cheeseburger',
-        7200,
+        72,
         [tags.burger],
         0,
         [
@@ -90,12 +90,12 @@ const venues = [
           ['yael', 4, true, 33],
         ],
       ],
-      ['צ׳יפס', 'Fries', 2400, [], 1, [['omer', 3, false, 3]]],
+      ['צ׳יפס', 'Fries', 24, [], 1, [['omer', 3, false, 3]]],
     ],
   },
   {
     name: { he: 'פיצה לנה', en: 'Pizza Lena' },
-    address: 'דיזנגוף 100, תל אביב',
+    address: { he: 'דיזנגוף 100, תל אביב', en: null },
     location: { lat: 32.0785, lng: 34.774 },
     phone: null,
     sections: [{ he: 'פיצות', en: 'Pizzas' }],
@@ -103,7 +103,7 @@ const venues = [
       [
         'מרגריטה',
         'Margherita',
-        5400,
+        54,
         [tags.pizza, tags.vegetarian],
         0,
         [
@@ -112,12 +112,12 @@ const venues = [
           ['yael', 4, true, 15],
         ],
       ],
-      ['פפרוני', 'Pepperoni', 6200, [tags.pizza, tags.spicy], 0, [['amit', 4, true, 7]]],
+      ['פפרוני', 'Pepperoni', 62, [tags.pizza, tags.spicy], 0, [['amit', 4, true, 7]]],
     ],
   },
   {
     name: { he: 'הבר של אלנבי', en: 'Allenby Bar' },
-    address: 'אלנבי 58, תל אביב',
+    address: { he: 'אלנבי 58, תל אביב', en: null },
     location: { lat: 32.0682, lng: 34.7713 },
     phone: null,
     sections: [
@@ -128,7 +128,7 @@ const venues = [
       [
         'נגרוני',
         'Negroni',
-        5800,
+        58,
         [tags.cocktail],
         0,
         [
@@ -136,7 +136,7 @@ const venues = [
           ['omer', 4, true, 18],
         ],
       ],
-      ['בירה מהחבית', 'Draft beer', 3200, [tags.beer], 1, [['amit', 3, true, 6]]],
+      ['בירה מהחבית', 'Draft beer', 32, [tags.beer], 1, [['amit', 3, true, 6]]],
     ],
   },
 ];
@@ -154,7 +154,7 @@ for (const venue of venues) {
     const item = await call('POST', `/venues/${created.id}/items`, {
       sectionId: sections[section].id,
       name: { he, en },
-      listPrice,
+      listPrice: { value: listPrice, currency: 'ILS' },
       tagIds: itemTags.map((t) => t.id),
     });
     for (const [who, rating, wouldOrderAgain, days] of entries) {
@@ -164,7 +164,7 @@ for (const venue of venues) {
         {
           rating,
           wouldOrderAgain,
-          pricePaid: listPrice,
+          pricePaid: { value: listPrice, currency: 'ILS' },
           eatenAt: daysAgo(days),
           text: rating >= 4 ? 'טעים, אזמין שוב' : 'היה בסדר',
           visibility: 'public',
@@ -186,7 +186,7 @@ await call(
   `/venues/${moses}/items`,
   {
     sectionId: mosesSections[0].id,
-    name: { he: 'סמאש בורגר' },
+    name: { he: 'סמאש בורגר', en: null },
     listPrice: null,
     tagIds: [tags.burger.id],
   },
