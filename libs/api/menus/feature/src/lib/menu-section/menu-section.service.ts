@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { MenuSectionRepository, VenueRepository } from '@menu/api/menus/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
-import { type LocalizedText, type MenuSection } from '@menu/shared/contracts';
+import { type MenuSection, type Text } from '@menu/shared/contracts';
 
 @Injectable()
 export class MenuSectionService {
@@ -23,16 +23,20 @@ export class MenuSectionService {
     return this.repository.listByVenue(venueId);
   }
 
-  async create(principal: Principal, venueId: string, name: LocalizedText): Promise<MenuSection> {
+  async create(principal: Principal, venueId: string, name: Text): Promise<MenuSection> {
     await this.assertCanEdit(principal, venueId);
-    return this.repository.create(venueId, name);
+    const section = await this.repository.create(venueId, name);
+    if (!section) {
+      throw new NotFoundException('Venue not found.');
+    }
+    return section;
   }
 
   async rename(
     principal: Principal,
     venueId: string,
     id: string,
-    name: LocalizedText,
+    name: Text,
   ): Promise<MenuSection> {
     await this.assertCanEdit(principal, venueId);
     const section = await this.repository.rename(venueId, id, name);

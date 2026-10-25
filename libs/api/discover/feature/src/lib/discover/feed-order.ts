@@ -17,7 +17,9 @@ function byFlagThenDistance(a: DiscoverItem, b: DiscoverItem): number {
 }
 
 function byPrice(a: DiscoverItem, b: DiscoverItem): number {
-  return (a.latestPrice ?? Infinity) - (b.latestPrice ?? Infinity) || byDistance(a, b);
+  return (
+    (a.latestPrice?.value ?? Infinity) - (b.latestPrice?.value ?? Infinity) || byDistance(a, b)
+  );
 }
 
 export function orderFeed(
