@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PhotoUrlSchema } from '../entries/photo.contract';
-import { AgorotSchema, GeoPointSchema, LocalizedTextSchema } from '../common/values.contract';
+import { GeoPointSchema, PriceSchema, ShekelsSchema, TextSchema } from '../common/values.contract';
 import { MenuSectionSchema } from '../menus/menu-section.contract';
 import { TagSchema } from '../menus/tag.contract';
 import { VenueSchema } from '../menus/venue.contract';
@@ -37,8 +37,8 @@ export const FeedQuerySchema = NearQuerySchema.extend({
   tagIds: TagIdsQuery,
   mode: z.enum(['reels', 'list']).default('reels'),
   sort: z.enum(['score', 'distance', 'price']).default('score'),
-  minPrice: QueryNumber.pipe(AgorotSchema).optional(),
-  maxPrice: QueryNumber.pipe(AgorotSchema).optional(),
+  minPrice: QueryNumber.pipe(ShekelsSchema).optional(),
+  maxPrice: QueryNumber.pipe(ShekelsSchema).optional(),
   minEntries: QueryNumber.int().min(0).max(1000).optional(),
   offset: QueryNumber.int().min(0).default(0),
   limit: QueryNumber.int().min(1).max(50).default(20),
@@ -61,7 +61,7 @@ export const SearchQuerySchema = z.object({ q: z.string().trim().min(1).max(60) 
 
 export type SearchQuery = z.infer<typeof SearchQuerySchema>;
 
-export const VenueRefSchema = z.object({ id: z.uuid(), name: LocalizedTextSchema });
+export const VenueRefSchema = z.object({ id: z.uuid(), name: TextSchema });
 
 export type VenueRef = z.infer<typeof VenueRefSchema>;
 
@@ -74,7 +74,7 @@ export type VenueRef = z.infer<typeof VenueRefSchema>;
  */
 export const DiscoverItemSchema = z.object({
   id: z.uuid(),
-  name: LocalizedTextSchema,
+  name: TextSchema,
   venue: VenueRefSchema,
   sectionId: z.uuid(),
   tagIds: z.array(z.uuid()),
@@ -82,7 +82,7 @@ export const DiscoverItemSchema = z.object({
   score: z.number().min(1).max(5).nullable(),
   ratingCount: z.number().int().min(0),
   wouldOrderAgainPercent: z.number().int().min(0).max(100).nullable(),
-  latestPrice: AgorotSchema.nullable(),
+  latestPrice: PriceSchema.nullable(),
   photoUrl: PhotoUrlSchema.nullable(),
   writtenByMe: z.boolean(),
 });
@@ -118,7 +118,7 @@ export type VenuePage = z.infer<typeof VenuePageSchema>;
 
 export const PricePointSchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
-  averagePrice: AgorotSchema,
+  averagePrice: PriceSchema,
   count: z.number().int().min(SCORE_FLOOR),
 });
 
@@ -146,7 +146,7 @@ export const VenueInsightsSchema = z.object({
   items: z.array(
     z.object({
       itemId: z.uuid(),
-      name: LocalizedTextSchema,
+      name: TextSchema,
       score: z.number().min(1).max(5).nullable(),
       ratingCount: z.number().int().min(0),
       publicEntryCount: z.number().int().min(0),
