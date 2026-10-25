@@ -12,7 +12,7 @@ The app opens in Hebrew (right to left) and must offer English as a full second 
 - Translate at runtime with a small workspace lib, `@menu/web/shared/util-i18n`, and no new dependency.
 - `I18n` holds the language as a signal (Hebrew by default, remembered per device) and keeps `<html lang dir>` in sync, so layout, Material components and logical CSS properties mirror automatically.
 - Each lib keeps its own strings next to its code with `defineMessages({ he, en })` and reads them with `injectMessages()`; the English object must have the same shape as the Hebrew one, so a missing string is a type error.
-- Bilingual data from the API (`LocalizedText`) is shown with `I18n.pick()` or the `localize` pipe, falling back to Hebrew when there is no English name.
+- Bilingual data from the API (`Text`) is shown with `I18n.pick()` or the `localize` pipe, falling back to Hebrew when there is no English name.
 - Styles use logical properties (`margin-inline-start`, `inset-inline-end`) so one stylesheet serves both directions.
 
 ## Consequences
