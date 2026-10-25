@@ -6,9 +6,9 @@ import { DiaryEntry } from './diary-entry';
 describe('DiaryEntry', () => {
   const itemRef = {
     id: 'i1',
-    name: { he: 'המבורגר' },
-    listPrice: 6800,
-    venue: { id: 'v1', name: { he: 'מוזס' } },
+    name: { he: 'המבורגר', en: null },
+    listPrice: { value: 68, currency: 'ILS' as const },
+    venue: { id: 'v1', name: { he: 'מוזס', en: null } },
   };
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const admin: Principal = { ...author, accountId: 'x', isAdmin: true };
@@ -20,7 +20,7 @@ describe('DiaryEntry', () => {
     eatenAt: '2026-10-20T19:30:00.000Z',
     rating: 4,
     wouldOrderAgain: true,
-    pricePaid: 6800,
+    pricePaid: { value: 68, currency: 'ILS' as const },
     text: 'טעים',
     visibility: 'shared',
     shareToken: 'abcdefghijklmnopqrstuv',

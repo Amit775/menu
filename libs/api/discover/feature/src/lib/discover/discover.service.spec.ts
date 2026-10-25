@@ -18,10 +18,10 @@ describe('DiscoverService', () => {
   function item(id: string, overrides: Partial<CatalogItem> = {}): CatalogItem {
     return {
       id,
-      name: { he: id },
+      name: { he: id, en: null },
       state: 'approved',
       venueId,
-      venueName: { he: 'משה' },
+      venueName: { he: 'משה', en: null },
       venueLocation: here,
       sectionId: 's1',
       position: 0,
@@ -36,7 +36,7 @@ describe('DiscoverService', () => {
     item('ranked'),
     item('archived', { state: 'archived' }),
     item('far', { venueId: farVenueId, venueLocation: { lat: 32.79, lng: 34.99 } }),
-    item('new', { position: 1, listPrice: 4200 }),
+    item('new', { position: 1, listPrice: { value: 42, currency: 'ILS' as const } }),
   ];
   const stats = new Map<string, ItemStats>([
     [
@@ -59,14 +59,16 @@ describe('DiscoverService', () => {
     const repository = {
       loadCatalog: vi.fn().mockResolvedValue(catalog),
       findActiveVenue: vi.fn().mockResolvedValue({ id: venueId, location: here }),
-      listActiveVenues: vi.fn().mockResolvedValue([{ id: venueId, name: { he: 'הבורגר של משה' } }]),
+      listActiveVenues: vi
+        .fn()
+        .mockResolvedValue([{ id: venueId, name: { he: 'הבורגר של משה', en: null } }]),
       listSections: vi
         .fn()
-        .mockResolvedValue([{ id: 's1', venueId, name: { he: 'עיקריות' }, position: 0 }]),
+        .mockResolvedValue([{ id: 's1', venueId, name: { he: 'עיקריות', en: null }, position: 0 }]),
       listTags: vi
         .fn()
         .mockResolvedValue([
-          { id: burger, slug: 'hamburger', name: { he: 'המבורגר' }, kind: 'dish' },
+          { id: burger, slug: 'hamburger', name: { he: 'המבורגר', en: null }, kind: 'dish' },
         ]),
       ...overrides,
     };
@@ -94,7 +96,11 @@ describe('DiscoverService', () => {
       expect(feed.items.map((i) => i.id)).toEqual(['ranked', 'new']);
       expect(feed.items[0]).toMatchObject({ ratingCount: 3, wouldOrderAgainPercent: 100 });
       expect(feed.items[0]?.score).not.toBeNull();
-      expect(feed.items[1]).toMatchObject({ score: null, writtenByMe: true, latestPrice: 4200 });
+      expect(feed.items[1]).toMatchObject({
+        score: null,
+        writtenByMe: true,
+        latestPrice: { value: 42, currency: 'ILS' as const },
+      });
       expect(feed.nextOffset).toBeNull();
     });
 
