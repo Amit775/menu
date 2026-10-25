@@ -1,4 +1,3 @@
-
 generator client {
   provider     = "prisma-client"
   output       = "../src/generated/prisma"
@@ -9,21 +8,30 @@ datasource db {
   provider = "postgresql"
 }
 
-
 enum Language {
   he
   en
 }
 
+enum Role {
+  user
+  admin
+}
+
+/// Owner is not a role: it comes from ownership rows, one per venue.
 model Account {
   id          String   @id @default(uuid()) @db.Uuid
   firebaseUid String   @unique @map("firebase_uid")
   displayName String   @default("") @map("display_name")
   language    Language @default(he)
-  isAdmin     Boolean  @default(false) @map("is_admin")
+  role        Role     @default(user)
   createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
-  ownerships Ownership[] @relation("owner")
+  ownerships        Ownership[] @relation("owner")
+  grantedOwnerships Ownership[] @relation("grantor")
+  createdVenues     Venue[]
+  submittedItems    Item[]
 
   @@map("account")
 }
@@ -34,53 +42,42 @@ model Ownership {
   grantedById String?  @map("granted_by_id") @db.Uuid
   grantedAt   DateTime @default(now()) @map("granted_at")
 
-  account Account @relation("owner", fields: [accountId], references: [id], onDelete: Cascade)
-  venue   Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  account   Account  @relation("owner", fields: [accountId], references: [id], onDelete: Cascade)
+  grantedBy Account? @relation("grantor", fields: [grantedById], references: [id], onDelete: SetNull)
+  venue     Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
 
   @@id([accountId, venueId])
   @@index([venueId])
   @@map("ownership")
 }
 
-
 enum VenueStatus {
   active
   hidden
 }
 
+/// `name` and `address` are Text and `sections` an array of { id, name: Text }, all jsonb validated by
+/// the Zod contracts. lat and lng stay columns so the bounding-box index works.
 model Venue {
   id             String      @id @default(uuid()) @db.Uuid
-  nameHe         String      @map("name_he")
-  nameEn         String?     @map("name_en")
-  address        String
+  name           Json
+  address        Json
   lat            Float
   lng            Float
   phone          String?
   reservationUrl String?     @map("reservation_url")
   status         VenueStatus @default(active)
+  sections       Json        @default("[]")
   createdById    String?     @map("created_by_id") @db.Uuid
   createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @default(now()) @updatedAt @map("updated_at")
 
-  sections   MenuSection[]
+  createdBy  Account?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   ownerships Ownership[]
   items      Item[]
 
   @@index([lat, lng])
   @@map("venue")
-}
-
-model MenuSection {
-  id       String  @id @default(uuid()) @db.Uuid
-  venueId  String  @map("venue_id") @db.Uuid
-  nameHe   String  @map("name_he")
-  nameEn   String? @map("name_en")
-  position Int
-
-  venue Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  items Item[]
-
-  @@index([venueId, position])
-  @@map("menu_section")
 }
 
 enum TagKind {
@@ -92,12 +89,10 @@ enum TagKind {
 model Tag {
   id        String   @id @default(uuid()) @db.Uuid
   slug      String   @unique
-  nameHe    String   @map("name_he")
-  nameEn    String?  @map("name_en")
+  name      Json
   kind      TagKind
   createdAt DateTime @default(now()) @map("created_at")
-
-  items ItemTag[]
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("tag")
 }
@@ -110,43 +105,38 @@ enum ItemState {
   archived
 }
 
-/// One dish or drink at one venue. `submitted_by_id` is set for user submissions
-/// and never leaves the API.
-model Item {
-  id            String    @id @default(uuid()) @db.Uuid
-  venueId       String    @map("venue_id") @db.Uuid
-  sectionId     String    @map("section_id") @db.Uuid
-  nameHe        String    @map("name_he")
-  nameEn        String?   @map("name_en")
-  listPrice     Int?      @map("list_price")
-  state         ItemState @default(approved)
-  submittedById String?   @map("submitted_by_id") @db.Uuid
-  mergedIntoId  String?   @map("merged_into_id") @db.Uuid
-  position      Int
-  createdAt     DateTime  @default(now()) @map("created_at")
-
-  venue   Venue       @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  section MenuSection @relation(fields: [sectionId], references: [id], onDelete: Restrict)
-  tags    ItemTag[]
-  entries Entry[]
-
-  @@index([venueId, state])
-  @@index([submittedById])
-  @@map("item")
+enum Currency {
+  ILS
 }
 
-/// A tag applied to an item. `position` 0 is the item's primary tag.
-model ItemTag {
-  itemId   String @map("item_id") @db.Uuid
-  tagId    String @map("tag_id") @db.Uuid
-  position Int
+/// One dish or drink at one venue. `section_id` points into `venue.sections` and is checked in code.
+/// `tag_ids` is ordered, the first is the primary tag. `submitted_by_id` never leaves the API.
+model Item {
+  id                String    @id @default(uuid()) @db.Uuid
+  venueId           String    @map("venue_id") @db.Uuid
+  sectionId         String    @map("section_id") @db.Uuid
+  name              Json
+  description       Json?
+  listPriceValue    Decimal?  @map("list_price_value") @db.Decimal(10, 2)
+  listPriceCurrency Currency? @map("list_price_currency")
+  tagIds            String[]  @default([]) @map("tag_ids") @db.Uuid
+  state             ItemState @default(approved)
+  submittedById     String?   @map("submitted_by_id") @db.Uuid
+  mergedIntoId      String?   @map("merged_into_id") @db.Uuid
+  position          Int
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  venue       Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  submittedBy Account? @relation(fields: [submittedById], references: [id], onDelete: SetNull)
+  mergedInto  Item?    @relation("merge", fields: [mergedIntoId], references: [id], onDelete: SetNull)
+  mergedFrom  Item[]   @relation("merge")
+  entries     Entry[]
 
-  @@id([itemId, tagId])
-  @@index([tagId])
-  @@map("item_tag")
+  @@index([venueId, state])
+  @@index([tagIds], type: Gin)
+  @@index([submittedById])
+  @@map("item")
 }
 
 enum EntryVisibility {
@@ -155,33 +145,31 @@ enum EntryVisibility {
   public
 }
 
-/// One line in a user's diary about one item. `author_id` never leaves the
-/// entries domain and has no foreign key (accounts belong to users, ADR 0004);
-/// `venue_id` is copied from the item for history per venue. Items are archived,
-/// never deleted, so the item reference restricts deletes.
+/// One line in a user's diary about one item. `author_id` never leaves the entries domain and has no
+/// foreign key (accounts belong to users, ADR 0004). Items never move venue, so the venue comes from
+/// the item. Items are archived, never deleted, so the item reference restricts deletes.
 model Entry {
-  id              String          @id @default(uuid()) @db.Uuid
-  authorId        String          @map("author_id") @db.Uuid
-  itemId          String          @map("item_id") @db.Uuid
-  venueId         String          @map("venue_id") @db.Uuid
-  eatenAt         DateTime        @map("eaten_at")
-  rating          Int?
-  wouldOrderAgain Boolean?        @map("would_order_again")
-  pricePaid       Int?            @map("price_paid")
-  text            String          @default("")
-  visibility      EntryVisibility @default(private)
-  shareToken      String?         @unique @map("share_token")
-  hiddenAt        DateTime?       @map("hidden_at")
-  /// Capability id of the photo (ADR 0011); changes when the photo or its audience changes.
-  photoId         String?         @unique @map("photo_id")
-  photoType       String?         @map("photo_type")
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime        @updatedAt @map("updated_at")
+  id                String          @id @default(uuid()) @db.Uuid
+  authorId          String          @map("author_id") @db.Uuid
+  itemId            String          @map("item_id") @db.Uuid
+  eatenAt           DateTime        @map("eaten_at")
+  rating            Int?            @db.SmallInt
+  wouldOrderAgain   Boolean?        @map("would_order_again")
+  pricePaidValue    Decimal?        @map("price_paid_value") @db.Decimal(10, 2)
+  pricePaidCurrency Currency?       @map("price_paid_currency")
+  text              String          @default("")
+  visibility        EntryVisibility @default(private)
+  shareToken        String?         @unique @map("share_token")
+  hiddenAt          DateTime?       @map("hidden_at")
+  /// { id, contentType }. The id is a capability (ADR 0011) and changes when the photo or its audience does.
+  photo             Json?
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
 
   item Item @relation(fields: [itemId], references: [id], onDelete: Restrict)
 
   @@index([authorId, eatenAt])
   @@index([itemId, visibility])
-  @@index([venueId])
+  @@index([photo(ops: JsonbPathOps)], type: Gin)
   @@map("entry")
 }
