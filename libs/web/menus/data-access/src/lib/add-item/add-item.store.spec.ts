@@ -72,7 +72,7 @@ describe('AddItemStore', () => {
     });
     store.load(() => VENUE_ID);
     await settle();
-    const input = { sectionId: section.id, name: { he: 'שקשוקה' }, listPrice: null };
+    const input = { sectionId: section.id, name: { he: 'שקשוקה', en: null }, listPrice: null };
     await expect(store.add(input)).resolves.toEqual(item);
     expect(addItem).toHaveBeenCalledWith(VENUE_ID, input);
   });
@@ -81,7 +81,7 @@ describe('AddItemStore', () => {
     const addItem = vi.fn();
     const store = setup({ addItem });
     await expect(
-      store.add({ sectionId: section.id, name: { he: 'שקשוקה' }, listPrice: null }),
+      store.add({ sectionId: section.id, name: { he: 'שקשוקה', en: null }, listPrice: null }),
     ).rejects.toThrow('Load the venue first.');
     expect(addItem).not.toHaveBeenCalled();
   });

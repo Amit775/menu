@@ -2,7 +2,7 @@ import { computed, inject, linkedSignal, resource, signal } from '@angular/core'
 import {
   type Item,
   type ItemDecision,
-  type LocalizedText,
+  type Text,
   type MenuSection,
   type Tag,
   type UpdateItem,
@@ -137,11 +137,11 @@ export const VenueManagerStore = signalStore(
         replace(item);
         return item;
       },
-      async addSection(name: LocalizedText): Promise<void> {
+      async addSection(name: Text): Promise<void> {
         const section = await api.addSection(venueId(), { name });
         patch(({ sections }) => ({ sections: [...sections, section] }));
       },
-      async renameSection(id: string, name: LocalizedText): Promise<void> {
+      async renameSection(id: string, name: Text): Promise<void> {
         const renamed = await api.renameSection(venueId(), id, { name });
         patch(({ sections }) => ({
           sections: sections.map((section) => (section.id === id ? renamed : section)),

@@ -16,7 +16,7 @@ export const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
 export const venue: Venue = {
   id: VENUE_ID,
   name: { he: 'בורגר 24', en: 'Burger 24' },
-  address: 'דיזנגוף 100, תל אביב',
+  address: { he: 'דיזנגוף 100, תל אביב', en: null },
   location: { lat: 32.08, lng: 34.77 },
   phone: '03-1234567',
   reservationUrl: null,
@@ -34,7 +34,7 @@ export const mains: MenuSection = {
 export const drinks: MenuSection = {
   id: '6c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
   venueId: VENUE_ID,
-  name: { he: 'שתייה' },
+  name: { he: 'שתייה', en: null },
   position: 1,
 };
 
@@ -49,8 +49,9 @@ export const classic: Item = {
   id: '7a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   venueId: VENUE_ID,
   sectionId: mains.id,
-  name: { he: 'קלאסי' },
-  listPrice: 6200,
+  name: { he: 'קלאסי', en: null },
+  description: null,
+  listPrice: { value: 62, currency: 'ILS' as const },
   tagIds: [burgerTag.id],
   state: 'approved',
   mergedIntoId: null,
@@ -62,8 +63,9 @@ export const classic: Item = {
 export const lamb: Item = {
   ...classic,
   id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
-  name: { he: 'בורגר כבש' },
-  listPrice: 7200,
+  name: { he: 'בורגר כבש', en: null },
+  description: null,
+  listPrice: { value: 72, currency: 'ILS' as const },
   state: 'pending',
   createdAt: '2026-10-21T10:00:00.000Z',
 };

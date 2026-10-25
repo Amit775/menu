@@ -19,7 +19,7 @@
         <span>{{ current.distanceMeters | distance }}</span>
       }
       @if (current.latestPrice !== null) {
-        <span>{{ current.latestPrice | shekels }}</span>
+        <span>{{ current.latestPrice | price }}</span>
       }
     </span>
     @if (current.wouldOrderAgainPercent !== null) {

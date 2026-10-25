@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { DistancePipe, RelativeDatePipe, ShekelsPipe } from './format.pipes';
+import { DistancePipe, PricePipe, RelativeDatePipe, ShekelsPipe } from './format.pipes';
 import { I18n } from './i18n';
 
 describe('format pipes', () => {
@@ -11,8 +11,9 @@ describe('format pipes', () => {
     return TestBed.runInInjectionContext(() => new type());
   }
 
-  it('shows agorot as shekels', () => {
-    expect(new ShekelsPipe().transform(6800)).toBe('₪68');
+  it('shows shekels and prices', () => {
+    expect(new ShekelsPipe().transform(68)).toBe('₪68');
+    expect(new PricePipe().transform({ value: 68.5, currency: 'ILS' as const })).toBe('₪68.50');
   });
 
   it('shows a distance in the current language', () => {

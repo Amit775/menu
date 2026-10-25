@@ -72,7 +72,7 @@ function fakeLeaflet() {
 
 describe('VenueMap', () => {
   const pin: MapPin = {
-    venue: { id: VENUE_ID, name: { he: 'מוזס' } },
+    venue: { id: VENUE_ID, name: { he: 'מוזס', en: null } },
     location: { lat: 32.0641, lng: 34.7744 },
     itemCount: 3,
     bestScore: 4.6,

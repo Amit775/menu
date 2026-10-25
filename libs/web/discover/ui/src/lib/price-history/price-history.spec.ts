@@ -7,8 +7,8 @@ describe('PriceHistory', () => {
     TestBed.inject(I18n).setLanguage('en');
     const fixture = TestBed.createComponent(PriceHistory);
     fixture.componentRef.setInput('points', [
-      { month: '2026-08', averagePrice: 6000, count: 3 },
-      { month: '2026-09', averagePrice: 8000, count: 4 },
+      { month: '2026-08', averagePrice: { value: 60, currency: 'ILS' as const }, count: 3 },
+      { month: '2026-09', averagePrice: { value: 80, currency: 'ILS' as const }, count: 4 },
     ]);
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;

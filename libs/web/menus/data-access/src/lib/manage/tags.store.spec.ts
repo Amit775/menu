@@ -37,12 +37,12 @@ describe('TagsStore', () => {
     const mergeTag = vi.fn().mockResolvedValue(undefined);
     const store = setup({
       addTag: vi.fn().mockResolvedValue(fries),
-      updateTag: vi.fn().mockResolvedValue({ ...burger, name: { he: 'בורגר' } }),
+      updateTag: vi.fn().mockResolvedValue({ ...burger, name: { he: 'בורגר', en: null } }),
       mergeTag,
     });
     await settle();
     await store.add({ slug: 'fries', name: fries.name, kind: 'dish' });
-    await store.update(burger.id, { name: { he: 'בורגר' } });
+    await store.update(burger.id, { name: { he: 'בורגר', en: null } });
     await store.merge(burger.id, tag.id);
     expect(mergeTag).toHaveBeenCalledWith(burger.id, tag.id);
     expect(store.sorted().map((t) => t.slug)).toEqual(['fries', 'hamburger']);

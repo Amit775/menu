@@ -13,7 +13,7 @@ const line: EntryWithItem = {
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 5,
   wouldOrderAgain: true,
-  pricePaid: 6800,
+  pricePaid: { value: 68, currency: 'ILS' as const },
   text: 'מדיום מושלם',
   visibility: 'private',
   shareToken: null,
@@ -23,9 +23,9 @@ const line: EntryWithItem = {
   updatedAt: '2026-10-20T20:00:00.000Z',
   item: {
     id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
-    name: { he: 'המבורגר הקלאסי' },
-    listPrice: 6800,
-    venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'בורגר 24' } },
+    name: { he: 'המבורגר הקלאסי', en: null },
+    listPrice: { value: 68, currency: 'ILS' as const },
+    venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'בורגר 24', en: null } },
   },
 };
 
