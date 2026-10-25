@@ -36,7 +36,7 @@
             <a class="venue" [routerLink]="['/manage/venues', row.venue.id]">
               <span class="names">
                 <span class="name">{{ row.venue.name | localize }}</span>
-                <span class="address">{{ row.venue.address }}</span>
+                <span class="address">{{ row.venue.address | localize }}</span>
               </span>
               @if (row.venue.status === 'hidden') {
                 <span class="chip muted">{{ t('hidden') }}</span>

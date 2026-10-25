@@ -64,7 +64,9 @@ describe('DiscoverApiClient', () => {
       item,
       archived: false,
       tags: [],
-      priceHistory: [{ month: '2026-09', averagePrice: 6500, count: 3 }],
+      priceHistory: [
+        { month: '2026-09', averagePrice: { value: 65, currency: 'ILS' as const }, count: 3 },
+      ],
       alsoGoodHere: [],
     });
     await expect(page).resolves.toMatchObject({ item: { id: ITEM_ID } });

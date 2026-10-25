@@ -97,7 +97,7 @@ describe('PendingQueue', () => {
     const onions = {
       ...lamb,
       id: '7c1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
-      name: { he: 'טבעות בצל' },
+      name: { he: 'טבעות בצל', en: null },
     };
     const answers = new Map<string, (value: Item) => void>();
     const decide = vi.fn((id: string) => new Promise<Item>((resolve) => answers.set(id, resolve)));

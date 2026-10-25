@@ -107,7 +107,8 @@ describe('VenueFormPage', () => {
     const createVenue = vi.fn().mockResolvedValue(venue);
     const { element, seen } = await render(menuApi({ createVenue }), '/manage/venues/new');
     type(element, 'nameHe', 'בורגר 24');
-    type(element, 'address', ' דיזנגוף 100, תל אביב ');
+    type(element, 'addressHe', ' דיזנגוף 100, תל אביב ');
+    type(element, 'addressEn', ' 100 Dizengoff, Tel Aviv ');
     seen.tap?.({ latlng: { lat: 32.0800001234, lng: 34.77 } });
     TestBed.tick();
     expect(field(element, 'lat').value).toBe('32.08');
@@ -119,12 +120,15 @@ describe('VenueFormPage', () => {
       expect(TestBed.inject(Router).url).toBe(`/manage/venues/${VENUE_ID}`);
     });
     expect(createVenue).toHaveBeenCalledWith({
-      name: { he: 'בורגר 24' },
-      address: 'דיזנגוף 100, תל אביב',
+      name: { he: 'בורגר 24', en: null },
+      address: { he: 'דיזנגוף 100, תל אביב', en: '100 Dizengoff, Tel Aviv' },
       location: { lat: 32.08, lng: 34.77 },
       phone: null,
       reservationUrl: null,
-      sections: [{ he: 'עיקריות' }, { he: 'שתייה' }],
+      sections: [
+        { he: 'עיקריות', en: null },
+        { he: 'שתייה', en: null },
+      ],
     });
   });
 
@@ -138,7 +142,7 @@ describe('VenueFormPage', () => {
     );
     expect(errors).toEqual([
       'צריך שם בעברית.',
-      'צריך כתובת.',
+      'צריך כתובת בעברית.',
       'סמנו את המקום במפה.',
       'סמנו את המקום במפה.',
     ]);
@@ -148,7 +152,7 @@ describe('VenueFormPage', () => {
     const createVenue = vi.fn();
     const { element, seen } = await render(menuApi({ createVenue }), '/manage/venues/new');
     type(element, 'nameHe', 'בורגר 24');
-    type(element, 'address', 'דיזנגוף 100');
+    type(element, 'addressHe', 'דיזנגוף 100');
     seen.tap?.({ latlng: { lat: 32.08, lng: 34.77 } });
     type(element, 'phone', 'call us');
     type(element, 'reservationUrl', 'ftp://example.com');

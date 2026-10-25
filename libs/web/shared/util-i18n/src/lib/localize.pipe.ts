@@ -1,5 +1,5 @@
 import { inject, Pipe, type PipeTransform } from '@angular/core';
-import { type LocalizedText } from '@menu/shared/contracts';
+import { type Text } from '@menu/shared/contracts';
 import { I18n } from './i18n';
 
 /** `{{ item.name | localize }}`: impure so it follows a language switch. */
@@ -7,7 +7,7 @@ import { I18n } from './i18n';
 export class LocalizePipe implements PipeTransform {
   private readonly i18n = inject(I18n);
 
-  transform(text: LocalizedText): string {
+  transform(text: Text): string {
     return this.i18n.pick(text);
   }
 }

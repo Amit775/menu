@@ -6,7 +6,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { type Item, type ItemDecision } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
 import {
-  formatShekels,
+  formatPrice,
   I18n,
   injectTranslate,
   LocalizePipe,
@@ -91,7 +91,7 @@ export class PendingQueue {
       .join(', ');
     return this.t('facts', {
       section: section ? this.i18n.pick(section.name) : '',
-      price: item.listPrice === null ? 'none' : formatShekels(item.listPrice),
+      price: item.listPrice === null ? 'none' : formatPrice(item.listPrice),
       tags: tags || 'none',
     });
   }

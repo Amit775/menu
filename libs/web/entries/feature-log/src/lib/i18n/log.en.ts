@@ -11,7 +11,7 @@ export const en = {
   yes: 'Yes',
   no: 'No',
   pricePaid: 'Price I paid',
-  priceInvalid: 'Whole shekels',
+  priceInvalid: 'Shekels, with up to two decimals',
   eatenAt: 'When',
   eatenAtMissing: 'When did you have it?',
   eatenAtFuture: 'Not in the future',

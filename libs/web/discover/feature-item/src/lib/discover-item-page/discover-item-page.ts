@@ -8,7 +8,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ItemPageStore } from '@menu/web/discover/data-access';
 import { DeviceShare } from '@menu/web/shared/util-device';
 import { ItemRow, PriceHistory, ScoreBadge } from '@menu/web/discover/ui';
-import { I18n, injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
+import { I18n, injectTranslate, LocalizePipe, PricePipe } from '@menu/web/shared/util-i18n';
 import { itemI18n } from '../item.i18n';
 
 @Component({
@@ -24,7 +24,7 @@ import { itemI18n } from '../item.i18n';
     PriceHistory,
     ScoreBadge,
     LocalizePipe,
-    ShekelsPipe,
+    PricePipe,
   ],
   templateUrl: './discover-item-page.html',
   styleUrl: './discover-item-page.scss',

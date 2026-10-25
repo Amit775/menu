@@ -9,7 +9,7 @@ export const he = {
   yes: 'כן',
   no: 'לא',
   pricePaid: 'מחיר ששילמתי',
-  priceInvalid: 'מחיר בשקלים שלמים',
+  priceInvalid: 'מחיר בשקלים, עד שתי ספרות אחרי הנקודה',
   eatenAt: 'מתי',
   eatenAtMissing: 'מתי אכלת?',
   eatenAtFuture: 'לא בעתיד',
