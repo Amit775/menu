@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AgorotSchema } from '../common/values.contract';
+import { PriceSchema } from '../common/values.contract';
 import { ItemRefSchema } from '../menus/item.contract';
 import { DisplayNameSchema } from '../users/account.contract';
 import { PhotoUrlSchema } from './photo.contract';
@@ -40,7 +40,7 @@ const EntryFieldsSchema = z.object({
   eatenAt: EatenAtSchema,
   rating: RatingSchema.nullable(),
   wouldOrderAgain: z.boolean().nullable(),
-  pricePaid: AgorotSchema.nullable(),
+  pricePaid: PriceSchema.nullable(),
   text: z.string().trim().max(2000),
   visibility: EntryVisibilitySchema,
 });
@@ -67,7 +67,7 @@ export const CreateEntrySchema = EntryFieldsSchema.extend({
   eatenAt: EatenAtSchema.optional(),
   rating: RatingSchema.nullable().default(null),
   wouldOrderAgain: z.boolean().nullable().default(null),
-  pricePaid: AgorotSchema.nullable().default(null),
+  pricePaid: PriceSchema.nullable().default(null),
   text: z.string().trim().max(2000).default(''),
   visibility: EntryVisibilitySchema.default('private'),
 });
