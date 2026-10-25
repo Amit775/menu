@@ -19,8 +19,8 @@
     }
     @if (current.pricePaid !== null) {
       <span>
-        <span aria-hidden="true">{{ current.pricePaid | shekels }}</span>
-        <span class="visually-hidden">{{ t('paid', { price: current.pricePaid | shekels }) }}</span>
+        <span aria-hidden="true">{{ current.pricePaid | price }}</span>
+        <span class="visually-hidden">{{ t('paid', { price: current.pricePaid | price }) }}</span>
       </span>
     }
     <time [attr.datetime]="current.eatenAt">{{ current.eatenAt | relativeDate }}</time>

@@ -12,23 +12,23 @@ describe('DiscoverVenuePage', () => {
   const SECTION_ID = '5c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10';
   const item: DiscoverItem = {
     id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
-    name: { he: 'המבורגר הבית' },
-    venue: { id: VENUE_ID, name: { he: 'מוזס' } },
+    name: { he: 'המבורגר הבית', en: null },
+    venue: { id: VENUE_ID, name: { he: 'מוזס', en: null } },
     sectionId: SECTION_ID,
     tagIds: [],
     distanceMeters: 350,
     score: 4.6,
     ratingCount: 12,
     wouldOrderAgainPercent: 92,
-    latestPrice: 6800,
+    latestPrice: { value: 68, currency: 'ILS' as const },
     photoUrl: null,
     writtenByMe: false,
   };
   const page: VenuePage = {
     venue: {
       id: VENUE_ID,
-      name: { he: 'מוזס' },
-      address: 'רוטשילד 35, תל אביב',
+      name: { he: 'מוזס', en: null },
+      address: { he: 'רוטשילד 35, תל אביב', en: null },
       location: { lat: 32.0641, lng: 34.7744 },
       phone: '03-566 4949',
       reservationUrl: null,
@@ -39,7 +39,12 @@ describe('DiscoverVenuePage', () => {
     topItems: [item],
     sections: [
       {
-        section: { id: SECTION_ID, venueId: VENUE_ID, name: { he: 'עיקריות' }, position: 0 },
+        section: {
+          id: SECTION_ID,
+          venueId: VENUE_ID,
+          name: { he: 'עיקריות', en: null },
+          position: 0,
+        },
         items: [item],
       },
     ],

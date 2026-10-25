@@ -13,15 +13,15 @@ import { DiscoverItemPage } from './discover-item-page';
 describe('DiscoverItemPage', () => {
   const item: DiscoverItem = {
     id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
-    name: { he: 'המבורגר הבית' },
-    venue: { id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס' } },
+    name: { he: 'המבורגר הבית', en: null },
+    venue: { id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס', en: null } },
     sectionId: '5c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
     tagIds: [],
     distanceMeters: null,
     score: 4.6,
     ratingCount: 12,
     wouldOrderAgainPercent: 92,
-    latestPrice: 6800,
+    latestPrice: { value: 68, currency: 'ILS' as const },
     photoUrl: null,
     writtenByMe: false,
   };
@@ -32,12 +32,16 @@ describe('DiscoverItemPage', () => {
       {
         id: '9a1d3c4e-3333-4c1c-9a57-6f7a5d3c2b10',
         slug: 'hamburger',
-        name: { he: 'המבורגר' },
+        name: { he: 'המבורגר', en: null },
         kind: 'dish',
       },
     ],
-    priceHistory: [{ month: '2026-09', averagePrice: 6500, count: 3 }],
-    alsoGoodHere: [{ ...item, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', name: { he: 'צ׳יפס' } }],
+    priceHistory: [
+      { month: '2026-09', averagePrice: { value: 65, currency: 'ILS' as const }, count: 3 },
+    ],
+    alsoGoodHere: [
+      { ...item, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', name: { he: 'צ׳יפס', en: null } },
+    ],
   };
 
   async function render(load: DiscoverApiClient['item'], share = vi.fn()) {

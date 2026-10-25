@@ -6,7 +6,11 @@ import { item, venue, VENUE_ID, settle } from '../testing/fixtures';
 import { ManagedVenuesStore } from './managed-venues.store';
 
 describe('ManagedVenuesStore', () => {
-  const other = { ...venue, id: '1c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'אבו חסן' } };
+  const other = {
+    ...venue,
+    id: '1c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
+    name: { he: 'אבו חסן', en: null },
+  };
 
   function setup(api: Partial<MenuApiClient>, isAdmin = false) {
     TestBed.configureTestingModule({

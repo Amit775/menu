@@ -41,7 +41,7 @@
             <li>{{ entry.wouldOrderAgain ? t('wouldOrderAgain') : t('wouldNotOrderAgain') }}</li>
           }
           @if (entry.pricePaid !== null) {
-            <li>{{ t('paid', { price: entry.pricePaid | shekels }) }}</li>
+            <li>{{ t('paid', { price: entry.pricePaid | price }) }}</li>
           }
           <li>
             <time [attr.datetime]="entry.eatenAt">{{ eatenOn() }}</time>

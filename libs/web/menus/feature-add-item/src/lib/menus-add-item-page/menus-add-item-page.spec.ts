@@ -11,8 +11,8 @@ import { MenusAddItemPage } from './menus-add-item-page';
 const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
 const venue: Venue = {
   id: VENUE_ID,
-  name: { he: 'מוזס' },
-  address: 'רוטשילד 35, תל אביב',
+  name: { he: 'מוזס', en: null },
+  address: { he: 'רוטשילד 35, תל אביב', en: null },
   location: { lat: 32.0641, lng: 34.7744 },
   phone: null,
   reservationUrl: null,
@@ -23,13 +23,13 @@ const sections: MenuSection[] = [
   {
     id: '5c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
     venueId: VENUE_ID,
-    name: { he: 'ראשונות' },
+    name: { he: 'ראשונות', en: null },
     position: 0,
   },
   {
     id: '6c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
     venueId: VENUE_ID,
-    name: { he: 'עיקריות' },
+    name: { he: 'עיקריות', en: null },
     position: 1,
   },
 ];
@@ -37,8 +37,9 @@ const created: Item = {
   id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   venueId: VENUE_ID,
   sectionId: '6c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
-  name: { he: 'שקשוקה' },
-  listPrice: 5400,
+  name: { he: 'שקשוקה', en: null },
+  description: null,
+  listPrice: { value: 54, currency: 'ILS' as const },
   tagIds: [],
   state: 'pending',
   mergedIntoId: null,
@@ -111,8 +112,8 @@ describe('MenusAddItemPage', () => {
     await harness.fixture.whenStable();
     expect(addItem).toHaveBeenCalledWith(VENUE_ID, {
       sectionId: sections[1]?.id,
-      name: { he: 'שקשוקה' },
-      listPrice: 5400,
+      name: { he: 'שקשוקה', en: null },
+      listPrice: { value: 54, currency: 'ILS' as const },
     });
     expect(TestBed.inject(Router).url).toBe(`/log/${created.id}`);
   });
