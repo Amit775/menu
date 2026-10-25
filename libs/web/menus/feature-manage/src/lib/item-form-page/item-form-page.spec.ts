@@ -65,7 +65,8 @@ describe('ItemFormPage', () => {
     expect(element.querySelector('mat-select.section')?.textContent).toContain('שתייה');
     type(field(element, 'nameHe'), ' לימונדה ');
     type(field(element, 'nameEn'), 'Lemonade');
-    type(field(element, 'price'), '18');
+    type(field(element, 'descriptionHe'), ' לימון ונענע ');
+    type(field(element, 'price'), '18.5');
     submit(element);
     await vi.waitFor(() => {
       expect(TestBed.inject(Router).url).toBe(`/manage/venues/${VENUE_ID}`);
@@ -73,9 +74,32 @@ describe('ItemFormPage', () => {
     expect(addItem).toHaveBeenCalledWith(VENUE_ID, {
       sectionId: drinks.id,
       name: { he: 'לימונדה', en: 'Lemonade' },
-      listPrice: 1800,
+      description: { he: 'לימון ונענע', en: null },
+      listPrice: { value: 18.5, currency: 'ILS' as const },
       tagIds: [],
     });
+  });
+
+  it('needs the Hebrew description before the English one, and a price to the agora', async () => {
+    const addItem = vi.fn();
+    const element = await render(
+      menuApi({ addItem }),
+      `/manage/venues/${VENUE_ID}/items/new?sectionId=${drinks.id}`,
+    );
+    TestBed.tick();
+    type(field(element, 'nameHe'), 'לימונדה');
+    type(field(element, 'descriptionEn'), 'Lemon and mint');
+    type(field(element, 'price'), '18.555');
+    submit(element);
+    TestBed.tick();
+    expect(addItem).not.toHaveBeenCalled();
+    const errors = [...element.querySelectorAll('mat-error')].map((error) =>
+      error.textContent.trim(),
+    );
+    expect(errors).toEqual([
+      'כתבו קודם תיאור בעברית, עד 2,000 תווים.',
+      'מחיר בשקלים, עד שתי ספרות אחרי הנקודה, עד 100,000.',
+    ]);
   });
 
   it('needs a Hebrew name and a section', async () => {
@@ -90,8 +114,8 @@ describe('ItemFormPage', () => {
     expect(errors).toEqual(['צריך שם בעברית.', 'בחרו קטע.']);
   });
 
-  it('edits an item and keeps its exact price when the price is untouched', async () => {
-    const odd = { ...classic, listPrice: 6250 };
+  it('edits an item, its price to the agora', async () => {
+    const odd = { ...classic, listPrice: { value: 62.5, currency: 'ILS' as const } };
     const updateItem = vi.fn().mockResolvedValue(odd);
     const element = await render(
       menuApi({ items: () => Promise.resolve([odd]), updateItem }),
@@ -99,7 +123,7 @@ describe('ItemFormPage', () => {
     );
     expect(element.querySelector('h1')?.textContent).toBe('עריכת פריט');
     expect(field(element, 'nameHe').value).toBe('קלאסי');
-    expect(field(element, 'price').value).toBe('63');
+    expect(field(element, 'price').value).toBe('62.5');
     element.querySelector<HTMLElement>('mat-select.tags .mat-mdc-select-trigger')?.click();
     TestBed.tick();
     const option = TestBed.inject(DOCUMENT).querySelector<HTMLElement>('mat-option');
@@ -110,8 +134,9 @@ describe('ItemFormPage', () => {
     await vi.waitFor(() => {
       expect(updateItem).toHaveBeenCalledWith(classic.id, {
         sectionId: mains.id,
-        name: { he: 'קלאסי' },
-        listPrice: 6250,
+        name: { he: 'קלאסי', en: null },
+        description: null,
+        listPrice: { value: 62.5, currency: 'ILS' as const },
         tagIds: [],
       });
     });

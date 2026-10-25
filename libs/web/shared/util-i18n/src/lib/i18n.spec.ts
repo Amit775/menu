@@ -45,6 +45,6 @@ describe('I18n', () => {
   it('picks the English name and falls back to Hebrew', () => {
     const { i18n } = setup('en');
     expect(i18n.pick({ he: 'סלט', en: 'Salad' })).toBe('Salad');
-    expect(i18n.pick({ he: 'סלט' })).toBe('סלט');
+    expect(i18n.pick({ he: 'סלט', en: null })).toBe('סלט');
   });
 });

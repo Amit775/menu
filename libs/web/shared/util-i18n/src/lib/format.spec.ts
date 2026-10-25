@@ -1,12 +1,19 @@
-import { formatDistance, formatMonth, formatRelativeDate, formatShekels } from './format';
+import {
+  formatDistance,
+  formatMonth,
+  formatPrice,
+  formatRelativeDate,
+  formatShekels,
+} from './format';
 
-describe('formatShekels', () => {
-  it('shows whole shekels', () => {
-    expect(formatShekels(6800)).toBe('₪68');
+describe('formatPrice', () => {
+  it('shows whole shekels without decimals', () => {
+    expect(formatPrice({ value: 68, currency: 'ILS' as const })).toBe('₪68');
   });
 
-  it('rounds agorot to the nearest shekel', () => {
-    expect(formatShekels(6850)).toBe('₪69');
+  it('shows a price with agorot with two decimals', () => {
+    expect(formatPrice({ value: 68.5, currency: 'ILS' as const })).toBe('₪68.50');
+    expect(formatShekels(0.07)).toBe('₪0.07');
   });
 });
 

@@ -5,9 +5,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
-import { type Item, type LocalizedText, type MenuSection } from '@menu/shared/contracts';
+import { type Item, type Text, type MenuSection } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
-import { formatShekels, I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
+import { formatPrice, I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { venueManagerI18n } from '../venue-manager.i18n';
 
 const nameValidators = [Validators.required.bind(Validators), Validators.maxLength(80)];
@@ -93,11 +93,11 @@ export class MenuEditor {
   }
 
   /** Writes the typed name in the current language; Hebrew is always set (the contract needs it). */
-  private named(current: LocalizedText | null, typed: string): LocalizedText {
+  private named(current: Text | null, typed: string): Text {
     if (this.i18n.language() === 'en') {
       return { he: current?.he ?? typed, en: typed };
     }
-    return current?.en ? { he: typed, en: current.en } : { he: typed };
+    return { he: typed, en: current?.en ?? null };
   }
 
   private async run(action: () => Promise<void>): Promise<boolean> {
@@ -120,7 +120,7 @@ export class MenuEditor {
       .filter((tag) => tag !== undefined)
       .map((tag) => this.i18n.pick(tag.name));
     return [
-      item.listPrice === null ? this.t('noPrice') : formatShekels(item.listPrice),
+      item.listPrice === null ? this.t('noPrice') : formatPrice(item.listPrice),
       ...tags,
     ].join(' · ');
   }

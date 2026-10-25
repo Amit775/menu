@@ -17,7 +17,7 @@ const mine: Entry = {
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 5,
   wouldOrderAgain: true,
-  pricePaid: 6800,
+  pricePaid: { value: 68, currency: 'ILS' as const },
   text: 'מדיום מושלם',
   visibility: 'private',
   shareToken: null,
@@ -29,9 +29,9 @@ const mine: Entry = {
 const sheet: ItemEntries = {
   item: {
     id: ITEM_ID,
-    name: { he: 'המבורגר הקלאסי' },
-    listPrice: 6800,
-    venue: { id: VENUE_ID, name: { he: 'בורגר 24' } },
+    name: { he: 'המבורגר הקלאסי', en: null },
+    listPrice: { value: 68, currency: 'ILS' as const },
+    venue: { id: VENUE_ID, name: { he: 'בורגר 24', en: null } },
   },
   itemIsPublic: true,
   mine: [mine],

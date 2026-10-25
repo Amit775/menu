@@ -17,7 +17,7 @@ export function sampleItem(n: number, changes: Partial<DiscoverItem> = {}): Disc
     score: 4.5,
     ratingCount: 12,
     wouldOrderAgainPercent: 90,
-    latestPrice: 6800,
+    latestPrice: { value: 68, currency: 'ILS' as const },
     photoUrl: null,
     writtenByMe: false,
     ...changes,

@@ -17,7 +17,7 @@ const vegan: Tag = {
 const burger: Tag = {
   id: '5a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   slug: 'burger',
-  name: { he: 'בורגר' },
+  name: { he: 'בורגר', en: null },
   kind: 'dish',
 };
 
@@ -69,7 +69,7 @@ describe('TagsPage', () => {
       ...vegan,
       id: '6a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
       slug: 'spicy',
-      name: { he: 'חריף' },
+      name: { he: 'חריף', en: null },
       kind: 'flavour',
     };
     const addTag = vi
@@ -95,7 +95,7 @@ describe('TagsPage', () => {
     });
     expect(addTag).toHaveBeenLastCalledWith({
       slug: 'spicy',
-      name: { he: 'חריף' },
+      name: { he: 'חריף', en: null },
       kind: 'flavour',
     });
   });

@@ -1,12 +1,19 @@
 import { inject, Pipe, type PipeTransform } from '@angular/core';
-import { type Agorot } from '@menu/shared/contracts';
-import { formatDistance, formatRelativeDate, formatShekels } from './format';
+import { type Price } from '@menu/shared/contracts';
+import { formatDistance, formatPrice, formatRelativeDate, formatShekels } from './format';
 import { I18n } from './i18n';
 
 @Pipe({ name: 'shekels' })
 export class ShekelsPipe implements PipeTransform {
-  transform(agorot: Agorot): string {
-    return formatShekels(agorot);
+  transform(value: number): string {
+    return formatShekels(value);
+  }
+}
+
+@Pipe({ name: 'price' })
+export class PricePipe implements PipeTransform {
+  transform(price: Price): string {
+    return formatPrice(price);
   }
 }
 

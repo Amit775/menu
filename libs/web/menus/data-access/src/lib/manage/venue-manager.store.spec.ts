@@ -15,7 +15,7 @@ describe('VenueManagerStore', () => {
   const drinks = {
     ...section,
     id: '4c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
-    name: { he: 'שתייה' },
+    name: { he: 'שתייה', en: null },
     position: 1,
   };
 
@@ -101,16 +101,18 @@ describe('VenueManagerStore', () => {
   it('adds and edits items on the menu', async () => {
     const added = { ...approved, id: '5b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10', position: 1 };
     const addItem = vi.fn().mockResolvedValue(added);
-    const updateItem = vi.fn().mockResolvedValue({ ...approved, listPrice: 6000 });
+    const updateItem = vi
+      .fn()
+      .mockResolvedValue({ ...approved, listPrice: { value: 60, currency: 'ILS' as const } });
     const store = setup({ addItem, updateItem });
     store.load(() => VENUE_ID);
     await settle();
     await store.addItem({ sectionId: section.id, name: added.name });
     expect(addItem).toHaveBeenCalledWith(VENUE_ID, { sectionId: section.id, name: added.name });
-    await store.updateItem(approved.id, { listPrice: 6000 });
+    await store.updateItem(approved.id, { listPrice: { value: 60, currency: 'ILS' as const } });
     expect(store.menu()[0]?.items.map((i) => [i.id, i.listPrice])).toEqual([
-      [approved.id, 6000],
-      [added.id, 5400],
+      [approved.id, { value: 60, currency: 'ILS' }],
+      [added.id, { value: 54, currency: 'ILS' }],
     ]);
   });
 
@@ -121,13 +123,13 @@ describe('VenueManagerStore', () => {
       .mockResolvedValue([{ ...drinks, position: 0 }, { ...section, position: 1 }, desserts]);
     const store = setup({
       addSection: vi.fn().mockResolvedValue(desserts),
-      renameSection: vi.fn().mockResolvedValue({ ...desserts, name: { he: 'קינוחים' } }),
+      renameSection: vi.fn().mockResolvedValue({ ...desserts, name: { he: 'קינוחים', en: null } }),
       reorderSections,
     });
     store.load(() => VENUE_ID);
     await settle();
     await store.addSection(desserts.name);
-    await store.renameSection(desserts.id, { he: 'קינוחים' });
+    await store.renameSection(desserts.id, { he: 'קינוחים', en: null });
     await store.moveSection(drinks.id, -1);
     expect(reorderSections).toHaveBeenCalledWith(VENUE_ID, [drinks.id, section.id, desserts.id]);
     expect(store.menu().map((view) => view.section.id)).toEqual([

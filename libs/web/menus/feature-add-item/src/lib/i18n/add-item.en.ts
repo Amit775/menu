@@ -10,7 +10,7 @@ export const en = {
   section: 'Where on the menu',
   sectionRequired: 'Pick a part of the menu',
   price: 'Menu price (optional)',
-  priceInvalid: 'Whole shekels',
+  priceInvalid: 'Shekels, with up to two decimals',
   noSections: 'This venue’s menu has no sections yet, so items cannot be added.',
   save: 'Add and write about it',
   saving: 'Saving…',

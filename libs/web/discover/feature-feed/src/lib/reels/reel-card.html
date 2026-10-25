@@ -86,7 +86,7 @@
         <span>{{ t('noScoreYet') }}</span>
       }
       @if (current.latestPrice !== null) {
-        <span class="price">{{ current.latestPrice | shekels }}</span>
+        <span class="price">{{ current.latestPrice | price }}</span>
       }
     </div>
     <a class="hint" [routerLink]="['/venues', current.venue.id]">
