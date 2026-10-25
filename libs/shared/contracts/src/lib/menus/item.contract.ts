@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AgorotSchema, LocalizedTextSchema } from '../common/values.contract';
+import { PriceSchema, LongTextSchema, TextSchema } from '../common/values.contract';
 
 export const itemPath = 'items';
 
@@ -34,8 +34,9 @@ export const ItemSchema = z.object({
   id: z.uuid(),
   venueId: z.uuid(),
   sectionId: z.uuid(),
-  name: LocalizedTextSchema,
-  listPrice: AgorotSchema.nullable(),
+  name: TextSchema,
+  description: LongTextSchema.nullable(),
+  listPrice: PriceSchema.nullable(),
   tagIds: TagIdsSchema,
   state: ItemStateSchema,
   mergedIntoId: z.uuid().nullable(),
@@ -52,8 +53,9 @@ export type Item = z.infer<typeof ItemSchema>;
  */
 export const CreateItemSchema = z.object({
   sectionId: z.uuid(),
-  name: LocalizedTextSchema,
-  listPrice: AgorotSchema.nullable().default(null),
+  name: TextSchema,
+  description: LongTextSchema.nullable().default(null),
+  listPrice: PriceSchema.nullable().default(null),
   tagIds: TagIdsSchema.default([]),
 });
 
@@ -62,8 +64,9 @@ export type CreateItem = z.infer<typeof CreateItemSchema>;
 export const UpdateItemSchema = z
   .object({
     sectionId: z.uuid(),
-    name: LocalizedTextSchema,
-    listPrice: AgorotSchema.nullable(),
+    name: TextSchema,
+    description: LongTextSchema.nullable(),
+    listPrice: PriceSchema.nullable(),
     tagIds: TagIdsSchema,
   })
   .partial();
@@ -84,9 +87,9 @@ export type MergeTag = z.infer<typeof MergeTagSchema>;
 
 export const ItemRefSchema = z.object({
   id: z.uuid(),
-  name: LocalizedTextSchema,
-  listPrice: AgorotSchema.nullable(),
-  venue: z.object({ id: z.uuid(), name: LocalizedTextSchema }),
+  name: TextSchema,
+  listPrice: PriceSchema.nullable(),
+  venue: z.object({ id: z.uuid(), name: TextSchema }),
 });
 
 export type ItemRef = z.infer<typeof ItemRefSchema>;
