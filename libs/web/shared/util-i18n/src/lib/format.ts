@@ -1,7 +1,11 @@
-import { type Agorot, type Language } from '@menu/shared/contracts';
+import { type Language, type Price } from '@menu/shared/contracts';
 
-export function formatShekels(agorot: Agorot): string {
-  return `₪${String(Math.round(agorot / 100))}`;
+export function formatShekels(value: number): string {
+  return `₪${Number.isInteger(value) ? String(value) : value.toFixed(2)}`;
+}
+
+export function formatPrice(price: Price): string {
+  return formatShekels(price.value);
 }
 
 export function formatDistance(meters: number, language: Language): string {

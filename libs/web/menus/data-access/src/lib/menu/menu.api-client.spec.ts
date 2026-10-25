@@ -45,7 +45,11 @@ describe('MenuApiClient', () => {
   });
 
   it('adds an item to the venue', async () => {
-    const input = { sectionId: section.id, name: { he: 'שקשוקה' }, listPrice: 5400 };
+    const input = {
+      sectionId: section.id,
+      name: { he: 'שקשוקה', en: null },
+      listPrice: { value: 54, currency: 'ILS' as const },
+    };
     const result = client.addItem(VENUE_ID, input);
     const request = http.expectOne(`/api/venues/${VENUE_ID}/items`);
     expect(request.request.method).toBe('POST');
@@ -55,7 +59,10 @@ describe('MenuApiClient', () => {
   });
 
   it('rejects an added item that breaks the contract', async () => {
-    const result = client.addItem(VENUE_ID, { sectionId: section.id, name: { he: 'שקשוקה' } });
+    const result = client.addItem(VENUE_ID, {
+      sectionId: section.id,
+      name: { he: 'שקשוקה', en: null },
+    });
     http.expectOne(`/api/venues/${VENUE_ID}/items`).flush({ ...item, state: 'unknown' });
     await expect(result).rejects.toThrow();
   });
@@ -85,12 +92,12 @@ describe('MenuApiClient', () => {
   });
 
   it('adds, renames and reorders sections', async () => {
-    const added = client.addSection(VENUE_ID, { name: { he: 'קינוחים' } });
+    const added = client.addSection(VENUE_ID, { name: { he: 'קינוחים', en: null } });
     const post = http.expectOne(`/api/venues/${VENUE_ID}/sections`);
     expect(post.request.method).toBe('POST');
     post.flush(section);
     await expect(added).resolves.toEqual(section);
-    const renamed = client.renameSection(VENUE_ID, section.id, { name: { he: 'מנות' } });
+    const renamed = client.renameSection(VENUE_ID, section.id, { name: { he: 'מנות', en: null } });
     const patch = http.expectOne(`/api/venues/${VENUE_ID}/sections/${section.id}`);
     expect(patch.request.method).toBe('PATCH');
     patch.flush(section);
@@ -107,11 +114,15 @@ describe('MenuApiClient', () => {
     const menu = client.items(VENUE_ID);
     http.expectOne(`/api/venues/${VENUE_ID}/items`).flush([item]);
     await expect(menu).resolves.toEqual([item]);
-    const edited = client.updateItem(item.id, { listPrice: 5800 });
+    const edited = client.updateItem(item.id, {
+      listPrice: { value: 58, currency: 'ILS' as const },
+    });
     const patch = http.expectOne(`/api/items/${item.id}`);
     expect(patch.request.method).toBe('PATCH');
-    patch.flush({ ...item, listPrice: 5800 });
-    await expect(edited).resolves.toMatchObject({ listPrice: 5800 });
+    patch.flush({ ...item, listPrice: { value: 58, currency: 'ILS' as const } });
+    await expect(edited).resolves.toMatchObject({
+      listPrice: { value: 58, currency: 'ILS' as const },
+    });
     const approved = client.decide(item.id, 'approve');
     const post = http.expectOne(`/api/items/${item.id}/approve`);
     expect(post.request.method).toBe('POST');
@@ -137,7 +148,7 @@ describe('MenuApiClient', () => {
     const added = client.addTag({ slug: tag.slug, name: tag.name, kind: tag.kind });
     http.expectOne('/api/tags').flush(tag);
     await expect(added).resolves.toEqual(tag);
-    const renamed = client.updateTag(tag.id, { name: { he: 'בורגר' } });
+    const renamed = client.updateTag(tag.id, { name: { he: 'בורגר', en: null } });
     const patch = http.expectOne(`/api/tags/${tag.id}`);
     expect(patch.request.method).toBe('PATCH');
     patch.flush(tag);

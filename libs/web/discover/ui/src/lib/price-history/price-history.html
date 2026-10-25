@@ -3,7 +3,7 @@
   <ol>
     @for (bar of bars(); track bar.month) {
       <li [class.latest]="bar.latest">
-        <span class="price">{{ bar.averagePrice | shekels }}</span>
+        <span class="price">{{ bar.averagePrice | price }}</span>
         <span class="track"><span class="bar" [style.height.%]="bar.height"></span></span>
         <span class="month">{{ bar.label }}</span>
       </li>

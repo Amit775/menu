@@ -14,7 +14,7 @@ describe('EntryCard', () => {
     eatenAt: yesterday,
     rating: 5,
     wouldOrderAgain: true,
-    pricePaid: 6800,
+    pricePaid: { value: 68, currency: 'ILS' as const },
     text: 'מדיום מושלם',
     visibility: 'private',
     shareToken: null,

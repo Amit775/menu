@@ -13,7 +13,7 @@ export const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
 export const itemRef: ItemRef = {
   id: ITEM_ID,
   name: { he: 'המבורגר הקלאסי', en: 'Classic burger' },
-  listPrice: 6800,
+  listPrice: { value: 68, currency: 'ILS' as const },
   venue: { id: VENUE_ID, name: { he: 'בורגר 24', en: 'Burger 24' } },
 };
 
@@ -24,7 +24,7 @@ export const entry: Entry = {
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 5,
   wouldOrderAgain: true,
-  pricePaid: 6200,
+  pricePaid: { value: 62, currency: 'ILS' as const },
   text: 'מדיום מושלם',
   visibility: 'private',
   shareToken: null,

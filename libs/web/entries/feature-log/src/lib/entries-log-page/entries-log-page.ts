@@ -10,21 +10,24 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
-import { disabled, form, FormField, max, maxLength, min, validate } from '@angular/forms/signals';
+import { disabled, form, FormField, maxLength, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
-import { type Entry, type EntryVisibility, type UpdateEntry } from '@menu/shared/contracts';
+import {
+  type Entry,
+  type EntryVisibility,
+  ShekelsSchema,
+  type UpdateEntry,
+} from '@menu/shared/contracts';
 import { ItemEntriesStore, LastVisibility, PhotoShrinker } from '@menu/web/entries/data-access';
 import { RatingInput } from '@menu/web/entries/ui';
-import { injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
+import { injectTranslate, LocalizePipe, PricePipe } from '@menu/web/shared/util-i18n';
 import { logI18n } from '../log.i18n';
 import { fromLocalInput, toLocalInput } from './local-time';
-
-const MAX_SHEKELS = 100_000;
 
 interface LogModel {
   rating: number | null;
@@ -33,10 +36,6 @@ interface LogModel {
   eatenAt: string;
   text: string;
   visibility: EntryVisibility;
-}
-
-function toShekels(agorot: number | null): number | null {
-  return agorot === null ? null : Math.round(agorot / 100);
 }
 
 type SaveError = 'failed' | 'closed' | 'photoRejected' | 'photoFailed';
@@ -58,7 +57,7 @@ type PhotoChange =
     MatProgressSpinnerModule,
     RatingInput,
     LocalizePipe,
-    ShekelsPipe,
+    PricePipe,
   ],
   templateUrl: './entries-log-page.html',
   styleUrl: './entries-log-page.scss',
@@ -104,7 +103,6 @@ export class EntriesLogPage {
       : (this.store.mine().find((entry) => entry.id === id) ?? null);
   });
 
-  /** The price the form opened with, in agorot: sent as is unless the user changes it. */
   private readonly prefilled = computed(() => {
     const editing = this.editing();
     return editing
@@ -118,7 +116,7 @@ export class EntriesLogPage {
     return {
       rating: editing?.rating ?? null,
       wouldOrderAgain: editing?.wouldOrderAgain ?? null,
-      price: toShekels(this.prefilled()),
+      price: this.prefilled()?.value ?? null,
       eatenAt: toLocalInput(editing ? new Date(editing.eatenAt) : new Date()),
       text: editing?.text ?? '',
       visibility: editing?.visibility ?? this.lastVisibility.get(),
@@ -127,11 +125,9 @@ export class EntriesLogPage {
 
   protected readonly form = form(this.model, (path) => {
     disabled(path.rating, { when: () => this.saving() });
-    min(path.price, 0);
-    max(path.price, MAX_SHEKELS);
     validate(path.price, ({ value }) => {
       const price = value();
-      return price === null || Number.isInteger(price) ? null : { kind: 'whole' };
+      return price === null || ShekelsSchema.safeParse(price).success ? null : { kind: 'price' };
     });
     validate(path.eatenAt, ({ value }) => {
       const iso = fromLocalInput(value());
@@ -235,12 +231,7 @@ export class EntriesLogPage {
     const input: UpdateEntry = {
       rating: model.rating,
       wouldOrderAgain: model.wouldOrderAgain,
-      pricePaid:
-        model.price === toShekels(this.prefilled())
-          ? this.prefilled()
-          : model.price === null
-            ? null
-            : model.price * 100,
+      pricePaid: model.price === null ? null : { value: model.price, currency: 'ILS' },
       text: model.text.trim(),
       visibility: model.visibility,
     };

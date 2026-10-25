@@ -7,14 +7,14 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
-import { form, FormField, max, maxLength, min, required, validate } from '@angular/forms/signals';
+import { form, FormField, maxLength, required, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
-import { type Item, type LocalizedText } from '@menu/shared/contracts';
+import { type Item, ShekelsSchema, type Text } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
 import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { itemFormI18n } from '../item-form.i18n';
@@ -22,6 +22,8 @@ import { itemFormI18n } from '../item-form.i18n';
 interface ItemModel {
   nameHe: string;
   nameEn: string;
+  descriptionHe: string;
+  descriptionEn: string;
   section: string | null;
   price: number | null;
   tags: string[];
@@ -70,13 +72,14 @@ export class ItemFormPage {
   protected readonly model = linkedSignal<ItemModel>(() => {
     const item = this.editing() ?? undefined;
     const sectionId = item?.sectionId ?? this.sectionId();
-    const listPrice = item?.listPrice ?? null;
     return {
       nameHe: item?.name.he ?? '',
       nameEn: item?.name.en ?? '',
+      descriptionHe: item?.description?.he ?? '',
+      descriptionEn: item?.description?.en ?? '',
       section:
         sectionId !== undefined && this.store.sectionsById().has(sectionId) ? sectionId : null,
-      price: listPrice === null ? null : Math.round(listPrice / 100),
+      price: item?.listPrice?.value ?? null,
       tags: item?.tagIds ?? [],
     };
   });
@@ -88,12 +91,17 @@ export class ItemFormPage {
       validate(path.nameHe, ({ value }) => (value().trim() === '' ? { kind: 'required' } : null));
       maxLength(path.nameHe, 200);
       maxLength(path.nameEn, 200);
+      maxLength(path.descriptionHe, 2000);
+      maxLength(path.descriptionEn, 2000);
+      validate(path.descriptionHe, (field) =>
+        field.value().trim() === '' && field.valueOf(path.descriptionEn).trim() !== ''
+          ? { kind: 'required' }
+          : null,
+      );
       required(path.section);
-      min(path.price, 0);
-      max(path.price, 100_000);
       validate(path.price, ({ value }) => {
         const price = value();
-        return price === null || Number.isInteger(price) ? null : { kind: 'whole' };
+        return price === null || ShekelsSchema.safeParse(price).success ? null : { kind: 'price' };
       });
     },
     { name: 'item' },
@@ -105,13 +113,6 @@ export class ItemFormPage {
 
   protected retry(): void {
     this.store.reload();
-  }
-
-  private listPrice(shekels: number | null, opened: number | null): number | null {
-    if (shekels === (opened === null ? null : Math.round(opened / 100))) {
-      return opened;
-    }
-    return shekels === null ? null : shekels * 100;
   }
 
   protected async save(): Promise<void> {
@@ -126,8 +127,11 @@ export class ItemFormPage {
     const editing = this.editing();
     const input = {
       sectionId,
-      name: this.localizedName(model),
-      listPrice: this.listPrice(model.price, editing?.listPrice ?? null),
+      name: textOf(model.nameHe, model.nameEn),
+      description: model.descriptionHe.trim()
+        ? textOf(model.descriptionHe, model.descriptionEn)
+        : null,
+      listPrice: model.price === null ? null : { value: model.price, currency: 'ILS' as const },
       tagIds: model.tags,
     };
     try {
@@ -139,10 +143,8 @@ export class ItemFormPage {
       this.saving.set(false);
     }
   }
+}
 
-  private localizedName(model: ItemModel): LocalizedText {
-    const he = model.nameHe.trim();
-    const en = model.nameEn.trim();
-    return en ? { he, en } : { he };
-  }
+function textOf(he: string, en: string): Text {
+  return { he: he.trim(), en: en.trim() || null };
 }
