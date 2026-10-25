@@ -9,7 +9,7 @@ describe('Venue contract', () => {
   const valid = {
     id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
     name: { he: 'בורגר 24', en: 'Burger 24' },
-    address: 'אבן גבירול 112, תל אביב',
+    address: { he: 'אבן גבירול 112, תל אביב', en: null },
     location: { lat: 32.08, lng: 34.78 },
     phone: '03-1234567',
     reservationUrl: 'https://example.com/book',

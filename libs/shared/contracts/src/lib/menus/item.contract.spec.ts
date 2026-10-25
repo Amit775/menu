@@ -6,7 +6,8 @@ describe('Item contract', () => {
     venueId: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
     sectionId: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
     name: { he: 'המבורגר הקלאסי', en: 'Classic burger' },
-    listPrice: 6800,
+    description: { he: 'קציצת בקר 220 גרם', en: null },
+    listPrice: { value: 68, currency: 'ILS' },
     tagIds: ['3a2d3c4e-3333-4c1c-9a57-6f7a5d3c2b10'],
     state: 'approved',
     mergedIntoId: null,
@@ -20,7 +21,15 @@ describe('Item contract', () => {
   });
 
   it('rejects a price in fractions of an agora', () => {
-    expect(ItemSchema.safeParse({ ...valid, listPrice: 68.5 }).success).toBe(false);
+    expect(
+      ItemSchema.safeParse({ ...valid, listPrice: { value: 68.555, currency: 'ILS' } }).success,
+    ).toBe(false);
+  });
+
+  it('keeps descriptions to 2000 characters', () => {
+    expect(
+      ItemSchema.safeParse({ ...valid, description: { he: 'א'.repeat(2001), en: null } }).success,
+    ).toBe(false);
   });
 
   it('rejects the same tag twice', () => {
@@ -29,9 +38,12 @@ describe('Item contract', () => {
   });
 
   it('defaults price and tags on create', () => {
-    expect(CreateItemSchema.parse({ sectionId: valid.sectionId, name: { he: 'צ׳יפס' } })).toEqual({
+    expect(
+      CreateItemSchema.parse({ sectionId: valid.sectionId, name: { he: 'צ׳יפס', en: null } }),
+    ).toEqual({
       sectionId: valid.sectionId,
-      name: { he: 'צ׳יפס' },
+      name: { he: 'צ׳יפס', en: null },
+      description: null,
       listPrice: null,
       tagIds: [],
     });
@@ -40,9 +52,9 @@ describe('Item contract', () => {
   it('names an item with its venue and list price', () => {
     const ref = {
       id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
-      name: { he: 'המבורגר' },
-      listPrice: 6800,
-      venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס' } },
+      name: { he: 'המבורגר', en: null },
+      listPrice: { value: 68, currency: 'ILS' },
+      venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס', en: null } },
     };
     expect(ItemRefSchema.parse(ref)).toEqual(ref);
     expect(ItemRefSchema.safeParse({ ...ref, venue: { id: 'x' } }).success).toBe(false);
