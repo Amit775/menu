@@ -10,8 +10,8 @@ describe('orderFeed', () => {
   ): DiscoverItem {
     return {
       id,
-      name: { he: id },
-      venue: { id: 'v', name: { he: 'v' } },
+      name: { he: id, en: null },
+      venue: { id: 'v', name: { he: 'v', en: null } },
       sectionId: 's',
       tagIds: [],
       distanceMeters,

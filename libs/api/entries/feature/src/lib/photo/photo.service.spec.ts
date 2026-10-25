@@ -27,7 +27,7 @@ describe('PhotoService', () => {
       eatenAt: '2026-10-20T19:30:00.000Z',
       rating: 4,
       wouldOrderAgain: true,
-      pricePaid: 6800,
+      pricePaid: { value: 68, currency: 'ILS' as const },
       text: '',
       visibility: 'public',
       shareToken: null,
