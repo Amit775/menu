@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { LocalizedTextSchema } from '../common/values.contract';
+import { TextSchema } from '../common/values.contract';
 
 export const tagPath = 'tags';
 
@@ -12,7 +12,7 @@ export const TagSchema = z.object({
   slug: z
     .string()
     .regex(/^[a-z][a-z0-9-]{1,40}$/, 'Use lowercase English letters, digits and dashes.'),
-  name: LocalizedTextSchema,
+  name: TextSchema,
   kind: TagKindSchema,
 });
 
