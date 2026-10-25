@@ -4,7 +4,7 @@ import { TagRepository } from '@menu/api/menus/data-access';
 import { TagService } from './tag.service';
 
 describe('TagService', () => {
-  const input = { slug: 'vegan', name: { he: 'טבעוני' }, kind: 'diet' as const };
+  const input = { slug: 'vegan', name: { he: 'טבעוני', en: null }, kind: 'diet' as const };
 
   async function setup(
     repository: Partial<Record<keyof TagRepository, unknown>>,

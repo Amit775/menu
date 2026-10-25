@@ -26,18 +26,22 @@ describe('MenuSectionService', () => {
 
   it('lets the Owner add a section', async () => {
     const create = vi.fn().mockResolvedValue({});
-    await (await setup({ create })).create(owner, venueId, { he: 'קינוחים' });
-    expect(create).toHaveBeenCalledWith(venueId, { he: 'קינוחים' });
+    await (await setup({ create })).create(owner, venueId, { he: 'קינוחים', en: null });
+    expect(create).toHaveBeenCalledWith(venueId, { he: 'קינוחים', en: null });
   });
 
   it('forbids a user who does not own the venue', async () => {
     const service = await setup({ create: vi.fn() });
-    await expect(service.create(user, venueId, { he: 'x' })).rejects.toThrow(ForbiddenException);
+    await expect(service.create(user, venueId, { he: 'x', en: null })).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('fails with 404 for a missing venue', async () => {
     const service = await setup({ create: vi.fn() }, null);
-    await expect(service.create(owner, venueId, { he: 'x' })).rejects.toThrow(NotFoundException);
+    await expect(service.create(owner, venueId, { he: 'x', en: null })).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('hides the sections of a hidden venue from users', async () => {

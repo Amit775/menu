@@ -1,26 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService, toLocalized } from '@menu/api/shared/db';
+import { PrismaService, readPrice, readText } from '@menu/api/shared/db';
 import {
   type GeoPoint,
-  type LocalizedText,
   type MenuSection,
+  MenuSectionSchema,
+  type Price,
   type Tag,
+  type Text,
   type Venue,
 } from '@menu/shared/contracts';
 
 export interface CatalogItem {
   id: string;
-  name: LocalizedText;
+  name: Text;
   state: 'approved' | 'archived';
   venueId: string;
-  venueName: LocalizedText;
+  venueName: Text;
   venueLocation: GeoPoint;
   sectionId: string;
   position: number;
   tagIds: string[];
-  listPrice: number | null;
+  listPrice: Price | null;
   createdAt: Date;
 }
+
+const StoredSectionsSchema = MenuSectionSchema.pick({ id: true, name: true }).array();
 
 /**
  * The discover read model over the menus tables; it never writes. Entries reach
@@ -35,22 +39,19 @@ export class DiscoverRepository {
   async loadCatalog(): Promise<CatalogItem[]> {
     const rows = await this.prisma.item.findMany({
       where: { state: { in: ['approved', 'archived'] }, venue: { status: 'active' } },
-      include: {
-        venue: { select: { nameHe: true, nameEn: true, lat: true, lng: true } },
-        tags: { select: { tagId: true }, orderBy: { position: 'asc' } },
-      },
+      include: { venue: { select: { name: true, lat: true, lng: true } } },
     });
     return rows.map((row) => ({
       id: row.id,
-      name: toLocalized(row),
+      name: readText(row.name),
       state: row.state === 'archived' ? 'archived' : 'approved',
       venueId: row.venueId,
-      venueName: toLocalized(row.venue),
+      venueName: readText(row.venue.name),
       venueLocation: { lat: row.venue.lat, lng: row.venue.lng },
       sectionId: row.sectionId,
       position: row.position,
-      tagIds: row.tags.map((tag) => tag.tagId),
-      listPrice: row.listPrice,
+      tagIds: row.tagIds,
+      listPrice: readPrice(row.listPriceValue, row.listPriceCurrency),
       createdAt: row.createdAt,
     }));
   }
@@ -62,8 +63,8 @@ export class DiscoverRepository {
     }
     return {
       id: row.id,
-      name: toLocalized(row),
-      address: row.address,
+      name: readText(row.name),
+      address: readText(row.address),
       location: { lat: row.lat, lng: row.lng },
       phone: row.phone,
       reservationUrl: row.reservationUrl,
@@ -72,34 +73,30 @@ export class DiscoverRepository {
     };
   }
 
-  async listActiveVenues(): Promise<{ id: string; name: LocalizedText }[]> {
+  async listActiveVenues(): Promise<{ id: string; name: Text }[]> {
     const rows = await this.prisma.venue.findMany({
       where: { status: 'active' },
-      select: { id: true, nameHe: true, nameEn: true },
+      select: { id: true, name: true },
     });
-    return rows.map((row) => ({ id: row.id, name: toLocalized(row) }));
+    return rows.map((row) => ({ id: row.id, name: readText(row.name) }));
   }
 
   async listSections(venueId: string): Promise<MenuSection[]> {
-    const rows = await this.prisma.menuSection.findMany({
-      where: { venueId },
-      orderBy: { position: 'asc' },
+    const row = await this.prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { sections: true },
     });
-    return rows.map((row) => ({
-      id: row.id,
-      venueId: row.venueId,
-      name: toLocalized(row),
-      position: row.position,
+    return StoredSectionsSchema.parse(row?.sections ?? []).map((section, position) => ({
+      ...section,
+      venueId,
+      position,
     }));
   }
 
   async listTags(): Promise<Tag[]> {
-    const rows = await this.prisma.tag.findMany({ orderBy: { nameHe: 'asc' } });
-    return rows.map((row) => ({
-      id: row.id,
-      slug: row.slug,
-      name: toLocalized(row),
-      kind: row.kind,
-    }));
+    const rows = await this.prisma.tag.findMany();
+    return rows
+      .map((row) => ({ id: row.id, slug: row.slug, name: readText(row.name), kind: row.kind }))
+      .sort((a, b) => a.name.he.localeCompare(b.name.he, 'he'));
   }
 }

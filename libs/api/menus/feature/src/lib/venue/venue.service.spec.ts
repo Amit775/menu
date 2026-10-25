@@ -53,8 +53,8 @@ describe('VenueService', () => {
   it('records the Admin who created a venue', async () => {
     const create = vi.fn().mockResolvedValue({});
     const input = {
-      name: { he: 'x' },
-      address: 'y',
+      name: { he: 'x', en: null },
+      address: { he: 'y', en: null },
       location: { lat: 0, lng: 0 },
       phone: null,
       reservationUrl: null,

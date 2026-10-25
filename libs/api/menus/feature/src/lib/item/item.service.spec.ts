@@ -9,7 +9,7 @@ import {
   type ItemRecord,
   ItemRepository,
   MenuSectionRepository,
-  TagRepository,
+  UnknownTagError,
   VenueRepository,
 } from '@menu/api/menus/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -30,8 +30,9 @@ describe('ItemService', () => {
       id: 'i1',
       venueId,
       sectionId,
-      name: { he: 'המבורגר' },
-      listPrice: 6800,
+      name: { he: 'המבורגר', en: null },
+      description: null,
+      listPrice: { value: 68, currency: 'ILS' as const },
       tagIds: [],
       state: 'approved',
       mergedIntoId: null,
@@ -44,7 +45,7 @@ describe('ItemService', () => {
 
   async function setup(
     repository: Partial<Record<keyof ItemRepository, unknown>>,
-    options: { venue?: unknown; listener?: unknown; section?: boolean; tags?: boolean } = {},
+    options: { venue?: unknown; listener?: unknown; section?: boolean } = {},
   ): Promise<ItemService> {
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -61,10 +62,6 @@ describe('ItemService', () => {
         {
           provide: MenuSectionRepository,
           useValue: { belongsTo: vi.fn().mockResolvedValue(options.section ?? true) },
-        },
-        {
-          provide: TagRepository,
-          useValue: { allExist: vi.fn().mockResolvedValue(options.tags ?? true) },
         },
         {
           provide: ITEM_MERGE_LISTENER,
@@ -128,7 +125,13 @@ describe('ItemService', () => {
   });
 
   describe('creating an item', () => {
-    const input = { sectionId, name: { he: 'צ׳יפס' }, listPrice: null, tagIds: [] };
+    const input = {
+      sectionId,
+      name: { he: 'צ׳יפס', en: null },
+      description: null,
+      listPrice: null,
+      tagIds: [],
+    };
 
     it('adds an Owner’s item to the menu at once', async () => {
       const create = vi.fn().mockResolvedValue(record());
@@ -149,7 +152,7 @@ describe('ItemService', () => {
     });
 
     it('rejects an unknown tag', async () => {
-      const service = await setup({ create: vi.fn() }, { tags: false });
+      const service = await setup({ create: vi.fn().mockRejectedValue(new UnknownTagError()) });
       await expect(service.create(owner, venueId, { ...input, tagIds: ['t'] })).rejects.toThrow(
         BadRequestException,
       );
@@ -158,10 +161,14 @@ describe('ItemService', () => {
 
   describe('editing an item', () => {
     it('lets the Owner edit', async () => {
-      const update = vi.fn().mockResolvedValue(record({ listPrice: 7200 }));
+      const update = vi
+        .fn()
+        .mockResolvedValue(record({ listPrice: { value: 72, currency: 'ILS' as const } }));
       const service = await setup({ findById: vi.fn().mockResolvedValue(record()), update });
-      await expect(service.update(owner, 'i1', { listPrice: 7200 })).resolves.toMatchObject({
-        listPrice: 7200,
+      await expect(
+        service.update(owner, 'i1', { listPrice: { value: 72, currency: 'ILS' as const } }),
+      ).resolves.toMatchObject({
+        listPrice: { value: 72, currency: 'ILS' as const },
       });
     });
 
@@ -170,8 +177,18 @@ describe('ItemService', () => {
         findById: vi.fn().mockResolvedValue(record()),
         update: vi.fn().mockResolvedValue(null),
       });
-      await expect(service.update(owner, 'i1', { listPrice: 1 })).rejects.toThrow(
-        NotFoundException,
+      await expect(
+        service.update(owner, 'i1', { listPrice: { value: 0.01, currency: 'ILS' as const } }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('rejects an unknown tag', async () => {
+      const service = await setup({
+        findById: vi.fn().mockResolvedValue(record()),
+        update: vi.fn().mockRejectedValue(new UnknownTagError()),
+      });
+      await expect(service.update(owner, 'i1', { tagIds: ['t'] })).rejects.toThrow(
+        BadRequestException,
       );
     });
 
@@ -180,9 +197,9 @@ describe('ItemService', () => {
         findById: vi.fn().mockResolvedValue(record({ state: 'rejected', submittedById: 'u' })),
         update: vi.fn(),
       });
-      await expect(service.update(owner, 'i1', { listPrice: 1 })).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.update(owner, 'i1', { listPrice: { value: 0.01, currency: 'ILS' as const } }),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('forbids a user', async () => {
@@ -190,9 +207,9 @@ describe('ItemService', () => {
         findById: vi.fn().mockResolvedValue(record()),
         update: vi.fn(),
       });
-      await expect(service.update(user, 'i1', { listPrice: 1 })).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.update(user, 'i1', { listPrice: { value: 0.01, currency: 'ILS' as const } }),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 

@@ -12,7 +12,7 @@ interface AccountRow {
   id: string;
   displayName: string;
   language: Language;
-  isAdmin: boolean;
+  role: 'user' | 'admin';
   createdAt: Date;
 }
 
@@ -44,7 +44,11 @@ export class AccountRepository {
     try {
       const row = await this.prisma.account.upsert({
         where: { firebaseUid: input.firebaseUid },
-        create: input,
+        create: {
+          firebaseUid: input.firebaseUid,
+          displayName: input.displayName,
+          role: input.isAdmin ? 'admin' : 'user',
+        },
         update: {},
         include: withOwnerships,
       });
@@ -96,7 +100,10 @@ export class AccountRepository {
   }
 
   async setAdmin(id: string, isAdmin: boolean): Promise<AccountSummary | null> {
-    const { count } = await this.prisma.account.updateMany({ where: { id }, data: { isAdmin } });
+    const { count } = await this.prisma.account.updateMany({
+      where: { id },
+      data: { role: isAdmin ? 'admin' : 'user' },
+    });
     if (count === 0) {
       return null;
     }
@@ -110,7 +117,7 @@ function toAccount(row: AccountWithOwnerships): Account {
     id: row.id,
     displayName: row.displayName,
     language: row.language,
-    isAdmin: row.isAdmin,
+    isAdmin: row.role === 'admin',
     ownedVenueIds: row.ownerships.map((ownership) => ownership.venueId),
     createdAt: row.createdAt.toISOString(),
   };
@@ -120,7 +127,7 @@ function toSummary(row: AccountRow): AccountSummary {
   return {
     id: row.id,
     displayName: row.displayName,
-    isAdmin: row.isAdmin,
+    isAdmin: row.role === 'admin',
     createdAt: row.createdAt.toISOString(),
   };
 }

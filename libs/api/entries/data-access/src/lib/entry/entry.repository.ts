@@ -1,14 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@menu/api/shared/db';
+import {
+  DbNull,
+  type DecimalColumn,
+  PrismaService,
+  readPrice,
+  writePrice,
+} from '@menu/api/shared/db';
 import { withoutUndefined } from '@menu/api/shared/util';
 import {
-  type Agorot,
+  type Currency,
   type DiaryQuery,
   type Entry,
   type EntryVisibility,
+  PhotoIdSchema,
   type PhotoType,
   PhotoTypeSchema,
   photoUrl,
+  type Price,
   type UpdateEntry,
 } from '@menu/shared/contracts';
 
@@ -26,11 +34,10 @@ export interface PhotoRef {
 export interface NewEntry {
   authorId: string;
   itemId: string;
-  venueId: string;
   eatenAt: string;
   rating: number | null;
   wouldOrderAgain: boolean | null;
-  pricePaid: Agorot | null;
+  pricePaid: Price | null;
   text: string;
   visibility: EntryVisibility;
   shareToken: string | null;
@@ -41,7 +48,7 @@ export interface EntryFact {
   authorId: string;
   rating: number | null;
   wouldOrderAgain: boolean | null;
-  pricePaid: number | null;
+  pricePaid: Price | null;
   visibility: EntryVisibility;
   photoId: string | null;
   eatenAt: Date;
@@ -54,42 +61,48 @@ interface EntryRow {
   id: string;
   authorId: string;
   itemId: string;
-  venueId: string;
   eatenAt: Date;
   rating: number | null;
   wouldOrderAgain: boolean | null;
-  pricePaid: number | null;
+  pricePaidValue: DecimalColumn | null;
+  pricePaidCurrency: Currency | null;
   text: string;
   visibility: EntryVisibility;
   shareToken: string | null;
   hiddenAt: Date | null;
-  photoId: string | null;
-  photoType: string | null;
+  photo: unknown;
   createdAt: Date;
   updatedAt: Date;
+  item: { venueId: string };
 }
 
 const newestFirst = [{ eatenAt: 'desc' }, { createdAt: 'desc' }] as const;
+
+// Items never move venue, so an entry's venue is read through its item.
+const withVenue = { item: { select: { venueId: true } } } as const;
 
 @Injectable()
 export class EntryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(input: NewEntry): Promise<EntryRecord> {
+    const { pricePaid, ...rest } = input;
     const row = await this.prisma.entry.create({
-      data: { ...input, eatenAt: new Date(input.eatenAt) },
+      data: { ...rest, ...priceColumns(pricePaid), eatenAt: new Date(input.eatenAt) },
+      include: withVenue,
     });
     return toRecord(row);
   }
 
   async findById(id: string): Promise<EntryRecord | null> {
-    const row = await this.prisma.entry.findUnique({ where: { id } });
+    const row = await this.prisma.entry.findUnique({ where: { id }, include: withVenue });
     return row ? toRecord(row) : null;
   }
 
   async findByPhotoId(photoId: string): Promise<EntryRecord | null> {
-    const row = await this.prisma.entry.findUnique({ where: { photoId } });
-    return row ? toRecord(row) : null;
+    const [match] = await this.prisma.$queryRaw<{ id: string }[]>`
+      SELECT "id" FROM "entry" WHERE "photo" @> ${JSON.stringify({ id: photoId })}::jsonb LIMIT 1`;
+    return match ? this.findById(match.id) : null;
   }
 
   async setPhoto(
@@ -99,20 +112,25 @@ export class EntryRepository {
   ): Promise<EntryRecord | null> {
     const { count } = await this.prisma.entry.updateMany({
       where: { id, authorId },
-      data: photo ?? { photoId: null, photoType: null },
+      data: { photo: photo ? { id: photo.photoId, contentType: photo.photoType } : DbNull },
     });
     return count === 0 ? null : this.findById(id);
   }
 
   async findByShareToken(shareToken: string): Promise<EntryRecord | null> {
-    const row = await this.prisma.entry.findUnique({ where: { shareToken } });
+    const row = await this.prisma.entry.findUnique({ where: { shareToken }, include: withVenue });
     return row ? toRecord(row) : null;
   }
 
   async listByAuthor(authorId: string, filter: DiaryQuery = {}): Promise<EntryRecord[]> {
     const rows = await this.prisma.entry.findMany({
-      where: { authorId, ...withoutUndefined(filter) },
+      where: withoutUndefined({
+        authorId,
+        itemId: filter.itemId,
+        item: filter.venueId ? { venueId: filter.venueId } : undefined,
+      }),
       orderBy: [...newestFirst],
+      include: withVenue,
     });
     return rows.map(toRecord);
   }
@@ -127,20 +145,32 @@ export class EntryRepository {
       },
       orderBy: [...newestFirst],
       take: 200,
+      include: withVenue,
     });
     return rows.map(toRecord);
   }
 
   async update(id: string, authorId: string, changes: EntryChanges): Promise<EntryRecord | null> {
-    const { eatenAt, ...rest } = changes;
-    const { count } = await this.prisma.entry.updateMany({
-      where: { id, authorId },
-      data: withoutUndefined({
-        ...rest,
-        eatenAt: eatenAt === undefined ? undefined : new Date(eatenAt),
-      }),
+    const { eatenAt, pricePaid, photoId, ...rest } = changes;
+    return this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.entry.updateMany({
+        where: { id, authorId },
+        data: withoutUndefined({
+          ...rest,
+          ...(pricePaid === undefined ? {} : priceColumns(pricePaid)),
+          eatenAt: eatenAt === undefined ? undefined : new Date(eatenAt),
+        }),
+      });
+      if (count === 0) {
+        return null;
+      }
+      if (photoId) {
+        await tx.$executeRaw`
+          UPDATE "entry" SET "photo" = jsonb_set("photo", '{id}', to_jsonb(${photoId}::text))
+          WHERE "id" = ${id}::uuid AND "photo" IS NOT NULL`;
+      }
+      return toRecord(await tx.entry.findUniqueOrThrow({ where: { id }, include: withVenue }));
     });
-    return count === 0 ? null : this.findById(id);
   }
 
   async delete(id: string, authorId: string): Promise<boolean> {
@@ -159,31 +189,36 @@ export class EntryRepository {
       // Photo ids handed out while it was visible stop working (ADR 0011).
       ...(hidden
         ? [
-            this.prisma.entry.updateMany({
-              where: { ...where, photoId: { not: null } },
-              data: { photoId: newPhotoId },
-            }),
+            this.prisma.$executeRaw`
+              UPDATE "entry" SET "photo" = jsonb_set("photo", '{id}', to_jsonb(${newPhotoId}::text))
+              WHERE "id" = ${id}::uuid AND "visibility" <> 'private' AND "photo" IS NOT NULL`,
           ]
         : []),
     ]);
   }
 
   /** Every unhidden entry, for aggregates. Fine at friends scale; a stored score can replace it. */
-  listFacts(): Promise<EntryFact[]> {
-    return this.prisma.entry.findMany({
+  async listFacts(): Promise<EntryFact[]> {
+    const rows = await this.prisma.entry.findMany({
       where: { hiddenAt: null },
       select: {
         itemId: true,
         authorId: true,
         rating: true,
         wouldOrderAgain: true,
-        pricePaid: true,
+        pricePaidValue: true,
+        pricePaidCurrency: true,
         visibility: true,
-        photoId: true,
+        photo: true,
         eatenAt: true,
         createdAt: true,
       },
     });
+    return rows.map(({ pricePaidValue, pricePaidCurrency, photo, ...fact }) => ({
+      ...fact,
+      pricePaid: readPrice(pricePaidValue, pricePaidCurrency),
+      photoId: readPhoto(photo)?.id ?? null,
+    }));
   }
 
   /** Hidden entries count: they are still the author's. */
@@ -197,7 +232,7 @@ export class EntryRepository {
   }
 
   countByAuthorAtVenue(authorId: string, venueId: string): Promise<number> {
-    return this.prisma.entry.count({ where: { authorId, venueId } });
+    return this.prisma.entry.count({ where: { authorId, item: { venueId } } });
   }
 
   /** Re-points every entry from one item to another. Safe to run twice. */
@@ -210,23 +245,42 @@ export class EntryRepository {
 }
 
 function toRecord(row: EntryRow): EntryRecord {
+  const photo = readPhoto(row.photo);
   return {
     id: row.id,
     authorId: row.authorId,
     itemId: row.itemId,
-    venueId: row.venueId,
+    venueId: row.item.venueId,
     eatenAt: row.eatenAt.toISOString(),
     rating: row.rating,
     wouldOrderAgain: row.wouldOrderAgain,
-    pricePaid: row.pricePaid,
+    pricePaid: readPrice(row.pricePaidValue, row.pricePaidCurrency),
     text: row.text,
     visibility: row.visibility,
     shareToken: row.shareToken,
     hidden: row.hiddenAt !== null,
-    photoUrl: row.photoId ? photoUrl(row.photoId) : null,
-    photoId: row.photoId,
-    photoType: row.photoType === null ? null : PhotoTypeSchema.parse(row.photoType),
+    photoUrl: photo ? photoUrl(photo.id) : null,
+    photoId: photo?.id ?? null,
+    photoType: photo?.contentType ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+function readPhoto(column: unknown): { id: string; contentType: PhotoType } | null {
+  if (column === null) {
+    return null;
+  }
+  if (typeof column !== 'object' || !('id' in column) || !('contentType' in column)) {
+    throw new Error('A stored photo needs its id and content type.');
+  }
+  return {
+    id: PhotoIdSchema.parse(column.id),
+    contentType: PhotoTypeSchema.parse(column.contentType),
+  };
+}
+
+function priceColumns(price: Price | null) {
+  const { value, currency } = writePrice(price);
+  return { pricePaidValue: value, pricePaidCurrency: currency };
 }

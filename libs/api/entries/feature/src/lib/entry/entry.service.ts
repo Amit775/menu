@@ -65,7 +65,6 @@ export class EntryService {
       eatenAt: input.eatenAt ?? new Date().toISOString(),
       authorId: principal.accountId,
       itemId: item.id,
-      venueId: item.venueId,
       shareToken: input.visibility === 'private' ? null : newCapabilityId(),
     });
     return new DiaryEntry(record).toContract();
