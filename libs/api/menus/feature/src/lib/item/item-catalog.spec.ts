@@ -19,7 +19,8 @@ describe('MenusItemCatalog', () => {
     id: 'i1',
     venueId,
     sectionId: 's1',
-    name: { he: 'פיצה' },
+    name: { he: 'פיצה', en: null },
+    description: null,
     listPrice: null,
     tagIds: [],
     state: 'approved',
@@ -34,7 +35,7 @@ describe('MenusItemCatalog', () => {
       findById: vi.fn().mockResolvedValue(record),
       findByIds: vi.fn().mockResolvedValue(record ? [record] : []),
     };
-    const venue = { id: venueId, status: venueStatus, name: { he: 'מוזס' } };
+    const venue = { id: venueId, status: venueStatus, name: { he: 'מוזס', en: null } };
     const venues = {
       findById: vi.fn().mockResolvedValue(venue),
       list: vi.fn().mockResolvedValue([venue]),
@@ -97,13 +98,17 @@ describe('MenusItemCatalog', () => {
   });
 
   it('names items with their venue, in any state', async () => {
-    const pending = { ...base, state: 'pending' as const, listPrice: 4200 };
+    const pending = {
+      ...base,
+      state: 'pending' as const,
+      listPrice: { value: 42, currency: 'ILS' as const },
+    };
     const refs = await catalog(pending, 'hidden').refsFor(['i1', 'i1']);
     expect(refs.get('i1')).toEqual({
       id: 'i1',
-      name: { he: 'פיצה' },
-      listPrice: 4200,
-      venue: { id: venueId, name: { he: 'מוזס' } },
+      name: { he: 'פיצה', en: null },
+      listPrice: { value: 42, currency: 'ILS' as const },
+      venue: { id: venueId, name: { he: 'מוזס', en: null } },
     });
   });
 

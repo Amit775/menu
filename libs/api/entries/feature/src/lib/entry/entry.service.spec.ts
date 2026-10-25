@@ -16,14 +16,14 @@ describe('EntryService', () => {
   const item: EntryTarget = { id: 'i1', venueId: 'v1', isPublic: true, acceptsEntry: true };
   const itemRef = {
     id: 'i1',
-    name: { he: 'המבורגר' },
-    listPrice: 6800,
-    venue: { id: 'v1', name: { he: 'מוזס' } },
+    name: { he: 'המבורגר', en: null },
+    listPrice: { value: 68, currency: 'ILS' as const },
+    venue: { id: 'v1', name: { he: 'מוזס', en: null } },
   };
   const input = {
     rating: 4,
     wouldOrderAgain: true,
-    pricePaid: 6800,
+    pricePaid: { value: 68, currency: 'ILS' as const },
     text: '',
     visibility: 'private' as const,
   };
@@ -37,7 +37,7 @@ describe('EntryService', () => {
       eatenAt: '2026-10-20T19:30:00.000Z',
       rating: 4,
       wouldOrderAgain: true,
-      pricePaid: 6800,
+      pricePaid: { value: 68, currency: 'ILS' as const },
       text: '',
       visibility: 'private',
       shareToken: null,
@@ -81,16 +81,16 @@ describe('EntryService', () => {
   }
 
   describe('logging an entry', () => {
-    it('records it on the item’s venue, eaten now by default, with no link while private', async () => {
+    it('records it for the item, eaten now by default, with no link while private', async () => {
       const create = vi.fn().mockResolvedValue(record());
       await (await setup({ create })).create(author, 'i1', input);
       const saved: unknown = create.mock.calls[0]?.[0];
       expect(saved).toMatchObject({
         authorId: 'a1',
         itemId: 'i1',
-        venueId: 'v1',
         shareToken: null,
       });
+      expect(saved).not.toHaveProperty('venueId');
       expect(saved).toHaveProperty('eatenAt', expect.any(String));
     });
 

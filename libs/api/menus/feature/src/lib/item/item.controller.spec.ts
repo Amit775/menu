@@ -28,7 +28,13 @@ describe('ItemController', () => {
 
   it('submits an item to a venue', async () => {
     const create = vi.fn().mockResolvedValue({});
-    const input = { sectionId: 's', name: { he: 'x' }, listPrice: null, tagIds: [] };
+    const input = {
+      sectionId: 's',
+      name: { he: 'x', en: null },
+      description: null,
+      listPrice: null,
+      tagIds: [],
+    };
     await (await setup({ create })).venueItems.create(principal, 'v1', input);
     expect(create).toHaveBeenCalledWith(principal, 'v1', input);
   });
