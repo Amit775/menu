@@ -38,6 +38,17 @@
         <input matInput dir="ltr" lang="en" [formField]="form.nameEn" />
       </mat-form-field>
       <mat-form-field appearance="outline">
+        <mat-label>{{ t('descriptionHe') }}</mat-label>
+        <textarea matInput dir="rtl" lang="he" rows="3" [formField]="form.descriptionHe"></textarea>
+        @if (form.descriptionHe().invalid()) {
+          <mat-error>{{ t('descriptionInvalid') }}</mat-error>
+        }
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('descriptionEn') }}</mat-label>
+        <textarea matInput dir="ltr" lang="en" rows="3" [formField]="form.descriptionEn"></textarea>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
         <mat-label>{{ t('section') }}</mat-label>
         <mat-select class="section" [formField]="form.section">
           @for (view of store.menu(); track view.section.id) {
@@ -50,7 +61,7 @@
       </mat-form-field>
       <mat-form-field appearance="outline">
         <mat-label>{{ t('price') }}</mat-label>
-        <input matInput type="number" inputmode="numeric" step="1" [formField]="form.price" />
+        <input matInput type="number" inputmode="decimal" step="0.01" [formField]="form.price" />
         <span matTextPrefix>₪&nbsp;</span>
         @if (form.price().invalid()) {
           <mat-error>{{ t('priceInvalid') }}</mat-error>

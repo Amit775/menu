@@ -5,7 +5,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { SharedEntryStore } from '@menu/web/entries/data-access';
 import { Auth } from '@menu/web/shared/util-auth';
-import { I18n, injectTranslate, LocalizePipe, ShekelsPipe } from '@menu/web/shared/util-i18n';
+import { I18n, injectTranslate, LocalizePipe, PricePipe } from '@menu/web/shared/util-i18n';
 import { sharedI18n } from '../shared.i18n';
 
 @Component({
@@ -16,7 +16,7 @@ import { sharedI18n } from '../shared.i18n';
     MatButtonModule,
     MatProgressSpinnerModule,
     LocalizePipe,
-    ShekelsPipe,
+    PricePipe,
   ],
   templateUrl: './entries-shared-page.html',
   styleUrl: './entries-shared-page.scss',

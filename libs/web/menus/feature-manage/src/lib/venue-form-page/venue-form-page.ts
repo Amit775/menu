@@ -23,7 +23,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
-import { type GeoPoint, type LocalizedText, type VenueStatus } from '@menu/shared/contracts';
+import { type GeoPoint, type Text, type VenueStatus } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
 import { injectTranslate } from '@menu/web/shared/util-i18n';
 import { venueFormI18n } from '../venue-form.i18n';
@@ -32,7 +32,8 @@ import { PinPicker } from './pin-picker';
 interface VenueModel {
   nameHe: string;
   nameEn: string;
-  address: string;
+  addressHe: string;
+  addressEn: string;
   lat: number | null;
   lng: number | null;
   phone: string;
@@ -87,7 +88,8 @@ export class VenueFormPage {
     return {
       nameHe: venue?.name.he ?? '',
       nameEn: venue?.name.en ?? '',
-      address: venue?.address ?? '',
+      addressHe: venue?.address.he ?? '',
+      addressEn: venue?.address.en ?? '',
       lat: venue?.location.lat ?? null,
       lng: venue?.location.lng ?? null,
       phone: venue?.phone ?? '',
@@ -100,12 +102,13 @@ export class VenueFormPage {
   protected readonly form = form(
     this.model,
     (path) => {
-      for (const text of [path.nameHe, path.address]) {
+      for (const text of [path.nameHe, path.addressHe]) {
         required(text);
         validate(text, ({ value }) => (value().trim() === '' ? { kind: 'required' } : null));
         maxLength(text, 200);
       }
       maxLength(path.nameEn, 200);
+      maxLength(path.addressEn, 200);
       required(path.lat);
       min(path.lat, -90);
       max(path.lat, 90);
@@ -160,8 +163,8 @@ export class VenueFormPage {
     this.failed.set(false);
     const model = this.model();
     const details = {
-      name: this.localizedName(model),
-      address: model.address.trim(),
+      name: textOf(model.nameHe, model.nameEn),
+      address: textOf(model.addressHe, model.addressEn),
       location,
       phone: model.phone.trim() || null,
       reservationUrl: model.reservationUrl.trim() || null,
@@ -171,7 +174,7 @@ export class VenueFormPage {
         ? await this.store.updateVenue({ ...details, status: model.status })
         : await this.store.createVenue({
             ...details,
-            sections: sectionLines(model.sections).map((he) => ({ he })),
+            sections: sectionLines(model.sections).map((he) => ({ he, en: null })),
           });
       void this.router.navigate(['/manage/venues', venue.id], { replaceUrl: true });
     } catch {
@@ -180,10 +183,8 @@ export class VenueFormPage {
       this.saving.set(false);
     }
   }
+}
 
-  private localizedName(model: VenueModel): LocalizedText {
-    const he = model.nameHe.trim();
-    const en = model.nameEn.trim();
-    return en ? { he, en } : { he };
-  }
+function textOf(he: string, en: string): Text {
+  return { he: he.trim(), en: en.trim() || null };
 }

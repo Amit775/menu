@@ -19,7 +19,7 @@ import {
   I18n,
   injectTranslate,
   LocalizePipe,
-  ShekelsPipe,
+  PricePipe,
 } from '@menu/web/shared/util-i18n';
 import { feedI18n } from '../feed.i18n';
 
@@ -35,7 +35,7 @@ const COPIED_NOTICE_MS = 3000;
     ScoreBadge,
     LocalizePipe,
     DistancePipe,
-    ShekelsPipe,
+    PricePipe,
   ],
   templateUrl: './reel-card.html',
   styleUrl: './reel-card.scss',

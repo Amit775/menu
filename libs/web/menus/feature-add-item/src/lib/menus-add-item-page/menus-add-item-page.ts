@@ -14,7 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { AddItemStore } from '@menu/web/menus/data-access';
-import { type LocalizedText } from '@menu/shared/contracts';
+import { ShekelsSchema, type Text } from '@menu/shared/contracts';
 import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { addItemI18n } from '../add-item.i18n';
 
@@ -56,11 +56,11 @@ export class MenusAddItemPage {
   protected readonly section = new FormControl<string | null>(null, (control) =>
     Validators.required(control),
   );
-  protected readonly price = new FormControl<number | null>(null, [
-    Validators.min(0),
-    Validators.max(100_000),
-    Validators.pattern(/^\d+$/),
-  ]);
+  protected readonly price = new FormControl<number | null>(null, (control) =>
+    control.value === null || ShekelsSchema.safeParse(control.value).success
+      ? null
+      : { price: true },
+  );
   protected readonly form = new FormGroup({
     name: this.name,
     section: this.section,
@@ -98,7 +98,7 @@ export class MenusAddItemPage {
       const item = await this.store.add({
         sectionId,
         name: this.localizedName(),
-        listPrice: this.price.value === null ? null : this.price.value * 100,
+        listPrice: this.price.value === null ? null : { value: this.price.value, currency: 'ILS' },
       });
       void this.router.navigate(['/log', item.id], { replaceUrl: true });
     } catch {
@@ -109,8 +109,8 @@ export class MenusAddItemPage {
   }
 
   /** Every name needs Hebrew; one typed in English stands in for it until someone translates it. */
-  private localizedName(): LocalizedText {
+  private localizedName(): Text {
     const name = this.name.value.trim();
-    return this.i18n.language() === 'en' ? { he: name, en: name } : { he: name };
+    return { he: name, en: this.i18n.language() === 'en' ? name : null };
   }
 }

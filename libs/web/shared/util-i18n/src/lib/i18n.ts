@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { computed, inject, Service } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
-import { type Language, type LocalizedText } from '@menu/shared/contracts';
+import { type Language, type Text } from '@menu/shared/contracts';
 import { BrowserStorage } from './browser-storage';
 
 const STORAGE_KEY = 'menu.language';
@@ -26,7 +26,7 @@ export class I18n {
     this.storage.set(STORAGE_KEY, language);
   }
 
-  pick(text: LocalizedText): string {
+  pick(text: Text): string {
     return this.language() === 'en' ? (text.en ?? text.he) : text.he;
   }
 

@@ -9,8 +9,8 @@ import { MenusManagePage } from './menus-manage-page';
 const VENUE_ID = '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
 const venue: Venue = {
   id: VENUE_ID,
-  name: { he: 'בורגר 24' },
-  address: 'דיזנגוף 100, תל אביב',
+  name: { he: 'בורגר 24', en: null },
+  address: { he: 'דיזנגוף 100, תל אביב', en: null },
   location: { lat: 32.08, lng: 34.77 },
   phone: null,
   reservationUrl: null,
@@ -20,15 +20,16 @@ const venue: Venue = {
 const quiet: Venue = {
   ...venue,
   id: '1c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
-  name: { he: 'מוזס' },
+  name: { he: 'מוזס', en: null },
   status: 'hidden',
 };
 const pending: Item = {
   id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   venueId: VENUE_ID,
   sectionId: '5c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
-  name: { he: 'בורגר כבש' },
-  listPrice: 7200,
+  name: { he: 'בורגר כבש', en: null },
+  description: null,
+  listPrice: { value: 72, currency: 'ILS' as const },
   tagIds: [],
   state: 'pending',
   mergedIntoId: null,

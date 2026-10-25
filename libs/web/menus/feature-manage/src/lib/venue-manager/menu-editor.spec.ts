@@ -79,7 +79,7 @@ describe('MenuEditor', () => {
     const addSection = vi.fn().mockResolvedValue({
       ...drinks,
       id: '8c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
-      name: { he: 'קינוחים' },
+      name: { he: 'קינוחים', en: null },
       position: 2,
     });
     const element = await render({ addSection });
@@ -92,7 +92,7 @@ describe('MenuEditor', () => {
       TestBed.tick();
       expect(sections(element)).toHaveLength(3);
     });
-    expect(addSection).toHaveBeenCalledWith(mains.venueId, { name: { he: 'קינוחים' } });
+    expect(addSection).toHaveBeenCalledWith(mains.venueId, { name: { he: 'קינוחים', en: null } });
   });
 
   it('takes an item off the menu on the second tap', async () => {

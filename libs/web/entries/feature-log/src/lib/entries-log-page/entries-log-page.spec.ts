@@ -15,7 +15,7 @@ const entry: Entry = {
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 4,
   wouldOrderAgain: false,
-  pricePaid: 6200,
+  pricePaid: { value: 62, currency: 'ILS' as const },
   text: 'קצת יבש',
   visibility: 'public',
   shareToken: 'abcdefghijklmnopqrstuv',
@@ -27,9 +27,9 @@ const entry: Entry = {
 const sheet: ItemEntries = {
   item: {
     id: ITEM_ID,
-    name: { he: 'המבורגר הקלאסי' },
-    listPrice: 6800,
-    venue: { id: entry.venueId, name: { he: 'בורגר 24' } },
+    name: { he: 'המבורגר הקלאסי', en: null },
+    listPrice: { value: 68, currency: 'ILS' as const },
+    venue: { id: entry.venueId, name: { he: 'בורגר 24', en: null } },
   },
   itemIsPublic: true,
   mine: [entry],
@@ -109,7 +109,7 @@ describe('EntriesLogPage', () => {
     expect(field('mat-button-toggle.mat-button-toggle-checked').textContent).toContain('כולם');
   });
 
-  it('logs the entry in agorot and opens the item’s entries', async () => {
+  it('logs the entry with its price in shekels and opens the item’s entries', async () => {
     const create = vi
       .fn()
       .mockResolvedValue({ ...entry, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10' });
@@ -126,7 +126,7 @@ describe('EntriesLogPage', () => {
       expect.objectContaining({
         rating: 5,
         wouldOrderAgain: true,
-        pricePaid: 6200,
+        pricePaid: { value: 62, currency: 'ILS' as const },
         text: 'מדיום מושלם',
         visibility: 'private',
       }),
@@ -135,30 +135,35 @@ describe('EntriesLogPage', () => {
     expect(TestBed.inject(Router).url).toBe(`/items/${ITEM_ID}/entries`);
   });
 
-  it('refuses a price that is not whole shekels', async () => {
+  it('refuses a price with more than two decimals', async () => {
     const create = vi.fn();
     const { harness, field } = await open(`/log/${ITEM_ID}`, { create });
     const price = field('input[type="number"]') as HTMLInputElement;
-    price.value = '12.5';
+    price.value = '12.555';
     price.dispatchEvent(new Event('input'));
     (field('button.save') as HTMLButtonElement).click();
     await harness.fixture.whenStable();
     expect(create).not.toHaveBeenCalled();
-    expect(field('mat-error').textContent).toContain('מחיר בשקלים שלמים');
+    expect(field('mat-error').textContent).toContain('עד שתי ספרות אחרי הנקודה');
   });
 
-  it('keeps agorot of a price the user did not touch', async () => {
+  it('prefills a price with its decimals and saves it unchanged', async () => {
     const create = vi.fn().mockResolvedValue(entry);
     const { harness, field } = await open(`/log/${ITEM_ID}`, {
-      forItem: vi
-        .fn()
-        .mockResolvedValue({ ...sheet, item: { ...sheet.item, listPrice: 4250 }, mine: [] }),
+      forItem: vi.fn().mockResolvedValue({
+        ...sheet,
+        item: { ...sheet.item, listPrice: { value: 42.5, currency: 'ILS' as const } },
+        mine: [],
+      }),
       create,
     });
-    expect((field('input[type="number"]') as HTMLInputElement).value).toBe('43');
+    expect((field('input[type="number"]') as HTMLInputElement).value).toBe('42.5');
     (field('button.save') as HTMLButtonElement).click();
     await harness.fixture.whenStable();
-    expect(create).toHaveBeenCalledWith(ITEM_ID, expect.objectContaining({ pricePaid: 4250 }));
+    expect(create).toHaveBeenCalledWith(
+      ITEM_ID,
+      expect.objectContaining({ pricePaid: { value: 42.5, currency: 'ILS' as const } }),
+    );
   });
 
   it('tells the submitter of a new item that it waits for approval', async () => {
@@ -202,7 +207,15 @@ describe('EntriesLogPage', () => {
     const forItem = vi.fn((id: string) =>
       Promise.resolve(
         id === other
-          ? { ...sheet, item: { ...sheet.item, id: other, listPrice: 3000 }, mine: [] }
+          ? {
+              ...sheet,
+              item: {
+                ...sheet.item,
+                id: other,
+                listPrice: { value: 30, currency: 'ILS' as const },
+              },
+              mine: [],
+            }
           : sheet,
       ),
     );
@@ -221,8 +234,20 @@ describe('EntriesLogPage', () => {
     const forItem = vi.fn((id: string) =>
       Promise.resolve(
         id === other
-          ? { ...sheet, item: { ...sheet.item, id: other, listPrice: 6250 }, mine: [] }
-          : { ...sheet, item: { ...sheet.item, listPrice: 6250 }, mine: [] },
+          ? {
+              ...sheet,
+              item: {
+                ...sheet.item,
+                id: other,
+                listPrice: { value: 62.5, currency: 'ILS' as const },
+              },
+              mine: [],
+            }
+          : {
+              ...sheet,
+              item: { ...sheet.item, listPrice: { value: 62.5, currency: 'ILS' as const } },
+              mine: [],
+            },
       ),
     );
     const create = vi.fn().mockResolvedValue({ ...entry, itemId: other });
@@ -240,7 +265,7 @@ describe('EntriesLogPage', () => {
     await harness.fixture.whenStable();
     expect(create).toHaveBeenCalledWith(
       other,
-      expect.objectContaining({ text: '', pricePaid: 6250 }),
+      expect.objectContaining({ text: '', pricePaid: { value: 62.5, currency: 'ILS' as const } }),
     );
   });
 
@@ -267,8 +292,8 @@ describe('EntriesLogPage', () => {
     expect(update.mock.calls[0]?.[1]).not.toHaveProperty('eatenAt');
   });
 
-  it('leaves an edited entry’s agorot alone unless the price changed', async () => {
-    const exact = { ...entry, pricePaid: 6250 };
+  it('leaves an edited entry’s exact price alone unless the price changed', async () => {
+    const exact = { ...entry, pricePaid: { value: 62.5, currency: 'ILS' as const } };
     const update = vi.fn().mockResolvedValue(exact);
     const { harness, field } = await open(`/log/${ITEM_ID}/${entry.id}`, {
       forItem: vi.fn().mockResolvedValue({ ...sheet, mine: [exact] }),
@@ -276,7 +301,10 @@ describe('EntriesLogPage', () => {
     });
     (field('button.save') as HTMLButtonElement).click();
     await harness.fixture.whenStable();
-    expect(update).toHaveBeenCalledWith(entry.id, expect.objectContaining({ pricePaid: 6250 }));
+    expect(update).toHaveBeenCalledWith(
+      entry.id,
+      expect.objectContaining({ pricePaid: { value: 62.5, currency: 'ILS' as const } }),
+    );
   });
 
   it('deletes an entry after a second tap', async () => {

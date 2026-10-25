@@ -8,14 +8,14 @@ describe('ItemRow', () => {
   const item: DiscoverItem = {
     id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
     name: { he: 'המבורגר הבית', en: 'House burger' },
-    venue: { id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס' } },
+    venue: { id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס', en: null } },
     sectionId: '5c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10',
     tagIds: [],
     distanceMeters: 350,
     score: 4.6,
     ratingCount: 12,
     wouldOrderAgainPercent: 92,
-    latestPrice: 6800,
+    latestPrice: { value: 68, currency: 'ILS' as const },
     photoUrl: null,
     writtenByMe: true,
   };

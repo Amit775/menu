@@ -10,7 +10,7 @@ describe('SearchPanel', () => {
   const tag = {
     id: '9a1d3c4e-3333-4c1c-9a57-6f7a5d3c2b10',
     slug: 'hamburger',
-    name: { he: 'המבורגר' },
+    name: { he: 'המבורגר', en: null },
     kind: 'dish' as const,
   };
 
@@ -43,7 +43,7 @@ describe('SearchPanel', () => {
   it('finds items, venues and tags as the user types', async () => {
     const search = vi.fn().mockResolvedValue({
       items: [sampleItem(1)],
-      venues: [{ id: VENUE_ID, name: { he: 'מוזס' } }],
+      venues: [{ id: VENUE_ID, name: { he: 'מוזס', en: null } }],
       tags: [tag],
     });
     const { element } = await render(search);
