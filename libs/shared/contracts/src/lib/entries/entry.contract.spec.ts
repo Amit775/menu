@@ -16,7 +16,7 @@ describe('Entry contract', () => {
     eatenAt: '2026-10-20T19:30:00.000Z',
     rating: 4,
     wouldOrderAgain: true,
-    pricePaid: 6800,
+    pricePaid: { value: 68, currency: 'ILS' },
     text: 'עסיסי, לחמנייה טובה',
     visibility: 'private',
     shareToken: null,
@@ -76,9 +76,9 @@ describe('Entry contract', () => {
 
   const item = {
     id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
-    name: { he: 'המבורגר' },
+    name: { he: 'המבורגר', en: null },
     listPrice: null,
-    venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס' } },
+    venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס', en: null } },
   };
 
   it('names the item and venue of a diary line', () => {
@@ -94,7 +94,7 @@ describe('Entry contract', () => {
       eatenAt: valid.eatenAt,
       rating: 4,
       wouldOrderAgain: true,
-      pricePaid: 6800,
+      pricePaid: { value: 68, currency: 'ILS' },
       text: '',
       authorName: 'דנה',
       photoUrl: null,

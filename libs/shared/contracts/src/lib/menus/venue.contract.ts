@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GeoPointSchema, LocalizedTextSchema } from '../common/values.contract';
+import { GeoPointSchema, TextSchema } from '../common/values.contract';
 
 export const venuePath = 'venues';
 
@@ -18,8 +18,8 @@ const PhoneSchema = z
  */
 export const VenueSchema = z.object({
   id: z.uuid(),
-  name: LocalizedTextSchema,
-  address: z.string().trim().min(1).max(200),
+  name: TextSchema,
+  address: TextSchema,
   location: GeoPointSchema,
   phone: PhoneSchema.nullable(),
   reservationUrl: z.url({ protocol: /^https?$/ }).nullable(),
@@ -36,7 +36,7 @@ export const CreateVenueSchema = VenueSchema.pick({
 }).extend({
   phone: PhoneSchema.nullable().default(null),
   reservationUrl: VenueSchema.shape.reservationUrl.default(null),
-  sections: z.array(LocalizedTextSchema).max(30).default([]),
+  sections: z.array(TextSchema).max(30).default([]),
 });
 
 export type CreateVenue = z.infer<typeof CreateVenueSchema>;
