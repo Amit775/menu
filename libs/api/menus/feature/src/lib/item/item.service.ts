@@ -9,7 +9,7 @@ import {
   type ItemRecord,
   ItemRepository,
   MenuSectionRepository,
-  TagRepository,
+  UnknownTagError,
   VenueRepository,
 } from '@menu/api/menus/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
@@ -35,7 +35,6 @@ export class ItemService {
     private readonly repository: ItemRepository,
     private readonly venues: VenueRepository,
     private readonly sections: MenuSectionRepository,
-    private readonly tags: TagRepository,
     @Inject(ITEM_MERGE_LISTENER) private readonly mergeListener: ItemMergeListener,
   ) {}
 
@@ -65,22 +64,24 @@ export class ItemService {
 
   async create(principal: Principal, venueId: string, input: CreateItem): Promise<Item> {
     await this.assertVenueVisible(principal, venueId);
-    await this.assertReferences(venueId, input.sectionId, input.tagIds);
+    await this.assertSection(venueId, input.sectionId);
     const approver = canEditVenue(principal, venueId);
-    const record = await this.repository.create({
-      venueId,
-      ...input,
-      state: approver ? 'approved' : 'pending',
-      submittedById: approver ? null : principal.accountId,
-    });
+    const record = await rejectUnknownTags(
+      this.repository.create({
+        venueId,
+        ...input,
+        state: approver ? 'approved' : 'pending',
+        submittedById: approver ? null : principal.accountId,
+      }),
+    );
     return new MenuItem(record).toContract(principal);
   }
 
   async update(principal: Principal, id: string, input: UpdateItem): Promise<Item> {
     const item = await this.findVisible(principal, id);
     item.assertEditableBy(principal);
-    await this.assertReferences(item.record.venueId, input.sectionId, input.tagIds);
-    const record = await this.repository.update(id, input);
+    await this.assertSection(item.record.venueId, input.sectionId);
+    const record = await rejectUnknownTags(this.repository.update(id, input));
     if (!record) {
       throw new NotFoundException('Item not found.');
     }
@@ -150,16 +151,20 @@ export class ItemService {
     }
   }
 
-  private async assertReferences(
-    venueId: string,
-    sectionId: string | undefined,
-    tagIds: readonly string[] | undefined,
-  ): Promise<void> {
+  private async assertSection(venueId: string, sectionId: string | undefined): Promise<void> {
     if (sectionId && !(await this.sections.belongsTo(sectionId, venueId))) {
       throw new BadRequestException('The section is not on this venue’s menu.');
     }
-    if (tagIds?.length && !(await this.tags.allExist(tagIds))) {
+  }
+}
+
+async function rejectUnknownTags<T>(write: Promise<T>): Promise<T> {
+  try {
+    return await write;
+  } catch (error) {
+    if (error instanceof UnknownTagError) {
       throw new BadRequestException('Unknown tag.');
     }
+    throw error;
   }
 }
