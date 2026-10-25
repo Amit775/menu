@@ -1,6 +1,6 @@
 import { type EntryFact } from '@menu/api/entries/data-access';
 import { type ItemEntryStats } from '@menu/api/shared/util-ports';
-import { photoUrl, type PricePoint, SCORE_FLOOR } from '@menu/shared/contracts';
+import { photoUrl, type Price, type PricePoint, SCORE_FLOOR } from '@menu/shared/contracts';
 
 /** Price-history months follow the diners' calendar, not UTC. */
 const monthFormat = new Intl.DateTimeFormat('en-CA', {
@@ -54,15 +54,21 @@ function priceHistory(facts: readonly EntryFact[]): PricePoint[] {
   return [...months.entries()]
     .map(([month, monthFacts]) => ({
       month,
-      prices: countable(monthFacts).map((fact) => fact.pricePaid ?? 0),
+      prices: countable(monthFacts).flatMap((fact) => (fact.pricePaid ? [fact.pricePaid] : [])),
     }))
     .filter(({ prices }) => prices.length >= SCORE_FLOOR)
     .sort((a, b) => a.month.localeCompare(b.month))
     .map(({ month, prices }) => ({
       month,
-      averagePrice: Math.round(prices.reduce((sum, price) => sum + price, 0) / prices.length),
+      averagePrice: averageOf(prices),
       count: prices.length,
     }));
+}
+
+// Every price is in shekels for now (Currency has ILS only), so they average as one currency.
+function averageOf(prices: readonly Price[]): Price {
+  const total = prices.reduce((sum, price) => sum + price.value, 0);
+  return { value: Math.round((total / prices.length) * 100) / 100, currency: 'ILS' };
 }
 
 export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {

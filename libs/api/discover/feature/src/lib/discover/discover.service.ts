@@ -63,9 +63,9 @@ export class DiscoverService {
     const snapshot = await this.snapshot(principal);
     const items = this.filter(snapshot, query).filter(
       (item) =>
-        (query.minPrice === undefined || (item.latestPrice ?? -1) >= query.minPrice) &&
+        (query.minPrice === undefined || (item.latestPrice?.value ?? -1) >= query.minPrice) &&
         (query.maxPrice === undefined ||
-          (item.latestPrice !== null && item.latestPrice <= query.maxPrice)) &&
+          (item.latestPrice !== null && item.latestPrice.value <= query.maxPrice)) &&
         (query.minEntries === undefined || item.ratingCount >= query.minEntries),
     );
     const ordered = orderFeed(items, query);
@@ -164,8 +164,8 @@ export class DiscoverService {
     if (needle === '') {
       return { items: [], venues: [], tags: [] };
     }
-    const matches = (...texts: (string | undefined)[]): boolean =>
-      texts.some((text) => text !== undefined && foldForSearch(text).includes(needle));
+    const matches = (...texts: (string | null)[]): boolean =>
+      texts.some((text) => text !== null && foldForSearch(text).includes(needle));
     const [snapshot, venues, tags] = await Promise.all([
       this.snapshot(principal),
       this.repository.listActiveVenues(),

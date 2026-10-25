@@ -85,27 +85,43 @@ describe('summarizeEntries', () => {
   it('takes the latest price from public entries only', () => {
     const stats = summarizeEntries([
       fact({
-        pricePaid: 6000,
+        pricePaid: { value: 60, currency: 'ILS' as const },
         visibility: 'public',
         eatenAt: new Date('2026-09-01T00:00:00.000Z'),
       }),
-      fact({ authorId: 'a2', pricePaid: 7000, visibility: 'private' }),
+      fact({
+        authorId: 'a2',
+        pricePaid: { value: 70, currency: 'ILS' as const },
+        visibility: 'private',
+      }),
     ]);
-    expect(stats.latestPublicPrice).toBe(6000);
+    expect(stats.latestPublicPrice).toEqual({ value: 60, currency: 'ILS' });
   });
 
   it('keeps a private price out of a month it could be recovered from', () => {
     const stats = summarizeEntries([
-      ...authors(3, { pricePaid: 6000, visibility: 'public' }),
-      fact({ authorId: 'secret', pricePaid: 9000 }),
+      ...authors(3, { pricePaid: { value: 60, currency: 'ILS' as const }, visibility: 'public' }),
+      fact({ authorId: 'secret', pricePaid: { value: 90, currency: 'ILS' as const } }),
     ]);
-    expect(stats.priceHistory).toEqual([{ month: '2026-10', averagePrice: 6000, count: 3 }]);
+    expect(stats.priceHistory).toEqual([
+      { month: '2026-10', averagePrice: { value: 60, currency: 'ILS' as const }, count: 3 },
+    ]);
+  });
+
+  it('averages a month to the agora', () => {
+    const prices = [10, 10.5, 10.26].map((value) => ({ value, currency: 'ILS' as const }));
+    const stats = summarizeEntries(
+      prices.map((pricePaid, index) =>
+        fact({ authorId: `a${index}`, pricePaid, visibility: 'public' }),
+      ),
+    );
+    expect(stats.priceHistory[0]?.averagePrice).toEqual({ value: 10.25, currency: 'ILS' });
   });
 
   it('puts an entry from just after midnight in Israel into the new month', () => {
     const stats = summarizeEntries(
       authors(3, {
-        pricePaid: 5000,
+        pricePaid: { value: 50, currency: 'ILS' as const },
         visibility: 'public',
         eatenAt: new Date('2026-09-30T22:30:00.000Z'),
       }),
