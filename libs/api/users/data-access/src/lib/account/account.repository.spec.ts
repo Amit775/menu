@@ -7,7 +7,7 @@ describe('AccountRepository', () => {
     firebaseUid: 'uid-1',
     displayName: 'נועה',
     language: 'he' as const,
-    isAdmin: false,
+    role: 'user' as const,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     ownerships: [],
   };
@@ -36,7 +36,7 @@ describe('AccountRepository', () => {
     ).resolves.toEqual(account);
     expect(upsert).toHaveBeenCalledWith({
       where: { firebaseUid: 'uid-1' },
-      create: { firebaseUid: 'uid-1', displayName: 'נועה', isAdmin: false },
+      create: { firebaseUid: 'uid-1', displayName: 'נועה', role: 'user' },
       update: {},
       include: { ownerships: { select: { venueId: true } } },
     });
@@ -111,6 +111,16 @@ describe('AccountRepository', () => {
   it('returns null for an unknown account', async () => {
     const repository = repositoryWith({ findUnique: vi.fn().mockResolvedValue(null) });
     await expect(repository.findById(row.id)).resolves.toBeNull();
+  });
+
+  it('makes an account an Admin by its role', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const repository = repositoryWith({
+      updateMany,
+      findUniqueOrThrow: vi.fn().mockResolvedValue({ ...row, role: 'admin' }),
+    });
+    await expect(repository.setAdmin(row.id, true)).resolves.toMatchObject({ isAdmin: true });
+    expect(updateMany).toHaveBeenCalledWith({ where: { id: row.id }, data: { role: 'admin' } });
   });
 
   it('returns null when setting the Admin flag of an unknown account', async () => {

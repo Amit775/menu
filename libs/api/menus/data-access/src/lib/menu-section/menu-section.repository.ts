@@ -1,62 +1,79 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { fromLocalized, PrismaService, toLocalized } from '@menu/api/shared/db';
-import { type LocalizedText, type MenuSection } from '@menu/shared/contracts';
+import { PrismaService } from '@menu/api/shared/db';
+import { type MenuSection, MenuSectionSchema, type Text } from '@menu/shared/contracts';
 
-interface MenuSectionRow {
-  id: string;
-  venueId: string;
-  nameHe: string;
-  nameEn: string | null;
-  position: number;
-}
+const StoredSectionsSchema = MenuSectionSchema.pick({ id: true, name: true }).array();
+
+type StoredSection = (typeof StoredSectionsSchema)['_output'][number];
 
 @Injectable()
 export class MenuSectionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async listByVenue(venueId: string): Promise<MenuSection[]> {
-    const rows = await this.prisma.menuSection.findMany({
-      where: { venueId },
-      orderBy: { position: 'asc' },
-    });
-    return rows.map(toContract);
+    return toContract(venueId, await this.read(venueId));
   }
 
   async belongsTo(sectionId: string, venueId: string): Promise<boolean> {
-    return (await this.prisma.menuSection.count({ where: { id: sectionId, venueId } })) > 0;
+    return (await this.read(venueId)).some((section) => section.id === sectionId);
   }
 
-  async create(venueId: string, name: LocalizedText): Promise<MenuSection> {
-    const row = await this.prisma.$transaction(async (tx) => {
-      const last = await tx.menuSection.aggregate({ where: { venueId }, _max: { position: true } });
-      return tx.menuSection.create({
-        data: { venueId, ...fromLocalized(name), position: (last._max.position ?? -1) + 1 },
-      });
-    });
-    return toContract(row);
+  async create(venueId: string, name: Text): Promise<MenuSection | null> {
+    const id = randomUUID();
+    const sections = await this.edit(venueId, (current) => [...current, { id, name }]);
+    return sections?.find((section) => section.id === id) ?? null;
   }
 
-  async rename(venueId: string, id: string, name: LocalizedText): Promise<MenuSection | null> {
-    const { count } = await this.prisma.menuSection.updateMany({
-      where: { id, venueId },
-      data: fromLocalized(name),
-    });
-    if (count === 0) {
-      return null;
-    }
-    return toContract(await this.prisma.menuSection.findUniqueOrThrow({ where: { id } }));
+  async rename(venueId: string, id: string, name: Text): Promise<MenuSection | null> {
+    const sections = await this.edit(venueId, (current) =>
+      current.some((section) => section.id === id)
+        ? current.map((section) => (section.id === id ? { id, name } : section))
+        : null,
+    );
+    return sections?.find((section) => section.id === id) ?? null;
   }
 
   async reorder(venueId: string, sectionIds: readonly string[]): Promise<MenuSection[]> {
-    await this.prisma.$transaction(
-      sectionIds.map((id, position) =>
-        this.prisma.menuSection.updateMany({ where: { id, venueId }, data: { position } }),
-      ),
+    const rank = (id: string) => {
+      const index = sectionIds.indexOf(id);
+      return index === -1 ? sectionIds.length : index;
+    };
+    const sections = await this.edit(venueId, (current) =>
+      [...current].sort((a, b) => rank(a.id) - rank(b.id)),
     );
-    return this.listByVenue(venueId);
+    return sections ?? [];
+  }
+
+  private async read(venueId: string): Promise<StoredSection[]> {
+    const row = await this.prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { sections: true },
+    });
+    return row ? StoredSectionsSchema.parse(row.sections) : [];
+  }
+
+  // Sections live in one jsonb column, so every change locks the venue row to keep concurrent edits.
+  private edit(
+    venueId: string,
+    change: (current: StoredSection[]) => StoredSection[] | null,
+  ): Promise<MenuSection[] | null> {
+    return this.prisma.$transaction(async (tx) => {
+      const [locked] = await tx.$queryRaw<{ sections: unknown }[]>`
+        SELECT "sections" FROM "venue" WHERE "id" = ${venueId}::uuid FOR UPDATE`;
+      if (!locked) {
+        return null;
+      }
+      const next = change(StoredSectionsSchema.parse(locked.sections));
+      if (!next) {
+        return null;
+      }
+      await tx.venue.update({ where: { id: venueId }, data: { sections: next } });
+      return toContract(venueId, next);
+    });
   }
 }
 
-function toContract(row: MenuSectionRow): MenuSection {
-  return { id: row.id, venueId: row.venueId, name: toLocalized(row), position: row.position };
+function toContract(venueId: string, sections: StoredSection[]): MenuSection[] {
+  return sections.map((section, position) => ({ ...section, venueId, position }));
 }

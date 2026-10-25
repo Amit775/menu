@@ -1,5 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
-import { fromLocalized, PrismaService, toLocalized } from '@menu/api/shared/db';
+import { PrismaService, readText } from '@menu/api/shared/db';
 import { withoutUndefined } from '@menu/api/shared/util';
 import {
   type CreateVenue,
@@ -10,9 +11,8 @@ import {
 
 interface VenueRow {
   id: string;
-  nameHe: string;
-  nameEn: string | null;
-  address: string;
+  name: unknown;
+  address: unknown;
   lat: number;
   lng: number;
   phone: string | null;
@@ -36,9 +36,8 @@ export class VenueRepository {
         ...(filter.ids ? { id: { in: [...filter.ids] } } : {}),
         ...(filter.includeHidden ? {} : { status: 'active' }),
       },
-      orderBy: { nameHe: 'asc' },
     });
-    return rows.map(toContract);
+    return rows.map(toContract).sort((a, b) => a.name.he.localeCompare(b.name.he, 'he'));
   }
 
   async findById(id: string): Promise<Venue | null> {
@@ -49,28 +48,25 @@ export class VenueRepository {
   async create(input: CreateVenue, createdById: string): Promise<Venue> {
     const row = await this.prisma.venue.create({
       data: {
-        ...fromLocalized(input.name),
+        name: input.name,
         address: input.address,
         lat: input.location.lat,
         lng: input.location.lng,
         phone: input.phone,
         reservationUrl: input.reservationUrl,
         createdById,
-        sections: {
-          create: input.sections.map((name, position) => ({ ...fromLocalized(name), position })),
-        },
+        sections: input.sections.map((name) => ({ id: randomUUID(), name })),
       },
     });
     return toContract(row);
   }
 
   async update(id: string, input: UpdateVenue): Promise<Venue | null> {
-    const { name, location, ...rest } = input;
+    const { location, ...rest } = input;
     const { count } = await this.prisma.venue.updateMany({
       where: { id },
       data: withoutUndefined({
         ...rest,
-        ...(name ? fromLocalized(name) : {}),
         ...(location ? { lat: location.lat, lng: location.lng } : {}),
       }),
     });
@@ -81,8 +77,8 @@ export class VenueRepository {
 function toContract(row: VenueRow): Venue {
   return {
     id: row.id,
-    name: toLocalized(row),
-    address: row.address,
+    name: readText(row.name),
+    address: readText(row.address),
     location: { lat: row.lat, lng: row.lng },
     phone: row.phone,
     reservationUrl: row.reservationUrl,

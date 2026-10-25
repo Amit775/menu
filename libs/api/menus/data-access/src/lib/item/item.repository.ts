@@ -1,11 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { fromLocalized, PrismaService, toLocalized } from '@menu/api/shared/db';
+import {
+  DbNull,
+  type DecimalColumn,
+  PrismaService,
+  readLongText,
+  readPrice,
+  readText,
+  writePrice,
+} from '@menu/api/shared/db';
 import { withoutUndefined } from '@menu/api/shared/util';
 import {
-  type Agorot,
+  type Currency,
   type Item,
   type ItemState,
-  type LocalizedText,
+  MenuSectionSchema,
+  type Price,
+  type Text,
   type UpdateItem,
 } from '@menu/shared/contracts';
 
@@ -14,8 +24,9 @@ export type ItemRecord = Omit<Item, 'submittedByMe'> & { submittedById: string |
 export interface NewItem {
   venueId: string;
   sectionId: string;
-  name: LocalizedText;
-  listPrice: Agorot | null;
+  name: Text;
+  description: Text | null;
+  listPrice: Price | null;
   tagIds: readonly string[];
   state: Extract<ItemState, 'pending' | 'approved'>;
   submittedById: string | null;
@@ -25,18 +36,40 @@ interface ItemRow {
   id: string;
   venueId: string;
   sectionId: string;
-  nameHe: string;
-  nameEn: string | null;
-  listPrice: number | null;
+  name: unknown;
+  description: unknown;
+  listPriceValue: DecimalColumn | null;
+  listPriceCurrency: Currency | null;
+  tagIds: string[];
   state: ItemState;
   submittedById: string | null;
   mergedIntoId: string | null;
   position: number;
   createdAt: Date;
-  tags: { tagId: string }[];
 }
 
-const withTags = { tags: { select: { tagId: true }, orderBy: { position: 'asc' } } } as const;
+const SectionIdsSchema = MenuSectionSchema.pick({ id: true }).array();
+
+export class UnknownTagError extends Error {
+  constructor() {
+    super('Unknown tag.');
+  }
+}
+
+type Transaction = Parameters<Parameters<PrismaService['$transaction']>[0]>[0];
+
+// tag_ids has no foreign key, so the tags are share-locked until the write commits; a merge
+// locks them for update, so it either waits for this write or makes it see the tag is gone.
+async function assertTagsExist(tx: Transaction, tagIds: readonly string[]): Promise<void> {
+  if (tagIds.length === 0) {
+    return;
+  }
+  const found = await tx.$queryRaw<{ id: string }[]>`
+    SELECT "id" FROM "tag" WHERE "id" = ANY(${[...tagIds]}::uuid[]) FOR SHARE`;
+  if (found.length !== new Set(tagIds).size) {
+    throw new UnknownTagError();
+  }
+}
 
 @Injectable()
 export class ItemRepository {
@@ -57,23 +90,32 @@ export class ItemRepository {
             : []),
         ],
       },
-      include: withTags,
-      orderBy: [{ section: { position: 'asc' } }, { position: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
     });
-    return rows.map(toRecord);
+    const venue = await this.prisma.venue.findUnique({
+      where: { id: venueId },
+      select: { sections: true },
+    });
+    const order = SectionIdsSchema.parse(venue?.sections ?? []).map((section) => section.id);
+    const rank = (sectionId: string) => {
+      const index = order.indexOf(sectionId);
+      return index === -1 ? order.length : index;
+    };
+    return rows
+      .map(toRecord)
+      .sort((a, b) => rank(a.sectionId) - rank(b.sectionId) || a.position - b.position);
   }
 
   async listPending(venueIds: readonly string[] | null): Promise<ItemRecord[]> {
     const rows = await this.prisma.item.findMany({
       where: { state: 'pending', ...(venueIds ? { venueId: { in: [...venueIds] } } : {}) },
-      include: withTags,
       orderBy: { createdAt: 'asc' },
     });
     return rows.map(toRecord);
   }
 
   async findById(id: string): Promise<ItemRecord | null> {
-    const row = await this.prisma.item.findUnique({ where: { id }, include: withTags });
+    const row = await this.prisma.item.findUnique({ where: { id } });
     return row ? toRecord(row) : null;
   }
 
@@ -83,13 +125,13 @@ export class ItemRepository {
     }
     const rows = await this.prisma.item.findMany({
       where: { id: { in: [...ids] } },
-      include: withTags,
     });
     return rows.map(toRecord);
   }
 
   async create(input: NewItem): Promise<ItemRecord> {
     const row = await this.prisma.$transaction(async (tx) => {
+      await assertTagsExist(tx, input.tagIds);
       const last = await tx.item.aggregate({
         where: { sectionId: input.sectionId },
         _max: { position: true },
@@ -98,14 +140,14 @@ export class ItemRepository {
         data: {
           venueId: input.venueId,
           sectionId: input.sectionId,
-          ...fromLocalized(input.name),
-          listPrice: input.listPrice,
+          name: input.name,
+          description: input.description ?? DbNull,
+          ...priceColumns(input.listPrice),
+          tagIds: [...input.tagIds],
           state: input.state,
           submittedById: input.submittedById,
           position: (last._max.position ?? -1) + 1,
-          tags: { create: input.tagIds.map((tagId, position) => ({ tagId, position })) },
         },
-        include: withTags,
       });
     });
     return toRecord(row);
@@ -116,12 +158,13 @@ export class ItemRepository {
    * and a new section puts the item at the end of that section.
    */
   async update(id: string, input: UpdateItem): Promise<ItemRecord | null> {
-    const { name, tagIds, ...rest } = input;
+    const { description, listPrice, tagIds, ...rest } = input;
     const row = await this.prisma.$transaction(async (tx) => {
       const current = await tx.item.findUnique({ where: { id }, select: { sectionId: true } });
       if (!current) {
         return null;
       }
+      await assertTagsExist(tx, tagIds ?? []);
       let position: number | undefined;
       if (rest.sectionId !== undefined && rest.sectionId !== current.sectionId) {
         const last = await tx.item.aggregate({
@@ -132,15 +175,15 @@ export class ItemRepository {
       }
       await tx.item.update({
         where: { id },
-        data: withoutUndefined({ ...rest, position, ...(name ? fromLocalized(name) : {}) }),
+        data: withoutUndefined({
+          ...rest,
+          position,
+          tagIds: tagIds ? [...tagIds] : undefined,
+          ...(description === undefined ? {} : { description: description ?? DbNull }),
+          ...(listPrice === undefined ? {} : priceColumns(listPrice)),
+        }),
       });
-      if (tagIds) {
-        await tx.itemTag.deleteMany({ where: { itemId: id } });
-        await tx.itemTag.createMany({
-          data: tagIds.map((tagId, position) => ({ itemId: id, tagId, position })),
-        });
-      }
-      return tx.item.findUniqueOrThrow({ where: { id }, include: withTags });
+      return tx.item.findUniqueOrThrow({ where: { id } });
     });
     return row ? toRecord(row) : null;
   }
@@ -165,13 +208,19 @@ function toRecord(row: ItemRow): ItemRecord {
     id: row.id,
     venueId: row.venueId,
     sectionId: row.sectionId,
-    name: toLocalized(row),
-    listPrice: row.listPrice,
-    tagIds: row.tags.map((tag) => tag.tagId),
+    name: readText(row.name),
+    description: row.description === null ? null : readLongText(row.description),
+    listPrice: readPrice(row.listPriceValue, row.listPriceCurrency),
+    tagIds: row.tagIds,
     state: row.state,
     mergedIntoId: row.mergedIntoId,
     submittedById: row.submittedById,
     position: row.position,
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+function priceColumns(price: Price | null) {
+  const { value, currency } = writePrice(price);
+  return { listPriceValue: value, listPriceCurrency: currency };
 }
