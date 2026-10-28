@@ -20,8 +20,11 @@ import {
   type Item,
   type ItemDecision,
   type ItemState,
+  type ItemVariation,
+  type ItemVariationInput,
   type UpdateItem,
 } from '@menu/shared/contracts';
+import { randomUUID } from 'node:crypto';
 import { MenuItem } from './menu-item';
 
 const decisionTarget: Record<ItemDecision, ItemState> = {
@@ -72,6 +75,7 @@ export class ItemService {
         {
           venueId,
           ...input,
+          variations: withIds(input.variations, []),
           state: approver ? 'approved' : 'pending',
           submittedById: approver ? null : principal.accountId,
         },
@@ -85,7 +89,17 @@ export class ItemService {
     const item = await this.findVisible(principal, id);
     item.assertEditableBy(principal);
     await this.assertSection(item.record.venueId, input.sectionId);
-    const record = await toHttpErrors(this.repository.update(id, input, principal.accountId));
+    const { variations, ...fields } = input;
+    const record = await toHttpErrors(
+      this.repository.update(
+        id,
+        {
+          ...fields,
+          ...(variations ? { variations: withIds(variations, item.record.variations) } : {}),
+        },
+        principal.accountId,
+      ),
+    );
     if (!record) {
       throw new NotFoundException('Item not found.');
     }
@@ -167,6 +181,22 @@ export class ItemService {
       throw new BadRequestException('The section is not on this venue’s menu.');
     }
   }
+}
+
+/**
+ * New variations get an id; a known id keeps its variation, so entries that name
+ * it still do. An id the item never had is refused rather than invented.
+ */
+function withIds(
+  inputs: readonly ItemVariationInput[],
+  current: readonly ItemVariation[],
+): ItemVariation[] {
+  return inputs.map(({ id, ...variation }) => {
+    if (id && !current.some((known) => known.id === id)) {
+      throw new BadRequestException('Unknown variation.');
+    }
+    return { id: id ?? randomUUID(), ...variation };
+  });
 }
 
 async function toHttpErrors<T>(write: Promise<T>): Promise<T> {

@@ -17,6 +17,8 @@ export interface EntryTarget {
   /** Approved, archived or merged: its public entries may be listed. Pending and rejected items show only the caller's own. */
   isPublic: boolean;
   acceptsEntry: boolean;
+  /** An entry may name an available variation; one it already names stays even once unavailable. */
+  variations: { id: string; available: boolean }[];
 }
 
 export interface ItemCatalog {

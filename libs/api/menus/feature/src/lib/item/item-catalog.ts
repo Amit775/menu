@@ -27,6 +27,7 @@ export class MenusItemCatalog implements ItemCatalog {
       venueId: item.record.venueId,
       isPublic: item.state !== 'pending' && item.state !== 'rejected',
       acceptsEntry: principal !== null && item.acceptsEntryFrom(principal),
+      variations: item.record.variations.map(({ id, available }) => ({ id, available })),
     };
   }
 
@@ -45,6 +46,12 @@ export class MenusItemCatalog implements ItemCatalog {
           name: item.name,
           listPrice: item.listPrice,
           venue: { id: item.venueId, name: venueName },
+          variations: item.variations.map(({ id, name, price, available }) => ({
+            id,
+            name,
+            price,
+            available,
+          })),
         });
       }
     }

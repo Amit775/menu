@@ -179,7 +179,10 @@ describe('EntryRepository', () => {
   it('moves entries to the item a duplicate was merged into', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 2 });
     await repositoryWith({ updateMany }).moveToItem('i1', 'i2');
-    expect(updateMany).toHaveBeenCalledWith({ where: { itemId: 'i1' }, data: { itemId: 'i2' } });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { itemId: 'i1' },
+      data: { itemId: 'i2', variationId: null },
+    });
   });
 
   it('never reads hidden entries into aggregates', async () => {

@@ -3,6 +3,7 @@ import {
   type ItemChange,
   type ItemHistoryEvent,
   type ItemSnapshot,
+  type ItemVariation,
   type MenuSection,
   type Price,
   type Tag,
@@ -78,6 +79,38 @@ function diff(
   const removed = tagNames(before.tagIds.filter((id) => !after.tagIds.includes(id)));
   if (added.length > 0 || removed.length > 0) {
     changes.push({ field: 'tags', added, removed });
+  }
+  return [...changes, ...variationChanges(before.variations, after.variations)];
+}
+
+function variationChanges(before: ItemVariation[], after: ItemVariation[]): ItemChange[] {
+  const names = (variations: ItemVariation[]): Text[] => variations.map((v) => v.name);
+  const kept = after.flatMap((variation) => {
+    const previous = before.find((candidate) => candidate.id === variation.id);
+    return previous ? [{ previous, variation }] : [];
+  });
+  const variations = {
+    added: names(after.filter((v) => !before.some((candidate) => candidate.id === v.id))),
+    removed: names(before.filter((v) => !after.some((candidate) => candidate.id === v.id))),
+    nowAvailable: kept.flatMap((pair) =>
+      !pair.previous.available && pair.variation.available ? [pair.variation.name] : [],
+    ),
+    nowUnavailable: kept.flatMap((pair) =>
+      pair.previous.available && !pair.variation.available ? [pair.variation.name] : [],
+    ),
+  };
+  const changes: ItemChange[] = Object.values(variations).some((list) => list.length > 0)
+    ? [{ field: 'variations', ...variations }]
+    : [];
+  for (const { previous, variation } of kept) {
+    if (!samePrice(previous.price, variation.price)) {
+      changes.push({
+        field: 'variationPrice',
+        variation: variation.name,
+        from: previous.price,
+        to: variation.price,
+      });
+    }
   }
   return changes;
 }

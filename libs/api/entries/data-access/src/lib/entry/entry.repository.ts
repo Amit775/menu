@@ -34,6 +34,7 @@ export interface PhotoRef {
 export interface NewEntry {
   authorId: string;
   itemId: string;
+  variationId: string | null;
   eatenAt: string;
   rating: number | null;
   wouldOrderAgain: boolean | null;
@@ -45,6 +46,7 @@ export interface NewEntry {
 
 export interface EntryFact {
   itemId: string;
+  variationId: string | null;
   authorId: string;
   rating: number | null;
   wouldOrderAgain: boolean | null;
@@ -61,6 +63,7 @@ interface EntryRow {
   id: string;
   authorId: string;
   itemId: string;
+  variationId: string | null;
   eatenAt: Date;
   rating: number | null;
   wouldOrderAgain: boolean | null;
@@ -203,6 +206,7 @@ export class EntryRepository {
       where: { hiddenAt: null },
       select: {
         itemId: true,
+        variationId: true,
         authorId: true,
         rating: true,
         wouldOrderAgain: true,
@@ -235,11 +239,14 @@ export class EntryRepository {
     return this.prisma.entry.count({ where: { authorId, item: { venueId } } });
   }
 
-  /** Re-points every entry from one item to another. Safe to run twice. */
+  /**
+   * Re-points every entry from one item to another. Safe to run twice. The old
+   * item's variations are not the new one's, so the entries lose theirs.
+   */
   async moveToItem(fromItemId: string, toItemId: string): Promise<void> {
     await this.prisma.entry.updateMany({
       where: { itemId: fromItemId },
-      data: { itemId: toItemId },
+      data: { itemId: toItemId, variationId: null },
     });
   }
 }
@@ -250,6 +257,7 @@ function toRecord(row: EntryRow): EntryRecord {
     id: row.id,
     authorId: row.authorId,
     itemId: row.itemId,
+    variationId: row.variationId,
     venueId: row.item.venueId,
     eatenAt: row.eatenAt.toISOString(),
     rating: row.rating,

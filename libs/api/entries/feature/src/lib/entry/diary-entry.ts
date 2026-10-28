@@ -59,20 +59,22 @@ export class DiaryEntry {
   }
 
   toContract(): Entry {
-    const { id, itemId, venueId, eatenAt, rating, wouldOrderAgain, pricePaid, text } = this.record;
-    const { visibility, shareToken, hidden, photoUrl, createdAt, updatedAt } = this.record;
+    const { id, itemId, variationId, venueId, eatenAt, rating, wouldOrderAgain } = this.record;
+    const { pricePaid, text, visibility, shareToken, hidden, photoUrl } = this.record;
+    const { createdAt, updatedAt } = this.record;
     return {
-      ...{ id, itemId, venueId, eatenAt, rating, wouldOrderAgain, pricePaid, text },
+      ...{ id, itemId, variationId, venueId, eatenAt, rating, wouldOrderAgain, pricePaid, text },
       ...{ visibility, shareToken, hidden, photoUrl, createdAt, updatedAt },
     };
   }
 
   toPublic(authorName: string): PublicEntry {
-    const { id, itemId, venueId, eatenAt, rating, wouldOrderAgain, pricePaid, text } = this.record;
-    const { photoUrl, createdAt } = this.record;
+    const { id, itemId, variationId, venueId, eatenAt, rating, wouldOrderAgain } = this.record;
+    const { pricePaid, text, photoUrl, createdAt } = this.record;
     return {
       id,
       itemId,
+      variationId,
       venueId,
       eatenAt,
       rating,

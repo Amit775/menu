@@ -12,6 +12,7 @@ describe('ItemRepository', () => {
     listPriceValue: { toNumber: () => 68.5 },
     listPriceCurrency: 'ILS' as const,
     tagIds: ['t1', 't2'],
+    variations: [],
     state: 'approved' as const,
     submittedById: null,
     mergedIntoId: null,
@@ -26,12 +27,34 @@ describe('ItemRepository', () => {
     description: null,
     listPrice: { value: 68.5, currency: 'ILS' as const },
     tagIds: ['t1', 't2'],
+    variations: [],
     state: 'approved',
     mergedIntoId: null,
     submittedById: null,
     position: 0,
     createdAt: '2026-01-01T00:00:00.000Z',
   };
+
+  const veganTag = '3a2d3c4e-3333-4c1c-9a57-6f7a5d3c2b10';
+  const vegan = {
+    id: '5d2d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
+    name: { he: 'טבעוני', en: null },
+    price: { value: 62, currency: 'ILS' as const },
+    tagIds: [veganTag],
+    available: true,
+  };
+
+  it('reads an item’s variations in menu order', async () => {
+    const findUnique = vi.fn().mockResolvedValue({ ...row, variations: [vegan] });
+    const repository = new ItemRepository({ item: { findUnique } } as unknown as PrismaService);
+    await expect(repository.findById('i1')).resolves.toMatchObject({ variations: [vegan] });
+  });
+
+  it('rejects a row whose variations do not parse', async () => {
+    const findUnique = vi.fn().mockResolvedValue({ ...row, variations: [{ id: 'x' }] });
+    const repository = new ItemRepository({ item: { findUnique } } as unknown as PrismaService);
+    await expect(repository.findById('i1')).rejects.toThrow();
+  });
 
   it('rejects a row with half a price', async () => {
     const findUnique = vi.fn().mockResolvedValue({ ...row, listPriceCurrency: null });
@@ -105,6 +128,7 @@ describe('ItemRepository', () => {
     listPrice: { value: 68.5, currency: 'ILS' },
     sectionId: 's1',
     tagIds: ['t1', 't2'],
+    variations: [],
   };
 
   it('appends a new item to its section with ordered tags', async () => {
@@ -124,6 +148,7 @@ describe('ItemRepository', () => {
         description: { he: 'קציצת בקר', en: null },
         listPrice: { value: 68.5, currency: 'ILS' as const },
         tagIds: ['t1', 't2'],
+        variations: [],
         state: 'pending',
         submittedById: 'u1',
       },
@@ -198,6 +223,7 @@ describe('ItemRepository', () => {
           description: null,
           listPrice: null,
           tagIds: ['t1', 't2'],
+          variations: [],
           state: 'approved',
           submittedById: null,
         },
@@ -327,6 +353,24 @@ describe('ItemRepository', () => {
       );
       expect(tx.item.updateMany).not.toHaveBeenCalled();
       expect(tx.itemRevision.create).not.toHaveBeenCalled();
+    });
+
+    it('replaces the variations and checks their tags', async () => {
+      const { tx, repository } = prismaWith({ sectionId: 's1' }, [{ id: 't1' }, { id: veganTag }]);
+      await repository.update('i1', { tagIds: ['t1'], variations: [vegan] }, 'w1');
+      expect(tx.$queryRaw.mock.calls[0]?.slice(1)).toEqual([['t1', veganTag]]);
+      expect(tx.item.updateMany).toHaveBeenCalledWith({
+        where: { id: 'i1', state: { in: ['pending', 'approved'] } },
+        data: { tagIds: ['t1'], variations: [vegan] },
+      });
+    });
+
+    it('refuses a variation tag that no longer exists', async () => {
+      const { tx, repository } = prismaWith({ sectionId: 's1' }, []);
+      await expect(repository.update('i1', { variations: [vegan] }, 'w1')).rejects.toThrow(
+        UnknownTagError,
+      );
+      expect(tx.item.updateMany).not.toHaveBeenCalled();
     });
 
     it('records the edit with the item as it is afterwards', async () => {

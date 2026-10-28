@@ -64,15 +64,28 @@ describe('TagRepository', () => {
   });
 
   describe('merge', () => {
+    const oldTag = '1a2d3c4e-3333-4c1c-9a57-6f7a5d3c2b10';
+    const newTag = '2a2d3c4e-3333-4c1c-9a57-6f7a5d3c2b10';
+    function variation(tagIds: string[]) {
+      return {
+        id: '5d2d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
+        name: { he: 'טבעוני', en: null },
+        price: null,
+        tagIds,
+        available: true,
+      };
+    }
+
     function prismaWith(tagCount: number) {
       const tx = {
         $queryRaw: vi.fn().mockResolvedValue([{ id: 'old' }, { id: 'new' }].slice(0, tagCount)),
         tag: { delete: vi.fn() },
         item: {
           findMany: vi.fn().mockResolvedValue([
-            { id: 'a', tagIds: ['old', 'x'] },
-            { id: 'b', tagIds: ['old', 'x', 'new'] },
-            { id: 'c', tagIds: ['new', 'old'] },
+            { id: 'a', tagIds: ['old', 'x'], variations: [] },
+            { id: 'b', tagIds: ['old', 'x', 'new'], variations: [] },
+            { id: 'c', tagIds: ['new', 'old'], variations: [] },
+            { id: 'd', tagIds: [], variations: [variation([oldTag])] },
           ]),
           update: vi.fn(),
         },
@@ -88,12 +101,17 @@ describe('TagRepository', () => {
         expect.arrayContaining([expect.stringContaining('FOR UPDATE')]),
       );
       expect(tx.item.findMany).toHaveBeenCalledWith({
-        where: { tagIds: { has: 'old' } },
-        select: { id: true, tagIds: true },
+        where: {
+          OR: [
+            { tagIds: { has: 'old' } },
+            { variations: { array_contains: [{ tagIds: ['old'] }] } },
+          ],
+        },
+        select: { id: true, tagIds: true, variations: true },
       });
       expect(tx.item.update).toHaveBeenCalledWith({
         where: { id: 'a' },
-        data: { tagIds: ['new', 'x'] },
+        data: { tagIds: ['new', 'x'], variations: [] },
       });
       expect(tx.tag.delete).toHaveBeenCalledWith({ where: { id: 'old' } });
     });
@@ -103,11 +121,20 @@ describe('TagRepository', () => {
       await repository.merge('old', 'new');
       expect(tx.item.update).toHaveBeenCalledWith({
         where: { id: 'b' },
-        data: { tagIds: ['new', 'x'] },
+        data: { tagIds: ['new', 'x'], variations: [] },
       });
       expect(tx.item.update).toHaveBeenCalledWith({
         where: { id: 'c' },
-        data: { tagIds: ['new'] },
+        data: { tagIds: ['new'], variations: [] },
+      });
+    });
+
+    it('moves variations to the target tag too', async () => {
+      const { tx, repository } = prismaWith(2);
+      await repository.merge(oldTag, newTag);
+      expect(tx.item.update).toHaveBeenCalledWith({
+        where: { id: 'd' },
+        data: { tagIds: [], variations: [variation([newTag])] },
       });
     });
 

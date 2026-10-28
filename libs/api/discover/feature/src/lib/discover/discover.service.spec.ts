@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { type CatalogItem, DiscoverRepository } from '@menu/api/discover/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { ENTRY_STATS } from '@menu/api/shared/util-ports';
-import { FeedQuerySchema, MapQuerySchema } from '@menu/shared/contracts';
+import { FeedQuerySchema, type ItemVariation, MapQuerySchema } from '@menu/shared/contracts';
 import { DiscoverService, RANKING_STRATEGY } from './discover.service';
 import { ConfidenceWeightedRanking, EMPTY_STATS, type ItemStats } from './ranking';
 
@@ -14,6 +14,19 @@ describe('DiscoverService', () => {
   const me: Principal = { accountId: 'me', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const owner: Principal = { ...me, accountId: 'owner', ownedVenueIds: [venueId] };
   const here = { lat: 32.0779, lng: 34.7741 };
+  const vegan = '3a2d3c4e-5555-4c1c-9a57-6f7a5d3c2b10';
+  const spicy = '3a2d3c4e-6666-4c1c-9a57-6f7a5d3c2b10';
+
+  function variation(id: string, overrides: Partial<ItemVariation> = {}): ItemVariation {
+    return {
+      id,
+      name: { he: id, en: null },
+      price: null,
+      tagIds: [],
+      available: true,
+      ...overrides,
+    };
+  }
 
   function item(id: string, overrides: Partial<CatalogItem> = {}): CatalogItem {
     return {
@@ -26,6 +39,7 @@ describe('DiscoverService', () => {
       sectionId: 's1',
       position: 0,
       tagIds: [burger],
+      variations: [],
       listPrice: null,
       createdAt: new Date('2026-10-01T00:00:00.000Z'),
       ...overrides,
@@ -55,6 +69,7 @@ describe('DiscoverService', () => {
 
   async function setup(
     overrides: Partial<Record<keyof DiscoverRepository, unknown>> = {},
+    itemStats: ReadonlyMap<string, ItemStats> = stats,
   ): Promise<DiscoverService> {
     const repository = {
       loadCatalog: vi.fn().mockResolvedValue(catalog),
@@ -81,7 +96,7 @@ describe('DiscoverService', () => {
         {
           provide: ENTRY_STATS,
           useValue: {
-            statsByItem: vi.fn().mockResolvedValue(stats),
+            statsByItem: vi.fn().mockResolvedValue(itemStats),
             itemIdsWrittenBy: vi.fn().mockResolvedValue(new Set(['new'])),
             countEntriesAt: vi.fn().mockResolvedValue(2),
           },
@@ -120,6 +135,27 @@ describe('DiscoverService', () => {
     it('filters by a price range on the latest price', async () => {
       const feed = await (await setup()).feed(null, FeedQuerySchema.parse({ maxPrice: '5000' }));
       expect(feed.items.map((i) => i.id)).toEqual(['new']);
+    });
+
+    it('finds an item by the tags of a variation it offers now', async () => {
+      const service = await setup({
+        loadCatalog: vi.fn().mockResolvedValue([
+          item('offered', { variations: [variation(vegan, { tagIds: [vegan] })] }),
+          item('gone', { variations: [variation(vegan, { tagIds: [vegan], available: false })] }),
+          item('split', {
+            variations: [
+              variation(vegan, { tagIds: [vegan] }),
+              variation(spicy, { tagIds: [spicy] }),
+            ],
+          }),
+        ]),
+      });
+      const tagged = (tagIds: string) =>
+        service.feed(null, FeedQuerySchema.parse({ tagIds })).then((feed) => feed.items);
+      expect((await tagged(vegan)).map((i) => i.id)).toEqual(['offered', 'split']);
+      expect((await tagged(`${burger},${vegan}`)).map((i) => i.id)).toEqual(['offered', 'split']);
+      expect(await tagged(`${vegan},${spicy}`)).toEqual([]);
+      expect((await tagged(vegan))[0]?.tagIds).toEqual([burger]);
     });
 
     it('filters by tag', async () => {
@@ -184,6 +220,53 @@ describe('DiscoverService', () => {
           kind: 'added',
           at: '2026-10-01T00:00:00.000Z',
           listPrice: { value: 58, currency: 'ILS' },
+        },
+      ]);
+    });
+
+    it('scores each variation it has, offered or not, with its tags', async () => {
+      const veganTag = { id: vegan, slug: 'vegan', name: { he: 'טבעוני', en: null }, kind: 'diet' };
+      const ranked: ItemStats = {
+        ...EMPTY_STATS,
+        ratingCount: 4,
+        ratingSum: 17,
+        variationRatings: new Map([
+          [vegan, { ratingCount: 3, ratingSum: 15 }],
+          [spicy, { ratingCount: 1, ratingSum: 2 }],
+        ]),
+      };
+      const service = await setup(
+        {
+          loadCatalog: vi.fn().mockResolvedValue([
+            item('ranked', {
+              variations: [
+                variation(vegan, { tagIds: [vegan], price: { value: 62, currency: 'ILS' } }),
+                variation(spicy, { available: false }),
+              ],
+            }),
+          ]),
+          listTags: vi.fn().mockResolvedValue([veganTag]),
+        },
+        new Map([['ranked', ranked]]),
+      );
+      const page = await service.itemPage(null, 'ranked', {});
+      expect(page.variations).toEqual([
+        {
+          variation: {
+            id: vegan,
+            name: { he: vegan, en: null },
+            price: { value: 62, currency: 'ILS' },
+            available: true,
+          },
+          tags: [veganTag],
+          score: expect.any(Number) as unknown,
+          ratingCount: 3,
+        },
+        {
+          variation: { id: spicy, name: { he: spicy, en: null }, price: null, available: false },
+          tags: [],
+          score: null,
+          ratingCount: 1,
         },
       ]);
     });

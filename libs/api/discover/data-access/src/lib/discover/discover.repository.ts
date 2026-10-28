@@ -5,6 +5,8 @@ import {
   type ItemRevisionKind,
   type ItemSnapshot,
   ItemSnapshotSchema,
+  type ItemVariation,
+  ItemVariationsSchema,
   type MenuSection,
   MenuSectionSchema,
   type Price,
@@ -23,6 +25,7 @@ export interface CatalogItem {
   sectionId: string;
   position: number;
   tagIds: string[];
+  variations: ItemVariation[];
   listPrice: Price | null;
   createdAt: Date;
 }
@@ -60,6 +63,7 @@ export class DiscoverRepository {
       sectionId: row.sectionId,
       position: row.position,
       tagIds: row.tagIds,
+      variations: ItemVariationsSchema.parse(row.variations),
       listPrice: readPrice(row.listPriceValue, row.listPriceCurrency),
       createdAt: row.createdAt,
     }));

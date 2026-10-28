@@ -13,6 +13,7 @@ describe('MenuItem', () => {
     description: null,
     listPrice: null,
     tagIds: [],
+    variations: [],
     state: 'pending',
     mergedIntoId: null,
     submittedById: 'submitter',

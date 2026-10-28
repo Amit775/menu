@@ -6,10 +6,12 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
+  type ItemChanges,
   type ItemRecord,
   ItemRepository,
   MenuSectionRepository,
   ItemNotEditableError,
+  type NewItem,
   UnknownTagError,
   VenueRepository,
 } from '@menu/api/menus/data-access';
@@ -35,6 +37,7 @@ describe('ItemService', () => {
       description: null,
       listPrice: { value: 68, currency: 'ILS' as const },
       tagIds: [],
+      variations: [],
       state: 'approved',
       mergedIntoId: null,
       submittedById: null,
@@ -132,7 +135,46 @@ describe('ItemService', () => {
       description: null,
       listPrice: null,
       tagIds: [],
+      variations: [],
     };
+
+    it('gives each new variation an id', async () => {
+      const create = vi.fn().mockResolvedValue(record());
+      await (
+        await setup({ create })
+      ).create(owner, venueId, {
+        ...input,
+        variations: [{ name: { he: 'עוף', en: null }, price: null, tagIds: [], available: true }],
+      });
+      const [created] = create.mock.calls[0] as [NewItem];
+      expect(created.variations).toEqual([
+        {
+          id: expect.stringMatching(/^[0-9a-f-]{36}$/) as unknown,
+          name: { he: 'עוף', en: null },
+          price: null,
+          tagIds: [],
+          available: true,
+        },
+      ]);
+    });
+
+    it('refuses a variation id that does not exist yet', async () => {
+      const service = await setup({ create: vi.fn() });
+      await expect(
+        service.create(owner, venueId, {
+          ...input,
+          variations: [
+            {
+              id: '5d2d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
+              name: { he: 'עוף', en: null },
+              price: null,
+              tagIds: [],
+              available: true,
+            },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
 
     it('adds an Owner’s item to the menu at once', async () => {
       const create = vi.fn().mockResolvedValue(record());
@@ -193,6 +235,31 @@ describe('ItemService', () => {
       await expect(service.update(owner, 'i1', { tagIds: ['t'] })).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it('keeps a variation’s id when it is edited and gives a new one an id', async () => {
+      const chicken = {
+        id: '5d2d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
+        name: { he: 'עוף', en: null },
+        price: null,
+        tagIds: [],
+        available: true,
+      };
+      const update = vi.fn().mockResolvedValue(record());
+      const service = await setup({
+        findById: vi.fn().mockResolvedValue(record({ variations: [chicken] })),
+        update,
+      });
+      await service.update(owner, 'i1', {
+        variations: [
+          { ...chicken, available: false },
+          { name: { he: 'טבעוני', en: null }, price: null, tagIds: [], available: true },
+        ],
+      });
+      const [, changes] = update.mock.calls[0] as [string, ItemChanges];
+      const [saved, added] = changes.variations ?? [];
+      expect(saved).toEqual({ ...chicken, available: false });
+      expect(added?.id).not.toBe(chicken.id);
     });
 
     it('fails with 409 when the item was archived meanwhile', async () => {

@@ -1,5 +1,5 @@
 import { type ItemRevisionRecord } from '@menu/api/discover/data-access';
-import { type ItemSnapshot, type Tag } from '@menu/shared/contracts';
+import { type ItemSnapshot, type ItemVariation, type Tag } from '@menu/shared/contracts';
 import { itemHistory } from './item-history';
 
 describe('itemHistory', () => {
@@ -22,6 +22,7 @@ describe('itemHistory', () => {
     listPrice: { value: 58, currency: 'ILS' },
     sectionId: mains,
     tagIds: ['t1'],
+    variations: [],
   };
 
   function revision(
@@ -122,6 +123,50 @@ describe('itemHistory', () => {
       revision('updated', 3, { tagIds: ['t2', 't1', 'gone'] }),
     ]);
     expect(events).toHaveLength(1);
+  });
+
+  it('tells which variations came, went, or stopped and started being offered, and their prices', () => {
+    const variation = (id: string, he: string, overrides: Partial<ItemVariation> = {}) => ({
+      id,
+      name: { he, en: null },
+      price: null,
+      tagIds: [],
+      available: true,
+      ...overrides,
+    });
+    const [event] = history([
+      revision('created', 1, {
+        variations: [
+          variation('v1', 'בקר'),
+          variation('v2', 'עוף'),
+          variation('v3', 'דלעת', { available: false }),
+        ],
+      }),
+      revision('updated', 2, {
+        variations: [
+          variation('v1', 'בקר', { price: { value: 64, currency: 'ILS' }, available: false }),
+          variation('v3', 'דלעת'),
+          variation('v4', 'טבעוני', { tagIds: ['t2'] }),
+        ],
+      }),
+    ]);
+    expect(event).toMatchObject({
+      changes: [
+        {
+          field: 'variations',
+          added: [{ he: 'טבעוני', en: null }],
+          removed: [{ he: 'עוף', en: null }],
+          nowAvailable: [{ he: 'דלעת', en: null }],
+          nowUnavailable: [{ he: 'בקר', en: null }],
+        },
+        {
+          field: 'variationPrice',
+          variation: { he: 'בקר', en: null },
+          from: null,
+          to: { value: 64, currency: 'ILS' },
+        },
+      ],
+    });
   });
 
   it('marks the item leaving the menu', () => {
