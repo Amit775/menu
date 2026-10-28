@@ -16,6 +16,7 @@ describe('AccountRepository', () => {
     displayName: 'נועה',
     language: 'he',
     isAdmin: false,
+    isContributor: false,
     ownedVenueIds: [],
     createdAt: '2026-01-01T00:00:00.000Z',
   };
@@ -128,10 +129,65 @@ describe('AccountRepository', () => {
     await expect(repository.setAdmin(row.id, true)).resolves.toBeNull();
   });
 
+  it('reads a Contributor from its role', async () => {
+    const repository = repositoryWith({
+      findUnique: vi.fn().mockResolvedValue({ ...row, role: 'contributor' }),
+    });
+    await expect(repository.findById(row.id)).resolves.toMatchObject({
+      isAdmin: false,
+      isContributor: true,
+    });
+  });
+
+  it('makes a user a Contributor without touching an Admin', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const repository = repositoryWith({
+      updateMany,
+      findUnique: vi.fn().mockResolvedValue({ ...row, role: 'contributor' }),
+    });
+    await expect(repository.setContributor(row.id, true)).resolves.toMatchObject({
+      isContributor: true,
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: row.id, role: 'user' },
+      data: { role: 'contributor' },
+    });
+  });
+
+  it('takes the Contributor role back, leaving an Admin an Admin', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 });
+    const repository = repositoryWith({
+      updateMany,
+      findUnique: vi.fn().mockResolvedValue({ ...row, role: 'admin' }),
+    });
+    await expect(repository.setContributor(row.id, false)).resolves.toMatchObject({
+      isAdmin: true,
+      isContributor: false,
+    });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: row.id, role: 'contributor' },
+      data: { role: 'user' },
+    });
+  });
+
+  it('returns null when setting the Contributor role of an unknown account', async () => {
+    const repository = repositoryWith({
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      findUnique: vi.fn().mockResolvedValue(null),
+    });
+    await expect(repository.setContributor(row.id, true)).resolves.toBeNull();
+  });
+
   it('lists accounts as summaries', async () => {
     const repository = repositoryWith({ findMany: vi.fn().mockResolvedValue([row]) });
     await expect(repository.list()).resolves.toEqual([
-      { id: row.id, displayName: 'נועה', isAdmin: false, createdAt: '2026-01-01T00:00:00.000Z' },
+      {
+        id: row.id,
+        displayName: 'נועה',
+        isAdmin: false,
+        isContributor: false,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
     ]);
   });
 

@@ -23,7 +23,9 @@
   }
   @default {
     @if (store.venue(); as venue) {
-      <p class="intro">{{ t('intro', { venue: venue.name | localize }) }}</p>
+      <p class="intro">
+        {{ t(addsDirectly() ? 'introDirect' : 'intro', { venue: venue.name | localize }) }}
+      </p>
       @if (store.sections().length === 0) {
         <p class="state" role="status">{{ t('noSections') }}</p>
       } @else {

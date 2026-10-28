@@ -7,7 +7,13 @@ import { AUTHOR_DIRECTORY, type EntryTarget, ITEM_CATALOG } from '@menu/api/shar
 import { EntryService } from './entry.service';
 
 describe('EntryService', () => {
-  const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
+  const author: Principal = {
+    accountId: 'a1',
+    isAdmin: false,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const other: Principal = { ...author, accountId: 'a2' };
   const beef = '5b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
   const seasonal = '6b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';

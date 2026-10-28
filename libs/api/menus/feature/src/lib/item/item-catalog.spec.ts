@@ -11,6 +11,7 @@ describe('MenusItemCatalog', () => {
   const submitter: Principal = {
     accountId: 'u',
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   };

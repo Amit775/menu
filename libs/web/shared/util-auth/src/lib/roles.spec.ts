@@ -1,7 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { convertToParamMap, provideRouter, Router, type UrlTree } from '@angular/router';
 import { AUTH_BACKEND } from './auth-backend';
-import { adminGuard, managerGuard, NO_ROLES, Roles, venueManagerGuard } from './roles';
+import {
+  adminGuard,
+  itemEditorGuard,
+  managerGuard,
+  NO_ROLES,
+  Roles,
+  venueManagerGuard,
+} from './roles';
 import { FakeAuthBackend } from './testing';
 
 describe('Roles', () => {
@@ -29,7 +36,7 @@ describe('Roles', () => {
 
   it('makes an Owner a manager of their venues only', () => {
     const roles = setup();
-    roles.set({ isAdmin: false, ownedVenueIds: ['v1'] });
+    roles.set({ isAdmin: false, isContributor: false, ownedVenueIds: ['v1'] });
     expect(roles.canManage()).toBe(true);
     expect(roles.isAdmin()).toBe(false);
     expect(roles.canEditVenue('v1')).toBe(true);
@@ -38,15 +45,43 @@ describe('Roles', () => {
 
   it('lets an Admin manage every venue', () => {
     const roles = setup();
-    roles.set({ isAdmin: true, ownedVenueIds: [] });
+    roles.set({ isAdmin: true, isContributor: false, ownedVenueIds: [] });
     expect(roles.canManage()).toBe(true);
     expect(roles.canEditVenue('v2')).toBe(true);
+  });
+
+  it('lets a Contributor edit items at every venue without managing any', () => {
+    const roles = setup();
+    roles.set({ isAdmin: false, isContributor: true, ownedVenueIds: [] });
+    expect(roles.canContribute()).toBe(true);
+    expect(roles.canManage()).toBe(false);
+    expect(roles.canEditVenue('v1')).toBe(false);
+    expect(roles.canEditItems('v1')).toBe(true);
+  });
+
+  it('lets an Owner edit their own venue’s items only, and an Admin every one', () => {
+    const roles = setup();
+    roles.set({ isAdmin: false, isContributor: false, ownedVenueIds: ['v1'] });
+    expect(roles.canContribute()).toBe(false);
+    expect(roles.canEditItems('v1')).toBe(true);
+    expect(roles.canEditItems('v2')).toBe(false);
+    roles.set({ isAdmin: true, isContributor: false, ownedVenueIds: [] });
+    expect(roles.canContribute()).toBe(true);
+  });
+
+  it('lets a Contributor into the item form and keeps a user out', async () => {
+    const roles = setup();
+    roles.set({ isAdmin: false, isContributor: true, ownedVenueIds: [] });
+    await expect(guard(itemEditorGuard, '/manage/venues/v1/items/new', 'v1')).resolves.toBe(true);
+    roles.set(NO_ROLES);
+    const result = (await guard(itemEditorGuard, '/manage/venues/v1/items/new', 'v1')) as UrlTree;
+    expect(TestBed.inject(Router).serializeUrl(result)).toBe('/venues/v1');
   });
 
   it('lets a manager into the manage pages once the roles are known', async () => {
     const roles = setup();
     const result = guard(managerGuard);
-    roles.set({ isAdmin: false, ownedVenueIds: ['v1'] });
+    roles.set({ isAdmin: false, isContributor: false, ownedVenueIds: ['v1'] });
     await expect(result).resolves.toBe(true);
   });
 
@@ -59,20 +94,20 @@ describe('Roles', () => {
 
   it('keeps Owners out of Admin pages', async () => {
     const roles = setup();
-    roles.set({ isAdmin: false, ownedVenueIds: ['v1'] });
+    roles.set({ isAdmin: false, isContributor: false, ownedVenueIds: ['v1'] });
     const result = (await guard(adminGuard, '/manage/tags')) as UrlTree;
     expect(TestBed.inject(Router).serializeUrl(result)).toBe('/manage');
-    roles.set({ isAdmin: true, ownedVenueIds: [] });
+    roles.set({ isAdmin: true, isContributor: false, ownedVenueIds: [] });
     await expect(guard(adminGuard, '/manage/tags')).resolves.toBe(true);
   });
 
   it('lets an Owner manage only their own venue', async () => {
     const roles = setup();
-    roles.set({ isAdmin: false, ownedVenueIds: ['v1'] });
+    roles.set({ isAdmin: false, isContributor: false, ownedVenueIds: ['v1'] });
     await expect(guard(venueManagerGuard, '/manage/venues/v1', 'v1')).resolves.toBe(true);
     const result = (await guard(venueManagerGuard, '/manage/venues/v2', 'v2')) as UrlTree;
     expect(TestBed.inject(Router).serializeUrl(result)).toBe('/manage');
-    roles.set({ isAdmin: true, ownedVenueIds: [] });
+    roles.set({ isAdmin: true, isContributor: false, ownedVenueIds: [] });
     await expect(guard(venueManagerGuard, '/manage/venues/v2', 'v2')).resolves.toBe(true);
   });
 
@@ -84,7 +119,7 @@ describe('Roles', () => {
 
   it('forgets the roles on sign-out', () => {
     const roles = setup();
-    roles.set({ isAdmin: true, ownedVenueIds: [] });
+    roles.set({ isAdmin: true, isContributor: false, ownedVenueIds: [] });
     roles.set(null);
     expect(roles.known()).toBe(false);
     expect(roles.isAdmin()).toBe(false);

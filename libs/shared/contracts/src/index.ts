@@ -12,3 +12,4 @@ export * from './lib/entries/entry.contract';
 export * from './lib/discover/discover.contract';
 export * from './lib/entries/photo.contract';
 export * from './lib/menus/item-history.contract';
+export * from './lib/users/contributor-application.contract';

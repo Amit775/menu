@@ -37,6 +37,13 @@
           <span class="error" role="alert">{{ t('saveFailed') }}</span>
         }
       </form>
+      @if (store.account(); as account) {
+        @if (account.isContributor) {
+          <p class="contributor">{{ t('contributorYes') }}</p>
+        } @else if (!account.isAdmin) {
+          <menu-contributor-application />
+        }
+      }
     }
   }
 

@@ -46,7 +46,11 @@ describe('MenusManagePage', () => {
       providers: [provideRouter([]), { provide: MenuApiClient, useValue: api }],
     });
     TestBed.inject(I18n).setLanguage('he');
-    TestBed.inject(Roles).set({ isAdmin, ownedVenueIds: isAdmin ? [] : [VENUE_ID] });
+    TestBed.inject(Roles).set({
+      isAdmin,
+      isContributor: false,
+      ownedVenueIds: isAdmin ? [] : [VENUE_ID],
+    });
     const fixture = TestBed.createComponent(MenusManagePage);
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;

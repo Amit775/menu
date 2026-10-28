@@ -3,6 +3,7 @@ import type { he } from './item.he';
 export const en = {
   back: 'Back',
   loading: 'Loading…',
+  edit: 'Edit item',
   share: 'Share',
   copied: 'Link copied',
   loadFailed: 'Could not load this item.',

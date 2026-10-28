@@ -36,10 +36,15 @@ form {
   gap: 12px;
 }
 
-.saved {
+.saved,
+.contributor {
   color: var(--mat-sys-on-surface-variant);
 }
 
 .error {
   color: var(--mat-sys-error);
+}
+
+.contributor {
+  margin: 0;
 }

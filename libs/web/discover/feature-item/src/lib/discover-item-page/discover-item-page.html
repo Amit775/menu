@@ -39,6 +39,16 @@
         <a class="venue" [routerLink]="['/venues', item.venue.id]">{{
           item.venue.name | localize
         }}</a>
+        @if (canEdit()) {
+          <a
+            mat-stroked-button
+            class="edit"
+            [routerLink]="['/manage/venues', item.venue.id, 'items', item.id]"
+          >
+            <mat-icon aria-hidden="true">edit</mat-icon>
+            {{ t('edit') }}
+          </a>
+        }
         @if (page.tags.length > 0) {
           <mat-chip-set>
             @for (tag of page.tags; track tag.id) {

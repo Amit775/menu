@@ -10,18 +10,21 @@ const me: AccountSummary = {
   id: '1a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   displayName: 'עמית',
   isAdmin: true,
+  isContributor: false,
   createdAt: '2026-10-01T10:00:00.000Z',
 };
 const dana: AccountSummary = {
   id: '2a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   displayName: 'דנה',
   isAdmin: false,
+  isContributor: false,
   createdAt: '2026-10-02T10:00:00.000Z',
 };
 const unnamed: AccountSummary = {
   id: '3a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   displayName: '',
   isAdmin: false,
+  isContributor: false,
   createdAt: '2026-10-03T10:00:00.000Z',
 };
 
@@ -31,7 +34,10 @@ describe('UsersPeoplePage', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: PeopleApiClient, useValue: api },
+        {
+          provide: PeopleApiClient,
+          useValue: { applications: () => Promise.resolve([]), ...api },
+        },
         { provide: AccountStore, useValue: { account } },
       ],
     });
@@ -79,6 +85,53 @@ describe('UsersPeoplePage', () => {
     expect(element.querySelector(`[data-id="${me.id}"] .hint`)?.textContent).toBe(
       'אי אפשר להסיר את תפקיד המנהל של עצמכם.',
     );
+  });
+
+  it('makes someone a Contributor, and shows every Admin as one', async () => {
+    const setContributor = vi.fn().mockResolvedValue({ ...dana, isContributor: true });
+    const element = await render({ accounts, setContributor });
+    const contributor = (id: string) =>
+      element.querySelector<HTMLButtonElement>(`[data-id="${id}"] .contributor button`);
+    expect(contributor(me.id)?.getAttribute('aria-checked')).toBe('true');
+    expect(contributor(me.id)?.disabled).toBe(true);
+    expect(contributor(dana.id)?.getAttribute('aria-label')).toBe('דנה: תורם');
+    contributor(dana.id)?.click();
+    await vi.waitFor(() => {
+      TestBed.tick();
+      expect(contributor(dana.id)?.getAttribute('aria-checked')).toBe('true');
+    });
+    expect(setContributor).toHaveBeenCalledWith(dana.id, true);
+  });
+
+  it('lists contributor applications and approves one', async () => {
+    const application = {
+      id: '9a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+      note: 'אוכלת בחוץ כל שבוע',
+      status: 'pending' as const,
+      createdAt: '2026-10-20T10:00:00.000Z',
+      decidedAt: null,
+      account: { id: dana.id, displayName: 'דנה' },
+    };
+    const decide = vi.fn().mockResolvedValue({ ...application, status: 'approved' });
+    const element = await render({
+      accounts,
+      applications: () => Promise.resolve([application]),
+      decide,
+    });
+    const row = element.querySelector(`[data-application-id="${application.id}"]`);
+    expect(element.querySelector('h2')?.textContent).toBe('בקשות להצטרף לתורמים');
+    expect(row?.querySelector('.note')?.textContent).toBe('אוכלת בחוץ כל שבוע');
+    row?.querySelector<HTMLButtonElement>('button.approve')?.click();
+    await vi.waitFor(() => {
+      TestBed.tick();
+      expect(element.querySelector('[data-application-id]')).toBeNull();
+    });
+    expect(decide).toHaveBeenCalledWith(application.id, 'approve');
+    expect(
+      element
+        .querySelector(`[data-id="${dana.id}"] .contributor button`)
+        ?.getAttribute('aria-checked'),
+    ).toBe('true');
   });
 
   it('says so when the change is refused', async () => {

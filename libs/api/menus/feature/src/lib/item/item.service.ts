@@ -13,7 +13,7 @@ import {
   UnknownTagError,
   VenueRepository,
 } from '@menu/api/menus/data-access';
-import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
+import { canContribute, canEditVenue, type Principal } from '@menu/api/shared/util-auth';
 import { ITEM_MERGE_LISTENER, type ItemMergeListener } from '@menu/api/shared/util-ports';
 import {
   type CreateItem,
@@ -69,7 +69,7 @@ export class ItemService {
   async create(principal: Principal, venueId: string, input: CreateItem): Promise<Item> {
     await this.assertVenueVisible(principal, venueId);
     await this.assertSection(venueId, input.sectionId);
-    const approver = canEditVenue(principal, venueId);
+    const approver = canEditVenue(principal, venueId) || canContribute(principal);
     const record = await toHttpErrors(
       this.repository.create(
         {
@@ -126,7 +126,7 @@ export class ItemService {
     if (
       item.state === 'merged' &&
       item.record.mergedIntoId === intoItemId &&
-      item.canBeEditedBy(principal)
+      item.canBeDecidedBy(principal)
     ) {
       await this.mergeListener.onItemMerged(id, intoItemId);
       return item.toContract(principal);

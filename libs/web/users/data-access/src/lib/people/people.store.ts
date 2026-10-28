@@ -1,5 +1,10 @@
 import { computed, inject, resource, signal } from '@angular/core';
-import { type AccountSummary, type Ownership } from '@menu/shared/contracts';
+import {
+  type AccountSummary,
+  type ContributorApplicationDecision,
+  type ContributorApplicationReview,
+  type Ownership,
+} from '@menu/shared/contracts';
 import { loadStatus } from '@menu/web/shared/util-data';
 import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
 import { PeopleApiClient } from './people.api-client';
@@ -8,6 +13,7 @@ interface People {
   venueId: string | null;
   accounts: AccountSummary[];
   owners: Ownership[];
+  applications: ContributorApplicationReview[];
 }
 
 export const PeopleStore = signalStore(
@@ -21,11 +27,12 @@ export const PeopleStore = signalStore(
           return id === undefined ? undefined : { venueId: id };
         },
         loader: async ({ params }): Promise<People> => {
-          const [accounts, owners] = await Promise.all([
+          const [accounts, owners, applications] = await Promise.all([
             api.accounts(),
             params.venueId ? api.owners(params.venueId) : Promise.resolve([]),
+            params.venueId ? Promise.resolve([]) : api.applications(),
           ]);
-          return { venueId: params.venueId, accounts, owners };
+          return { venueId: params.venueId, accounts, owners, applications };
         },
       }),
     };
@@ -37,6 +44,7 @@ export const PeopleStore = signalStore(
       venueId: computed(() => people()?.venueId ?? null),
       accounts: computed(() => people()?.accounts ?? []),
       owners: computed(() => people()?.owners ?? []),
+      applications: computed(() => people()?.applications ?? []),
     };
   }),
   withComputed(({ accounts, owners }) => ({
@@ -79,6 +87,26 @@ export const PeopleStore = signalStore(
         const updated = await api.setAdmin(id, isAdmin);
         patch(({ accounts }) => ({
           accounts: accounts.map((account) => (account.id === id ? updated : account)),
+        }));
+      },
+      async setContributor(id: string, isContributor: boolean): Promise<void> {
+        const updated = await api.setContributor(id, isContributor);
+        patch(({ accounts }) => ({
+          accounts: accounts.map((account) => (account.id === id ? updated : account)),
+        }));
+      },
+      async decide(id: string, decision: ContributorApplicationDecision): Promise<void> {
+        const decided = await api.decide(id, decision);
+        patch(({ accounts, applications }) => ({
+          applications: applications.filter((application) => application.id !== id),
+          accounts:
+            decision === 'approve'
+              ? accounts.map((account) =>
+                  account.id === decided.account.id && !account.isAdmin
+                    ? { ...account, isContributor: true }
+                    : account,
+                )
+              : accounts,
         }));
       },
       async grant(accountId: string): Promise<void> {

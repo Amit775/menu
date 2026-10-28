@@ -9,6 +9,7 @@ const summary = {
   id: ACCOUNT_ID,
   displayName: 'Yossi',
   isAdmin: false,
+  isContributor: false,
   createdAt: '2026-10-20T20:00:00.000Z',
 };
 const ownership = {
@@ -16,6 +17,15 @@ const ownership = {
   venueId: VENUE_ID,
   displayName: 'Yossi',
   grantedAt: '2026-10-21T20:00:00.000Z',
+};
+
+const application = {
+  id: '5f9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
+  note: 'I eat out every week',
+  status: 'pending',
+  createdAt: '2026-10-22T20:00:00.000Z',
+  decidedAt: null,
+  account: { id: ACCOUNT_ID, displayName: 'Yossi' },
 };
 
 describe('PeopleApiClient', () => {
@@ -44,6 +54,35 @@ describe('PeopleApiClient', () => {
     const result = client.accounts();
     http.expectOne('/api/accounts').flush([{ id: 'nope' }]);
     await expect(result).rejects.toThrow();
+  });
+
+  it('lists pending contributor applications', async () => {
+    const result = client.applications();
+    http.expectOne('/api/contributor-applications').flush([application]);
+    await expect(result).resolves.toEqual([application]);
+  });
+
+  it('rejects an application that breaks the contract', async () => {
+    const result = client.applications();
+    http.expectOne('/api/contributor-applications').flush([{ ...application, note: '' }]);
+    await expect(result).rejects.toThrow();
+  });
+
+  it('decides on an application', async () => {
+    const result = client.decide(application.id, 'approve');
+    const request = http.expectOne(`/api/contributor-applications/${application.id}/approve`);
+    expect(request.request.method).toBe('POST');
+    request.flush({ ...application, status: 'approved', decidedAt: '2026-10-23T20:00:00.000Z' });
+    await expect(result).resolves.toMatchObject({ status: 'approved' });
+  });
+
+  it('grants and takes back the Contributor role', async () => {
+    const result = client.setContributor(ACCOUNT_ID, false);
+    const request = http.expectOne(`/api/accounts/${ACCOUNT_ID}/contributor`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ isContributor: false });
+    request.flush(summary);
+    await expect(result).resolves.toEqual(summary);
   });
 
   it('makes an account an Admin', async () => {

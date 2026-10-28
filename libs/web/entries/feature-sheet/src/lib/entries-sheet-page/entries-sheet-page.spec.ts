@@ -74,7 +74,7 @@ describe('EntriesSheetPage', () => {
       ],
     });
     TestBed.inject(I18n).setLanguage('he');
-    TestBed.inject(Roles).set({ isAdmin, ownedVenueIds: [] });
+    TestBed.inject(Roles).set({ isAdmin, isContributor: false, ownedVenueIds: [] });
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(`/items/${ITEM_ID}/entries`, EntriesSheetPage);
     await harness.fixture.whenStable();

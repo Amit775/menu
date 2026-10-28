@@ -16,7 +16,11 @@ describe('ManagedVenuesStore', () => {
     TestBed.configureTestingModule({
       providers: [ManagedVenuesStore, { provide: MenuApiClient, useValue: api }],
     });
-    TestBed.inject(Roles).set({ isAdmin, ownedVenueIds: isAdmin ? [] : [VENUE_ID] });
+    TestBed.inject(Roles).set({
+      isAdmin,
+      isContributor: false,
+      ownedVenueIds: isAdmin ? [] : [VENUE_ID],
+    });
     return TestBed.inject(ManagedVenuesStore);
   }
 

@@ -1,5 +1,5 @@
 import { Location } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -15,6 +15,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { AddItemStore } from '@menu/web/menus/data-access';
 import { ShekelsSchema, type Text } from '@menu/shared/contracts';
+import { Roles } from '@menu/web/shared/util-auth';
 import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { addItemI18n } from '../add-item.i18n';
 
@@ -45,9 +46,11 @@ export class MenusAddItemPage {
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly i18n = inject(I18n);
+  private readonly roles = inject(Roles);
   protected readonly t = injectTranslate(addItemI18n);
 
   readonly id = input.required<string>();
+  protected readonly addsDirectly = computed(() => this.roles.canEditItems(this.id()));
 
   protected readonly name = new FormControl('', {
     nonNullable: true,

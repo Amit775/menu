@@ -10,13 +10,15 @@ export const DisplayNameSchema = z.string().trim().min(1).max(60);
 /**
  * The signed-in account as its owner sees it. `displayName` is empty until the
  * user picks one (phone sign-in has no name). `ownedVenueIds` makes the account
- * an Owner of those venues only.
+ * an Owner of those venues only. An Admin has every Contributor right without
+ * `isContributor`.
  */
 export const AccountSchema = z.object({
   id: z.uuid(),
   displayName: z.union([DisplayNameSchema, z.literal('')]),
   language: LanguageSchema,
   isAdmin: z.boolean(),
+  isContributor: z.boolean(),
   ownedVenueIds: z.array(z.uuid()),
   createdAt: z.iso.datetime(),
 });
@@ -36,6 +38,7 @@ export const AccountSummarySchema = AccountSchema.pick({
   id: true,
   displayName: true,
   isAdmin: true,
+  isContributor: true,
   createdAt: true,
 });
 

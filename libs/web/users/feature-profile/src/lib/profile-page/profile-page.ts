@@ -11,11 +11,13 @@ import { type Language } from '@menu/shared/contracts';
 import { AccountStore } from '@menu/web/users/data-access';
 import { Auth } from '@menu/web/shared/util-auth';
 import { I18n, injectTranslate } from '@menu/web/shared/util-i18n';
+import { ContributorApplication } from '../contributor-application/contributor-application';
 import { profileI18n } from '../profile.i18n';
 
 @Component({
   selector: 'menu-profile-page',
   imports: [
+    ContributorApplication,
     FormField,
     RouterLink,
     MatButtonModule,

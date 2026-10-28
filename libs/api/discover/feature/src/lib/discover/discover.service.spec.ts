@@ -11,7 +11,13 @@ describe('DiscoverService', () => {
   const venueId = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
   const farVenueId = '7b1d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
   const burger = '3a2d3c4e-3333-4c1c-9a57-6f7a5d3c2b10';
-  const me: Principal = { accountId: 'me', isAdmin: false, language: 'he', ownedVenueIds: [] };
+  const me: Principal = {
+    accountId: 'me',
+    isAdmin: false,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const owner: Principal = { ...me, accountId: 'owner', ownedVenueIds: [venueId] };
   const here = { lat: 32.0779, lng: 34.7741 };
   const vegan = '3a2d3c4e-5555-4c1c-9a57-6f7a5d3c2b10';

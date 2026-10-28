@@ -19,6 +19,7 @@ describe('Photo controllers', () => {
   const principal: Principal = {
     accountId: 'a1',
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   };

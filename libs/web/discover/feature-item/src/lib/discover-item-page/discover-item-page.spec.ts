@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
+import { AUTH_BACKEND, FakeAuthBackend, type RoleGrants, Roles } from '@menu/web/shared/util-auth';
 import { webDiscoverFeatureItemRoutes } from '../lib.routes';
 import { type DiscoverItem, type ItemPage } from '@menu/shared/contracts';
 import { DiscoverApiClient } from '@menu/web/discover/data-access';
@@ -49,7 +49,7 @@ describe('DiscoverItemPage', () => {
     ],
   };
 
-  async function render(load: DiscoverApiClient['item'], share = vi.fn()) {
+  async function render(load: DiscoverApiClient['item'], share = vi.fn(), roles?: RoleGrants) {
     TestBed.configureTestingModule({
       imports: [DiscoverItemPage],
       providers: [
@@ -60,6 +60,9 @@ describe('DiscoverItemPage', () => {
       ],
     });
     TestBed.inject(I18n).setLanguage('he');
+    if (roles) {
+      TestBed.inject(Roles).set(roles);
+    }
     const fixture = TestBed.createComponent(DiscoverItemPage);
     fixture.componentRef.setInput('id', item.id);
     await fixture.whenStable();
@@ -89,6 +92,27 @@ describe('DiscoverItemPage', () => {
       'עוד טעים במוזס',
     );
     expect(element.querySelector('menu-item-row')?.textContent).toContain('צ׳יפס');
+  });
+
+  it('offers a Contributor to edit the item, and a diner nothing', async () => {
+    const contributor = { isAdmin: false, isContributor: true, ownedVenueIds: [] };
+    const { element } = await render(vi.fn().mockResolvedValue(page), vi.fn(), contributor);
+    expect(element.querySelector('a.edit')?.getAttribute('href')).toBe(
+      `/manage/venues/${item.venue.id}/items/${item.id}`,
+    );
+    TestBed.resetTestingModule();
+    const diner = await render(vi.fn().mockResolvedValue(page));
+    expect(diner.element.querySelector('a.edit')).toBeNull();
+  });
+
+  it('does not offer to edit an item taken off the menu', async () => {
+    const owner = { isAdmin: false, isContributor: false, ownedVenueIds: [item.venue.id] };
+    const { element } = await render(
+      vi.fn().mockResolvedValue({ ...page, archived: true }),
+      vi.fn(),
+      owner,
+    );
+    expect(element.querySelector('a.edit')).toBeNull();
   });
 
   it('scores each variation, with its price and tags, and marks one not offered now', async () => {

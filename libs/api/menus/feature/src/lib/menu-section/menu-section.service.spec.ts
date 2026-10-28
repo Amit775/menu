@@ -6,7 +6,13 @@ import { MenuSectionService } from './menu-section.service';
 
 describe('MenuSectionService', () => {
   const venueId = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
-  const user: Principal = { accountId: 'u', isAdmin: false, language: 'he', ownedVenueIds: [] };
+  const user: Principal = {
+    accountId: 'u',
+    isAdmin: false,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const owner: Principal = { ...user, ownedVenueIds: [venueId] };
   const venue = { id: venueId, status: 'active' };
 

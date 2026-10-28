@@ -3,7 +3,15 @@ import type { he } from './people.he';
 export const en = {
   back: 'Back',
   title: 'People',
-  intro: 'Admins can do everything: venues, tags and people. Owners manage their own venues only.',
+  intro:
+    'Admins can do everything: venues, tags and people. Owners manage their own venues only. Contributors add and edit items at every venue, but never approve or archive them.',
+  contributor: 'Contributor',
+  makeContributor: '{name}: Contributor',
+  applicationsTitle: 'Contributor applications',
+  applied: 'Applied {date}',
+  approve: 'Approve',
+  reject: 'Reject',
+  decideFailed: 'The decision was not saved. Try again.',
   admin: 'Admin',
   makeAdmin: '{name}: Admin',
   you: 'This is you',

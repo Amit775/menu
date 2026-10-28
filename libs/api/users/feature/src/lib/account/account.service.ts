@@ -30,6 +30,7 @@ export class AccountService implements PrincipalResolver {
     return {
       accountId: account.id,
       isAdmin,
+      isContributor: account.isContributor,
       language: account.language,
       ownedVenueIds: account.ownedVenueIds,
     };
@@ -69,6 +70,14 @@ export class AccountService implements PrincipalResolver {
       throw new BadRequestException('You cannot remove your own Admin role.');
     }
     const account = await this.repository.setAdmin(id, isAdmin);
+    if (!account) {
+      throw new NotFoundException('Account not found.');
+    }
+    return account;
+  }
+
+  async setContributor(id: string, isContributor: boolean): Promise<AccountSummary> {
+    const account = await this.repository.setContributor(id, isContributor);
     if (!account) {
       throw new NotFoundException('Account not found.');
     }

@@ -4,7 +4,13 @@ import { MenuSectionController } from './menu-section.controller';
 import { MenuSectionService } from './menu-section.service';
 
 describe('MenuSectionController', () => {
-  const principal: Principal = { accountId: 'u', isAdmin: true, language: 'he', ownedVenueIds: [] };
+  const principal: Principal = {
+    accountId: 'u',
+    isAdmin: true,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
 
   it('passes the caller and venue to the service', async () => {
     const reorder = vi.fn().mockResolvedValue([]);

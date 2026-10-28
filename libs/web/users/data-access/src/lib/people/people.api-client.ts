@@ -4,6 +4,10 @@ import {
   accountPath,
   type AccountSummary,
   AccountSummarySchema,
+  type ContributorApplicationDecision,
+  contributorApplicationPath,
+  type ContributorApplicationReview,
+  ContributorApplicationReviewSchema,
   type Ownership,
   ownershipPath,
   OwnershipSchema,
@@ -25,6 +29,28 @@ export class PeopleApiClient {
       this.http.put<unknown>(`/api/${accountPath}/${id}/admin`, { isAdmin }),
     );
     return AccountSummarySchema.parse(body);
+  }
+
+  async setContributor(id: string, isContributor: boolean): Promise<AccountSummary> {
+    const body = await firstValueFrom(
+      this.http.put<unknown>(`/api/${accountPath}/${id}/contributor`, { isContributor }),
+    );
+    return AccountSummarySchema.parse(body);
+  }
+
+  async applications(): Promise<ContributorApplicationReview[]> {
+    const body = await firstValueFrom(this.http.get<unknown>(`/api/${contributorApplicationPath}`));
+    return z.array(ContributorApplicationReviewSchema).parse(body);
+  }
+
+  async decide(
+    id: string,
+    decision: ContributorApplicationDecision,
+  ): Promise<ContributorApplicationReview> {
+    const body = await firstValueFrom(
+      this.http.post<unknown>(`/api/${contributorApplicationPath}/${id}/${decision}`, {}),
+    );
+    return ContributorApplicationReviewSchema.parse(body);
   }
 
   async owners(venueId: string): Promise<Ownership[]> {

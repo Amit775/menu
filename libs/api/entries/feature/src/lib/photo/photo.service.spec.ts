@@ -6,7 +6,13 @@ import { type Principal } from '@menu/api/shared/util-auth';
 import { PhotoService } from './photo.service';
 
 describe('PhotoService', () => {
-  const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
+  const author: Principal = {
+    accountId: 'a1',
+    isAdmin: false,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const other: Principal = { ...author, accountId: 'a2' };
   // Start of image, then straight to the image data.
   const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xda, 0x00, 0x02, 1, 2, 3]);

@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { type MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RouterLink } from '@angular/router';
-import { type AccountSummary } from '@menu/shared/contracts';
+import { type AccountSummary, type ContributorApplicationDecision } from '@menu/shared/contracts';
 import { AccountStore, PeopleStore } from '@menu/web/users/data-access';
 import { I18n, injectTranslate, RelativeDatePipe } from '@menu/web/shared/util-i18n';
 import { peopleI18n } from '../people.i18n';
@@ -54,14 +54,46 @@ export class UsersPeoplePage {
   }
 
   protected async toggle(account: AccountSummary, change: MatSlideToggleChange): Promise<void> {
-    this.busy.set(account.id);
+    await this.change(account.id, change, account.isAdmin, () =>
+      this.store.setAdmin(account.id, change.checked),
+    );
+  }
+
+  protected async toggleContributor(
+    account: AccountSummary,
+    change: MatSlideToggleChange,
+  ): Promise<void> {
+    await this.change(account.id, change, account.isContributor, () =>
+      this.store.setContributor(account.id, change.checked),
+    );
+  }
+
+  protected async decide(id: string, decision: ContributorApplicationDecision): Promise<void> {
+    this.busy.set(id);
     this.failed.set(null);
     try {
-      await this.store.setAdmin(account.id, change.checked);
+      await this.store.decide(id, decision);
+    } catch {
+      this.failed.set(id);
+    } finally {
+      this.busy.set(null);
+    }
+  }
+
+  private async change(
+    id: string,
+    change: MatSlideToggleChange,
+    was: boolean,
+    save: () => Promise<void>,
+  ): Promise<void> {
+    this.busy.set(id);
+    this.failed.set(null);
+    try {
+      await save();
     } catch {
       // The switch flipped on tap; put it back to what the account still is.
-      change.source.checked = account.isAdmin;
-      this.failed.set(account.id);
+      change.source.checked = was;
+      this.failed.set(id);
     } finally {
       this.busy.set(null);
     }

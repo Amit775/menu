@@ -12,10 +12,16 @@ export interface VerifiedIdentity {
 export interface Principal {
   accountId: string;
   isAdmin: boolean;
+  isContributor: boolean;
   language: Language;
   ownedVenueIds: readonly string[];
 }
 
 export function canEditVenue(principal: Principal | null, venueId: string): boolean {
   return principal !== null && (principal.isAdmin || principal.ownedVenueIds.includes(venueId));
+}
+
+/** Contributors add and edit items at any venue; an Admin has every Contributor right. */
+export function canContribute(principal: Principal | null): boolean {
+  return principal !== null && (principal.isAdmin || principal.isContributor);
 }

@@ -50,6 +50,10 @@ h1 {
   font: var(--mat-sys-title-medium);
 }
 
+.edit {
+  align-self: flex-start;
+}
+
 .archived {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);

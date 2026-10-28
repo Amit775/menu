@@ -12,5 +12,17 @@ export const he = {
   language: 'שפה',
   hebrew: 'עברית',
   english: 'English',
+  contributorTitle: 'הצטרפות לתורמים',
+  contributorIntro:
+    'תורמים מוסיפים מנות לכל תפריט בלי לחכות לאישור, מעדכנים מנות ווריאציות ומוסיפים להן תמונות. ספרו לנו בקצרה למה.',
+  contributorNote: 'למה תרצו לתרום?',
+  contributorNoteHint: 'עד 500 תווים. רק המנהלים יראו.',
+  contributorApply: 'הגשת בקשה',
+  contributorApplyFailed: 'הבקשה לא נשלחה. נסו שוב.',
+  contributorPending: 'הבקשה אצל המנהלים. נעדכן כאן כשתאושר.',
+  contributorRejected: 'הבקשה לא אושרה הפעם. אפשר להגיש שוב {date}.',
+  contributorLoadFailed: 'לא הצלחנו לטעון את מצב הבקשה.',
+  contributorYes: 'אתם בין התורמים: אפשר להוסיף מנות לכל תפריט מיד, לעדכן מנות ולהוסיף להן תמונות.',
+  retry: 'לנסות שוב',
   signOut: 'יציאה',
 };

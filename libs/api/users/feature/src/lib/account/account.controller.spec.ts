@@ -7,6 +7,7 @@ describe('AccountController', () => {
   const principal: Principal = {
     accountId: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   };
@@ -43,5 +44,12 @@ describe('AccountController', () => {
     const id = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
     await (await setup({ setAdmin })).setAdmin(principal, id, { isAdmin: true });
     expect(setAdmin).toHaveBeenCalledWith(principal, id, true);
+  });
+
+  it('sets the Contributor role through the service', async () => {
+    const setContributor = vi.fn().mockResolvedValue({});
+    const id = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    await (await setup({ setContributor })).setContributor(id, { isContributor: false });
+    expect(setContributor).toHaveBeenCalledWith(id, false);
   });
 });

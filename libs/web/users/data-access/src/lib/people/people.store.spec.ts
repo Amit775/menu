@@ -9,6 +9,7 @@ const yossi = {
   id: '2f9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
   displayName: 'Yossi',
   isAdmin: false,
+  isContributor: false,
   createdAt: '2026-10-20T20:00:00.000Z',
 };
 const dana = { ...yossi, id: '3f9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', displayName: 'Dana' };
@@ -18,6 +19,15 @@ const owner = {
   venueId: VENUE_ID,
   displayName: 'Yossi',
   grantedAt: '2026-10-21T20:00:00.000Z',
+};
+
+const application = {
+  id: '5f9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
+  note: 'I eat out every week',
+  status: 'pending' as const,
+  createdAt: '2026-10-22T20:00:00.000Z',
+  decidedAt: null,
+  account: { id: dana.id, displayName: 'Dana' },
 };
 
 describe('PeopleStore', () => {
@@ -32,6 +42,7 @@ describe('PeopleStore', () => {
           useValue: {
             accounts: vi.fn().mockResolvedValue([phone, yossi, dana]),
             owners: vi.fn().mockResolvedValue([owner]),
+            applications: vi.fn().mockResolvedValue([application]),
             ...api,
           },
         },
@@ -61,6 +72,61 @@ describe('PeopleStore', () => {
     store.load(() => null);
     await settle();
     expect(store.status()).toBe('error');
+  });
+
+  it('loads pending applications with the accounts, not with a venue’s Owners', async () => {
+    const applications = vi.fn().mockResolvedValue([application]);
+    const store = setup({ applications });
+    store.load(() => null);
+    await settle();
+    expect(store.applications()).toEqual([application]);
+    store.load(() => VENUE_ID);
+    await settle();
+    expect(applications).toHaveBeenCalledTimes(1);
+  });
+
+  it('approves an application and shows the account as a Contributor', async () => {
+    const decide = vi.fn().mockResolvedValue({ ...application, status: 'approved' });
+    const store = setup({ decide });
+    store.load(() => null);
+    await settle();
+    await store.decide(application.id, 'approve');
+    expect(decide).toHaveBeenCalledWith(application.id, 'approve');
+    expect(store.applications()).toEqual([]);
+    expect(store.accounts().find((account) => account.id === dana.id)?.isContributor).toBe(true);
+  });
+
+  it('rejects an application without changing the account', async () => {
+    const store = setup({
+      decide: vi.fn().mockResolvedValue({ ...application, status: 'rejected' }),
+    });
+    store.load(() => null);
+    await settle();
+    await store.decide(application.id, 'reject');
+    expect(store.applications()).toEqual([]);
+    expect(store.accounts().find((account) => account.id === dana.id)?.isContributor).toBe(false);
+  });
+
+  it('keeps the application when deciding fails', async () => {
+    const store = setup({
+      decide: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 500 })),
+    });
+    store.load(() => null);
+    await settle();
+    await expect(store.decide(application.id, 'approve')).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.applications()).toEqual([application]);
+  });
+
+  it('takes the Contributor role back', async () => {
+    const setContributor = vi.fn().mockResolvedValue({ ...yossi, isContributor: false });
+    const store = setup({
+      accounts: vi.fn().mockResolvedValue([{ ...yossi, isContributor: true }]),
+      setContributor,
+    });
+    store.load(() => null);
+    await settle();
+    await store.setContributor(yossi.id, false);
+    expect(store.accounts()[0]?.isContributor).toBe(false);
   });
 
   it('makes an account an Admin', async () => {

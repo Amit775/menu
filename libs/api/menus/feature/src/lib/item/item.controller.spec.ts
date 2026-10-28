@@ -10,7 +10,13 @@ import {
 import { ItemService } from './item.service';
 
 describe('ItemController', () => {
-  const principal: Principal = { accountId: 'u', isAdmin: true, language: 'he', ownedVenueIds: [] };
+  const principal: Principal = {
+    accountId: 'u',
+    isAdmin: true,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
 
   async function setup(service: Partial<Record<keyof ItemService, unknown>>) {
     const moduleRef = await Test.createTestingModule({
@@ -51,6 +57,7 @@ describe('Item photo controllers', () => {
   const principal: Principal = {
     accountId: 'o1',
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   };

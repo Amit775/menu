@@ -57,6 +57,12 @@ li {
   min-width: 0;
 }
 
+.note {
+  margin-top: 4px;
+  font: var(--mat-sys-body-medium);
+  white-space: pre-line;
+}
+
 .name {
   font: var(--mat-sys-body-large);
 

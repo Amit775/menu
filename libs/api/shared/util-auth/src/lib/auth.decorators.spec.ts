@@ -33,6 +33,7 @@ describe('principal decorators', () => {
   const principal: Principal = {
     accountId: 'a',
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   };

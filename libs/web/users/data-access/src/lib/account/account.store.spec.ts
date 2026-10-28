@@ -10,6 +10,7 @@ describe('AccountStore', () => {
     displayName: 'Noa',
     language: 'en' as const,
     isAdmin: false,
+    isContributor: false,
     ownedVenueIds: ['7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10'],
     createdAt: '2026-01-01T00:00:00.000Z',
   };
@@ -37,6 +38,19 @@ describe('AccountStore', () => {
     expect(store.ownsVenues()).toBe(true);
     expect(setLanguage).toHaveBeenCalledWith('en');
     expect(TestBed.inject(Roles).ownedVenueIds()).toEqual(account.ownedVenueIds);
+  });
+
+  it('gives a Contributor the right to edit items everywhere', async () => {
+    const { backend } = setup({
+      me: vi.fn().mockResolvedValue({ ...account, isContributor: true }),
+    });
+    backend.signIn();
+    TestBed.tick();
+    const roles = TestBed.inject(Roles);
+    await vi.waitFor(() => {
+      expect(roles.known()).toBe(true);
+    });
+    expect(roles.canContribute()).toBe(true);
   });
 
   it('records an error when loading fails', async () => {

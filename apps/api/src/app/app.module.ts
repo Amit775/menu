@@ -9,9 +9,11 @@ import { DiscoverModule } from '@menu/api/discover/feature';
 import { EntryModule } from '@menu/api/entries/feature';
 import { HealthController } from './health/health.controller';
 import { PortsModule } from './ports.module';
+import { ContributorApplicationModule } from '@menu/api/users/feature';
 
 @Module({
   imports: [
+    ContributorApplicationModule,
     DiscoverModule,
     EntryModule,
     ItemModule,

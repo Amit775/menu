@@ -44,7 +44,11 @@ export const AccountStore = signalStore(
       function apply(account: Account): void {
         patchState(store, { account, loading: false, error: null });
         i18n.setLanguage(account.language);
-        roles.set({ isAdmin: account.isAdmin, ownedVenueIds: account.ownedVenueIds });
+        roles.set({
+          isAdmin: account.isAdmin,
+          isContributor: account.isContributor,
+          ownedVenueIds: account.ownedVenueIds,
+        });
       }
       return {
         async load(): Promise<void> {

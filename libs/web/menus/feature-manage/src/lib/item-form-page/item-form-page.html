@@ -1,5 +1,5 @@
 <header>
-  <a mat-button [routerLink]="['/manage/venues', id()]">{{ t('cancel') }}</a>
+  <a mat-button [routerLink]="venueLink()">{{ t('cancel') }}</a>
   <h1>{{ itemId() ? t('editTitle') : t('newTitle') }}</h1>
 </header>
 
@@ -12,7 +12,7 @@
   @case ('not-found') {
     <div class="state" role="alert">
       {{ t('notFound') }}
-      <a mat-button [routerLink]="['/manage/venues', id()]">{{ t('toVenue') }}</a>
+      <a mat-button [routerLink]="venueLink()">{{ t('toVenue') }}</a>
     </div>
   }
   @case ('error') {
