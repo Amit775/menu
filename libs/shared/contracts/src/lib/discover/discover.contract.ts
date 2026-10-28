@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PhotoUrlSchema } from '../entries/photo.contract';
+import { ItemPhotoUrlSchema } from '../menus/item.contract';
 import { GeoPointSchema, PriceSchema, ShekelsSchema, TextSchema } from '../common/values.contract';
 import { ItemHistoryEventSchema } from '../menus/item-history.contract';
 import { ItemVariationSchema } from '../menus/item.contract';
@@ -85,7 +86,8 @@ export const DiscoverItemSchema = z.object({
   ratingCount: z.number().int().min(0),
   wouldOrderAgainPercent: z.number().int().min(0).max(100).nullable(),
   latestPrice: PriceSchema.nullable(),
-  photoUrl: PhotoUrlSchema.nullable(),
+  /** The newest public entry photo, else the item's own (ADR 0013). */
+  photoUrl: PhotoUrlSchema.or(ItemPhotoUrlSchema).nullable(),
   writtenByMe: z.boolean(),
 });
 

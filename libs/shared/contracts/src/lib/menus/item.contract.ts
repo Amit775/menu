@@ -1,8 +1,19 @@
 import { z } from 'zod';
 import { PriceSchema, LongTextSchema, TextSchema } from '../common/values.contract';
-import { PhotoUrlSchema } from '../entries/photo.contract';
 
 export const itemPath = 'items';
+
+export const itemPhotoPath = 'item-photos';
+
+export function itemPhotoUploadPath(itemId: string): string {
+  return `items/${itemId}/photo`;
+}
+
+export const ItemPhotoUrlSchema = z.string().regex(/^\/api\/item-photos\/[\w-]{22}$/);
+
+export function itemPhotoUrl(photoId: string): string {
+  return `/api/${itemPhotoPath}/${photoId}`;
+}
 
 export function venueItemsPath(venueId: string): string {
   return `venues/${venueId}/items`;
@@ -88,7 +99,7 @@ export const ItemSchema = z.object({
   mergedIntoId: z.uuid().nullable(),
   submittedByMe: z.boolean(),
   position: z.number().int().min(0),
-  photoUrl: PhotoUrlSchema.nullable(),
+  photoUrl: ItemPhotoUrlSchema.nullable(),
   createdAt: z.iso.datetime(),
 });
 
