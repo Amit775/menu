@@ -123,6 +123,8 @@ model Item {
   listPriceCurrency Currency? @map("list_price_currency")
   tagIds            String[]  @default([]) @map("tag_ids") @db.Uuid
   variations        Json      @default("[]")
+  /// { id, contentType }, set by the venue's Owner or an Admin. A new photo gets a new id (ADR 0013).
+  photo             Json?
   state             ItemState @default(approved)
   submittedById     String?   @map("submitted_by_id") @db.Uuid
   mergedIntoId      String?   @map("merged_into_id") @db.Uuid
@@ -140,6 +142,7 @@ model Item {
   @@index([venueId, state])
   @@index([tagIds], type: Gin)
   @@index([submittedById])
+  @@index([photo(ops: JsonbPathOps)], type: Gin)
   @@map("item")
 }
 
