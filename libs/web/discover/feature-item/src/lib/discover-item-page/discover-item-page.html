@@ -137,6 +137,15 @@
           </section>
         }
 
+        @if (page.lastConfirmedAt; as confirmedAt) {
+          <p class="confirmed">
+            {{ t('lastConfirmed', { when: confirmedAt | relativeDate }) }}
+          </p>
+        }
+        @if (auth.signedIn() && !page.archived) {
+          <menu-item-report-form />
+        }
+
         @if (page.history.length > 0) {
           <menu-item-history [events]="page.history" />
         }

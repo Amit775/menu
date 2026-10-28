@@ -58,4 +58,14 @@ export const en = {
   retry: 'Try again',
   notFound: 'This venue was not found, or you do not manage it.',
   toVenues: 'To my venues',
+  reportsTitle: 'Reports from diners',
+  reportsIntro:
+    'Diners reported items that are no longer served or cost something else. You are not told who reported.',
+  reportsGone:
+    '{count, plural, =1 {1 diner says it is no longer served} other {# say it is no longer served}}',
+  reportsPrice: '{count, plural, =1 {1 report of a new price:} other {# reports of a new price:}}',
+  reportsListPrice: 'on the menu: {price}',
+  reportsNoListPrice: 'no price on the menu',
+  reportsConfirm: 'Still on the menu',
+  reportsSetPrice: 'Set to {price}',
 } satisfies typeof he;

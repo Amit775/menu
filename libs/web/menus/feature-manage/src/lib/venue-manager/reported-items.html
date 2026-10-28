@@ -1,0 +1,75 @@
+@if (store.reported().length > 0) {
+  <h2>{{ t('reportsTitle') }}</h2>
+  <p class="intro">{{ t('reportsIntro') }}</p>
+  <ul>
+    @for (row of store.reported(); track row.item.id) {
+      @let item = row.item;
+      @let report = row.report;
+      <li class="card">
+        <div class="top">
+          <h3>{{ item.name | localize }}</h3>
+          <time [attr.datetime]="report.lastReportedAt">{{
+            report.lastReportedAt | relativeDate
+          }}</time>
+        </div>
+        @if (report.goneCount > 0) {
+          <p class="gone">{{ t('reportsGone', { count: report.goneCount }) }}</p>
+        }
+        @if (report.priceCount > 0) {
+          <p class="price">
+            {{ t('reportsPrice', { count: report.priceCount }) }}
+            @for (price of report.reportedPrices; track $index) {
+              <span class="reported">{{ price | price }}</span>
+            }
+            @if (item.listPrice; as listPrice) {
+              · {{ t('reportsListPrice', { price: listPrice | price }) }}
+            } @else {
+              · {{ t('reportsNoListPrice') }}
+            }
+          </p>
+        }
+        <div class="actions">
+          <button
+            mat-flat-button
+            type="button"
+            class="confirm"
+            [disabled]="busy() === item.id"
+            (click)="confirm(item)"
+          >
+            {{ t('reportsConfirm') }}
+          </button>
+          @if (report.reportedPrices[0]; as price) {
+            <button
+              mat-stroked-button
+              type="button"
+              class="set-price"
+              [disabled]="busy() === item.id"
+              (click)="setPrice(item, price)"
+            >
+              {{ t('reportsSetPrice', { price: price | price }) }}
+            </button>
+          }
+          <button
+            mat-stroked-button
+            type="button"
+            class="archive"
+            [disabled]="busy() === item.id"
+            (click)="archive(item)"
+          >
+            {{ confirmingArchive() === item.id ? t('confirmArchive') : t('archive') }}
+          </button>
+          <a
+            mat-button
+            class="edit"
+            [routerLink]="['/manage/venues', item.venueId, 'items', item.id]"
+          >
+            {{ t('edit') }}
+          </a>
+        </div>
+        @if (failed() === item.id) {
+          <p class="error" role="alert">{{ t('decisionFailed') }}</p>
+        }
+      </li>
+    }
+  </ul>
+}

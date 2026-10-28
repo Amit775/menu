@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import {
   type Item,
+  type ItemReportSummary,
   type MenuSection,
   type Tag,
   type Venue,
@@ -95,6 +96,14 @@ export const insights: VenueInsights = {
   ],
 };
 
+export const classicReport: ItemReportSummary = {
+  itemId: classic.id,
+  goneCount: 2,
+  priceCount: 1,
+  reportedPrices: [{ value: 68, currency: 'ILS' }],
+  lastReportedAt: '2026-10-27T10:00:00.000Z',
+};
+
 export function menuApi(overrides: Partial<MenuApiClient> = {}): Partial<MenuApiClient> {
   return {
     venue: () => Promise.resolve(venue),
@@ -102,6 +111,7 @@ export function menuApi(overrides: Partial<MenuApiClient> = {}): Partial<MenuApi
     items: () => Promise.resolve([classic, lamb]),
     tags: () => Promise.resolve([burgerTag]),
     insights: () => Promise.resolve(insights),
+    itemReports: () => Promise.resolve([]),
     ...overrides,
   };
 }
@@ -112,5 +122,6 @@ export async function loadedStore(api: Partial<MenuApiClient>): Promise<void> {
   });
   TestBed.inject(I18n).setLanguage('he');
   TestBed.inject(VenueManagerStore).load(() => VENUE_ID);
+  TestBed.inject(VenueManagerStore).loadReports();
   await TestBed.inject(ApplicationRef).whenStable();
 }

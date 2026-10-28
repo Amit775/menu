@@ -19,6 +19,7 @@ import { venueManagerI18n } from '../venue-manager.i18n';
 import { InsightsTable } from '../venue-manager/insights-table';
 import { MenuEditor } from '../venue-manager/menu-editor';
 import { PendingQueue } from '../venue-manager/pending-queue';
+import { ReportedItems } from '../venue-manager/reported-items';
 
 @Component({
   selector: 'menu-venue-manager-page',
@@ -30,6 +31,7 @@ import { PendingQueue } from '../venue-manager/pending-queue';
     MatTabsModule,
     LocalizePipe,
     PendingQueue,
+    ReportedItems,
     MenuEditor,
     InsightsTable,
   ],
@@ -49,13 +51,18 @@ export class VenueManagerPage {
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',
   );
 
+  protected readonly toReview = computed(
+    () => this.store.pending().length + this.store.reported().length,
+  );
+
   protected readonly tab = linkedSignal<string | null | undefined, number>({
     source: () => (this.store.status() === 'loaded' ? this.store.venue()?.id : null),
-    computation: () => untracked(() => (this.store.pending().length > 0 ? 0 : 1)),
+    computation: () => untracked(() => (this.toReview() > 0 ? 0 : 1)),
   });
 
   constructor() {
     this.store.load(this.id);
+    this.store.loadReports();
   }
 
   protected choose(index: number): void {

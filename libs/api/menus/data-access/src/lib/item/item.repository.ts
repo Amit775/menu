@@ -235,7 +235,7 @@ export class ItemRepository {
   async update(id: string, input: ItemChanges, changedById: string): Promise<ItemRecord | null> {
     const { description, listPrice, tagIds, variations, ...rest } = input;
     const row = await this.prisma.$transaction(async (tx) => {
-      const current = await tx.item.findUnique({ where: { id }, select: { sectionId: true } });
+      const current = await tx.item.findUnique({ where: { id } });
       if (!current) {
         return null;
       }
@@ -265,6 +265,9 @@ export class ItemRepository {
       }
       const updated = await tx.item.findUniqueOrThrow({ where: { id } });
       await recordRevision(tx, updated, 'updated', changedById);
+      if (pricesChanged(toRecord(current), toRecord(updated))) {
+        await tx.itemReport.deleteMany({ where: { itemId: id, kind: 'price' } });
+      }
       return updated;
     });
     return row ? toRecord(row) : null;
@@ -288,9 +291,30 @@ export class ItemRepository {
       }
       const moved = await tx.item.findUniqueOrThrow({ where: { id } });
       await recordRevision(tx, moved, transitionKind[to], changedById);
+      if (to !== 'approved') {
+        await tx.itemReport.deleteMany({ where: { itemId: id } });
+      }
       return moved;
     });
     return row ? toRecord(row) : null;
+  }
+
+  /** Records that an approved item is still served, closing its reports. False when it is not on the menu. */
+  async confirm(id: string, changedById: string): Promise<boolean> {
+    return this.prisma.$transaction(async (tx) => {
+      // A no-op write that locks the row, so an archive cannot slip in before the revision.
+      const { count } = await tx.item.updateMany({
+        where: { id, state: 'approved' },
+        data: { state: 'approved' },
+      });
+      if (count === 0) {
+        return false;
+      }
+      const current = await tx.item.findUniqueOrThrow({ where: { id } });
+      await recordRevision(tx, current, 'confirmed', changedById);
+      await tx.itemReport.deleteMany({ where: { itemId: id } });
+      return true;
+    });
   }
 }
 
@@ -325,6 +349,12 @@ function snapshotOf(record: ItemRecord): ItemSnapshot {
     tagIds: record.tagIds,
     variations: record.variations,
   };
+}
+
+function pricesChanged(before: ItemRecord, after: ItemRecord): boolean {
+  const prices = (record: ItemRecord) =>
+    JSON.stringify([record.listPrice, record.variations.map(({ id, price }) => [id, price])]);
+  return prices(before) !== prices(after);
 }
 
 function allTagIds(tagIds: readonly string[], variations: readonly ItemVariation[]): string[] {

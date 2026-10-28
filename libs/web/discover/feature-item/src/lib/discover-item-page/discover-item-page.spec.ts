@@ -29,6 +29,7 @@ describe('DiscoverItemPage', () => {
   const page: ItemPage = {
     item,
     archived: false,
+    lastConfirmedAt: '2026-10-20T10:00:00.000Z',
     tags: [
       {
         id: '9a1d3c4e-3333-4c1c-9a57-6f7a5d3c2b10',
@@ -118,7 +119,7 @@ describe('DiscoverItemPage', () => {
 
   it('offers no bookmark on an item taken off the menu, unless it is saved', async () => {
     const backend = new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null });
-    const archived = { ...page, archived: true };
+    const archived = { ...page, archived: true, lastConfirmedAt: null };
     const off = await render(vi.fn().mockResolvedValue(archived), vi.fn(), undefined, { backend });
     expect(off.element.querySelector('button.save')).toBeNull();
     TestBed.resetTestingModule();
@@ -136,6 +137,31 @@ describe('DiscoverItemPage', () => {
     expect(element.querySelector('button.save')).toBeNull();
   });
 
+  it('says when the menu last confirmed the item', async () => {
+    const { element } = await render(vi.fn().mockResolvedValue(page));
+    expect(element.querySelector('.confirmed')?.textContent).toContain('אושר בתפריט');
+  });
+
+  it('lets a signed-in diner report the item, but not a visitor or on an archived item', async () => {
+    const visitor = await render(vi.fn().mockResolvedValue(page));
+    expect(visitor.element.querySelector('menu-item-report-form')).toBeNull();
+    TestBed.resetTestingModule();
+    const backend = new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null });
+    const diner = await render(vi.fn().mockResolvedValue(page), vi.fn(), undefined, { backend });
+    expect(diner.element.querySelector('menu-item-report-form button')?.textContent).toContain(
+      'כבר לא בתפריט',
+    );
+    TestBed.resetTestingModule();
+    const archived = await render(
+      vi.fn().mockResolvedValue({ ...page, archived: true, lastConfirmedAt: null }),
+      vi.fn(),
+      undefined,
+      { backend },
+    );
+    expect(archived.element.querySelector('menu-item-report-form')).toBeNull();
+    expect(archived.element.querySelector('.confirmed')).toBeNull();
+  });
+
   it('offers a Contributor to edit the item, and a diner nothing', async () => {
     const contributor = { isAdmin: false, isContributor: true, ownedVenueIds: [] };
     const { element } = await render(vi.fn().mockResolvedValue(page), vi.fn(), contributor);
@@ -150,7 +176,7 @@ describe('DiscoverItemPage', () => {
   it('does not offer to edit an item taken off the menu', async () => {
     const owner = { isAdmin: false, isContributor: false, ownedVenueIds: [item.venue.id] };
     const { element } = await render(
-      vi.fn().mockResolvedValue({ ...page, archived: true }),
+      vi.fn().mockResolvedValue({ ...page, archived: true, lastConfirmedAt: null }),
       vi.fn(),
       owner,
     );
@@ -225,7 +251,13 @@ describe('DiscoverItemPage', () => {
       photoUrl: null,
     };
     const { element } = await render(
-      vi.fn().mockResolvedValue({ ...page, item: quiet, archived: true, history: [] }),
+      vi.fn().mockResolvedValue({
+        ...page,
+        item: quiet,
+        archived: true,
+        lastConfirmedAt: null,
+        history: [],
+      }),
     );
     expect(element.querySelector('.score')?.textContent).toContain('היו הראשונים');
     expect(element.querySelector('[role=note]')?.textContent).toContain('כבר לא בתפריט');

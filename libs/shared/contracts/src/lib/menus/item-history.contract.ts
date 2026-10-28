@@ -10,6 +10,7 @@ export const ItemRevisionKindSchema = z.enum([
   'rejected',
   'merged',
   'archived',
+  'confirmed',
 ]);
 
 export type ItemRevisionKind = z.infer<typeof ItemRevisionKindSchema>;

@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { insights, item, section, tag, venue, VENUE_ID } from '../testing/fixtures';
+import { insights, item, reportOn, section, tag, venue, VENUE_ID } from '../testing/fixtures';
 import { MenuApiClient } from './menu.api-client';
 
 describe('MenuApiClient', () => {
@@ -18,6 +18,28 @@ describe('MenuApiClient', () => {
 
   afterEach(() => {
     http.verify();
+  });
+
+  it('reads the open reports on the venue’s menu', async () => {
+    const result = client.itemReports(VENUE_ID);
+    http.expectOne(`/api/venues/${VENUE_ID}/item-reports`).flush([reportOn(item.id)]);
+    await expect(result).resolves.toEqual([reportOn(item.id)]);
+  });
+
+  it('rejects a report summary without its counts', async () => {
+    const result = client.itemReports(VENUE_ID);
+    http
+      .expectOne(`/api/venues/${VENUE_ID}/item-reports`)
+      .flush([{ ...reportOn(item.id), goneCount: undefined }]);
+    await expect(result).rejects.toThrow();
+  });
+
+  it('confirms an item is still served', async () => {
+    const done = client.confirmItem(item.id);
+    const request = http.expectOne(`/api/items/${item.id}/reports`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await done;
   });
 
   it('reads a venue', async () => {

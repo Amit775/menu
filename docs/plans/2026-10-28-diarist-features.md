@@ -17,9 +17,12 @@ Phase 4 of the next-phase plan: four independent features on the item model from
 - Tag names come through a new `ItemCatalog.tagsFor` port method; tags are the item's own, not its variations'.
 - Web: a stats card at the top of the whole diary (`/diary`, linked from the profile as "My diary"), not on the profile itself, because `users` must not import `entries` (ADR 0004). A venue's diary leaves it out, and a failed read hides the card without blocking the diary.
 
-## 4c. "No longer on the menu" reports
+## 4c. "No longer on the menu" reports (done)
 
-Any signed-in user reports an item from its page ("no longer served" or "price changed", with an optional new price). Reports join the venue's pending queue; the Owner or Admin archives the item, updates it or dismisses the report. The reporter is never shown. The item page shows "last confirmed".
+- Any signed-in user reports an approved item from its page: "no longer served" or "price changed", with an optional new price. One open report per diner and item (ADR 0016).
+- The reports join the venue's "To approve" tab, counted per item with the prices given; the reporter is never shown. The Owner or Admin confirms the item is still served, sets a reported price, archives it, or edits it.
+- Archiving closes all of an item's reports, a price or variation edit closes its price reports, and "still on the menu" closes all of them with a `confirmed` revision.
+- The item page shows "confirmed on the menu" from the latest added, approved, edited or confirmed revision.
 
 ## 4d. WhatsApp link previews
 

@@ -10,6 +10,9 @@ import {
   type ItemDecision,
   itemPath,
   itemPhotoUploadPath,
+  itemReportsPath,
+  type ItemReportSummary,
+  ItemReportSummarySchema,
   ItemSchema,
   type MenuSection,
   menuSectionPath,
@@ -24,6 +27,7 @@ import {
   type Venue,
   type VenueInsights,
   VenueInsightsSchema,
+  venueItemReportsPath,
   venueItemsPath,
   venuePath,
   VenueSchema,
@@ -113,6 +117,14 @@ export class MenuApiClient {
       this.http.put<unknown>(`/api/${itemPhotoUploadPath(id)}`, photo),
     );
     return ItemSchema.parse(body);
+  }
+
+  itemReports(venueId: string): Promise<ItemReportSummary[]> {
+    return this.get(venueItemReportsPath(venueId), z.array(ItemReportSummarySchema));
+  }
+
+  async confirmItem(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`/api/${itemReportsPath(id)}`));
   }
 
   async removeItemPhoto(id: string): Promise<Item> {

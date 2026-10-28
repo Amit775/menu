@@ -19,7 +19,7 @@ import {
 } from '@menu/shared/contracts';
 import { orderFeed } from './feed-order';
 import { distanceMeters } from './geo';
-import { itemHistory } from './item-history';
+import { itemHistory, lastConfirmedAt } from './item-history';
 import {
   EMPTY_STATS,
   type ItemStats,
@@ -183,6 +183,7 @@ export class DiscoverService {
     return {
       item: this.toItem(snapshot, record, point),
       archived: record.state === 'archived',
+      lastConfirmedAt: record.state === 'archived' ? null : lastConfirmedAt(revisions),
       tags: tagsOf(record.tagIds, tags),
       variations: this.variationScores(snapshot, record, tags),
       history: itemHistory(revisions, sections, tags),

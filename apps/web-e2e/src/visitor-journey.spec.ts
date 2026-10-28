@@ -58,6 +58,7 @@ async function stubBackends(page: Page): Promise<void> {
       json: {
         item,
         archived: false,
+        lastConfirmedAt: null,
         tags: [],
         variations: [],
         history: [{ kind: 'added', at: '2026-09-01T10:00:00.000Z', listPrice: null }],

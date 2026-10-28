@@ -77,6 +77,15 @@ describe('DiscoverApiClient', () => {
     await removed;
   });
 
+  it('reports an item to its venue', async () => {
+    const sent = client.report(ITEM_ID, { kind: 'price', price: { value: 74, currency: 'ILS' } });
+    const post = http.expectOne(`/api/items/${ITEM_ID}/reports`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({ kind: 'price', price: { value: 74, currency: 'ILS' } });
+    post.flush(null, { status: 204, statusText: 'No Content' });
+    await sent;
+  });
+
   it('asks for map pins and validates them', async () => {
     const pins = client.map({ near: null, radiusKm: 10, tagIds: ['a'] });
     const request = http.expectOne((r) => r.url === '/api/discover/map');
@@ -90,6 +99,7 @@ describe('DiscoverApiClient', () => {
     http.expectOne(`/api/discover/items/${ITEM_ID}`).flush({
       item,
       archived: false,
+      lastConfirmedAt: null,
       tags: [],
       variations: [],
       history: [{ kind: 'added', at: '2026-09-01T10:00:00.000Z', listPrice: null }],

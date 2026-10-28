@@ -1,0 +1,57 @@
+@switch (step()) {
+  @case ('closed') {
+    <button mat-button type="button" class="report-start" (click)="go('choosing')">
+      {{ t('reportStart') }}
+    </button>
+  }
+  @case ('choosing') {
+    <p>{{ t('reportQuestion') }}</p>
+    <div class="actions">
+      <button
+        mat-stroked-button
+        type="button"
+        class="report-gone"
+        [disabled]="sending()"
+        (click)="reportGone()"
+      >
+        {{ t('reportGone') }}
+      </button>
+      <button mat-stroked-button type="button" class="report-price" (click)="go('price')">
+        {{ t('reportPrice') }}
+      </button>
+      <button mat-button type="button" class="report-cancel" (click)="go('closed')">
+        {{ t('reportCancel') }}
+      </button>
+    </div>
+  }
+  @case ('price') {
+    <mat-form-field appearance="outline">
+      <mat-label>{{ t('reportNewPrice') }}</mat-label>
+      <input matInput type="number" inputmode="decimal" step="0.01" [formField]="form.price" />
+      <span matTextPrefix>₪&nbsp;</span>
+      @if (form.price().invalid()) {
+        <mat-error>{{ t('reportPriceInvalid') }}</mat-error>
+      }
+    </mat-form-field>
+    <div class="actions">
+      <button
+        mat-flat-button
+        type="button"
+        class="report-send"
+        [disabled]="sending() || form().invalid()"
+        (click)="reportPrice()"
+      >
+        {{ t('reportSend') }}
+      </button>
+      <button mat-button type="button" class="report-cancel" (click)="go('closed')">
+        {{ t('reportCancel') }}
+      </button>
+    </div>
+  }
+  @case ('sent') {
+    <p role="status">{{ t('reportThanks') }}</p>
+  }
+}
+@if (failed()) {
+  <p class="error" role="alert">{{ t('reportFailed') }}</p>
+}
