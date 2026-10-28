@@ -1,5 +1,5 @@
-import { PayloadTooLargeException } from '@nestjs/common';
-import { photoTypeOf, readBody } from './photo-bytes';
+import { PayloadTooLargeException, UnsupportedMediaTypeException } from '@nestjs/common';
+import { cleanPhoto, photoTypeOf, readBody } from './photo-bytes';
 
 async function* chunks(...parts: Buffer[]): AsyncIterable<Buffer> {
   for (const part of parts) {
@@ -31,6 +31,18 @@ describe('photo bytes', () => {
   it('stops reading a body over the limit', async () => {
     await expect(readBody(chunks(Buffer.alloc(3), Buffer.alloc(3)), 5)).rejects.toBeInstanceOf(
       PayloadTooLargeException,
+    );
+  });
+
+  it('keeps a photo it knows, without its metadata, and refuses one it does not', () => {
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xda, 0x00, 0x02, 1, 2, 3]);
+    const exif = Buffer.from([0xff, 0xe1, 0x00, 0x05, 0x47, 0x50, 0x53]);
+    expect(cleanPhoto(Buffer.concat([jpeg.subarray(0, 2), exif, jpeg.subarray(2)]))).toEqual({
+      bytes: jpeg,
+      type: 'image/jpeg',
+    });
+    expect(() => cleanPhoto(Buffer.from('GIF89a', 'latin1'))).toThrow(
+      UnsupportedMediaTypeException,
     );
   });
 });

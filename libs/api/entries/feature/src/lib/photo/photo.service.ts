@@ -1,21 +1,16 @@
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { EntryRepository } from '@menu/api/entries/data-access';
 import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  UnsupportedMediaTypeException,
-} from '@nestjs/common';
-import {
-  EntryRepository,
+  cleanPhoto,
   PHOTO_STORAGE,
   type PhotoStorage,
   type StoredPhoto,
-} from '@menu/api/entries/data-access';
+} from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { type Entry } from '@menu/shared/contracts';
 import { newCapabilityId } from '../entry/capability-id';
 import { DiaryEntry } from '../entry/diary-entry';
-import { deletePhoto, entryPhotoKey, photoTypeOf } from './photo-bytes';
-import { withoutMetadata } from './photo-metadata';
+import { deletePhoto, entryPhotoKey } from './entry-photo';
 
 @Injectable()
 export class PhotoService {
@@ -30,7 +25,7 @@ export class PhotoService {
    * replaces it.
    */
   async set(principal: Principal, entryId: string, bytes: Buffer): Promise<Entry> {
-    const photo = this.clean(bytes);
+    const photo = cleanPhoto(bytes);
     await this.findOwn(principal, entryId);
     const entry = await this.save(principal, entryId, {
       photoId: newCapabilityId(),
@@ -54,18 +49,6 @@ export class PhotoService {
       throw new NotFoundException('Photo not found.');
     }
     return photo;
-  }
-
-  private clean(bytes: Buffer): StoredPhoto {
-    const type = photoTypeOf(bytes);
-    if (!type) {
-      throw new UnsupportedMediaTypeException('Send a JPEG, PNG or WebP photo.');
-    }
-    try {
-      return { bytes: withoutMetadata(bytes, type), type };
-    } catch {
-      throw new UnsupportedMediaTypeException('This photo could not be read.');
-    }
   }
 
   private async findOwn(principal: Principal, entryId: string): Promise<void> {

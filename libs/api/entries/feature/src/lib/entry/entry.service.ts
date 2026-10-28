@@ -6,8 +6,9 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { EntryRepository, PHOTO_STORAGE, type PhotoStorage } from '@menu/api/entries/data-access';
+import { EntryRepository } from '@menu/api/entries/data-access';
 import { withoutUndefined } from '@menu/api/shared/util';
+import { PHOTO_STORAGE, type PhotoStorage } from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
 import {
   AUTHOR_DIRECTORY,
@@ -25,7 +26,7 @@ import {
   type SharedEntryView,
   type UpdateEntry,
 } from '@menu/shared/contracts';
-import { deletePhoto } from '../photo/photo-bytes';
+import { deletePhoto } from '../photo/entry-photo';
 import { newCapabilityId } from './capability-id';
 import { DiaryEntry } from './diary-entry';
 

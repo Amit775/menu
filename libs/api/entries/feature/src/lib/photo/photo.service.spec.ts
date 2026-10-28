@@ -1,11 +1,7 @@
 import { NotFoundException, UnsupportedMediaTypeException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import {
-  type EntryRecord,
-  EntryRepository,
-  MemoryPhotoStorage,
-  PHOTO_STORAGE,
-} from '@menu/api/entries/data-access';
+import { type EntryRecord, EntryRepository } from '@menu/api/entries/data-access';
+import { MemoryPhotoStorage, PHOTO_STORAGE } from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { PhotoService } from './photo.service';
 

@@ -1,11 +1,7 @@
 import { BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import {
-  type EntryRecord,
-  EntryRepository,
-  MemoryPhotoStorage,
-  PHOTO_STORAGE,
-} from '@menu/api/entries/data-access';
+import { type EntryRecord, EntryRepository } from '@menu/api/entries/data-access';
+import { MemoryPhotoStorage, PHOTO_STORAGE } from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { AUTHOR_DIRECTORY, type EntryTarget, ITEM_CATALOG } from '@menu/api/shared/util-ports';
 import { EntryService } from './entry.service';
