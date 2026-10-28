@@ -32,6 +32,7 @@ model Account {
   grantedOwnerships Ownership[] @relation("grantor")
   createdVenues     Venue[]
   submittedItems    Item[]
+  itemRevisions     ItemRevision[]
 
   @@map("account")
 }
@@ -132,11 +133,40 @@ model Item {
   mergedInto  Item?    @relation("merge", fields: [mergedIntoId], references: [id], onDelete: SetNull)
   mergedFrom  Item[]   @relation("merge")
   entries     Entry[]
+  revisions   ItemRevision[]
 
   @@index([venueId, state])
   @@index([tagIds], type: Gin)
   @@index([submittedById])
   @@map("item")
+}
+
+enum ItemRevisionKind {
+  created
+  submitted
+  updated
+  approved
+  rejected
+  merged
+  archived
+}
+
+/// One change to an item, written in the same transaction as the change. `snapshot` holds the item's
+/// catalog fields after it (`ItemSnapshotSchema`); diffs are computed on read. `changed_by_id` never
+/// leaves the API.
+model ItemRevision {
+  id          String           @id @default(uuid()) @db.Uuid
+  itemId      String           @map("item_id") @db.Uuid
+  kind        ItemRevisionKind
+  snapshot    Json
+  changedById String?          @map("changed_by_id") @db.Uuid
+  changedAt   DateTime         @default(now()) @map("changed_at")
+
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  changedBy Account? @relation(fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([itemId, changedAt])
+  @@map("item_revision")
 }
 
 enum EntryVisibility {
