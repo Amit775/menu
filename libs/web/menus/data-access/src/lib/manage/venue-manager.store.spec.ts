@@ -2,7 +2,16 @@ import { signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { MenuApiClient } from '../menu/menu.api-client';
-import { insights, item, section, tag, venue, VENUE_ID, settle } from '../testing/fixtures';
+import {
+  insights,
+  item,
+  reportOn,
+  section,
+  tag,
+  venue,
+  VENUE_ID,
+  settle,
+} from '../testing/fixtures';
 import { VenueManagerStore } from './venue-manager.store';
 
 describe('VenueManagerStore', () => {
@@ -30,6 +39,7 @@ describe('VenueManagerStore', () => {
             sections: vi.fn().mockResolvedValue([drinks, section]),
             items: vi.fn().mockResolvedValue([item, approved]),
             tags: vi.fn().mockResolvedValue([tag]),
+            itemReports: vi.fn().mockResolvedValue([reportOn(approved.id)]),
             ...api,
           },
         },
@@ -49,6 +59,74 @@ describe('VenueManagerStore', () => {
       [drinks.id, []],
     ]);
     expect(store.tagsById().get(tag.id)).toEqual(tag);
+  });
+
+  it('pairs the open reports with the items on the menu', async () => {
+    const store = setup({
+      itemReports: vi.fn().mockResolvedValue([reportOn(approved.id), reportOn('gone-item')]),
+    });
+    store.load(() => VENUE_ID);
+    await settle();
+    expect(store.reported()).toEqual([]);
+    store.loadReports();
+    await settle();
+    expect(store.reported()).toEqual([{ item: approved, report: reportOn(approved.id) }]);
+  });
+
+  it('loads the venue without the reports when they are not the caller’s to read', async () => {
+    const store = setup({
+      itemReports: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 403 })),
+    });
+    store.load(() => VENUE_ID);
+    store.loadReports();
+    await settle();
+    expect(store.status()).toBe('loaded');
+    expect(store.pending()).toEqual([item]);
+    expect(store.reported()).toEqual([]);
+  });
+
+  it('closes an item’s reports once it is confirmed or archived, and rereads them after an edit', async () => {
+    const confirmItem = vi.fn().mockResolvedValue(undefined);
+    const store = setup({ confirmItem });
+    store.load(() => VENUE_ID);
+    store.loadReports();
+    await settle();
+    await store.confirmItem(approved.id);
+    expect(confirmItem).toHaveBeenCalledWith(approved.id);
+    expect(store.reported()).toEqual([]);
+
+    TestBed.resetTestingModule();
+    const archiving = setup({
+      decide: vi.fn().mockResolvedValue({ ...approved, state: 'archived' }),
+    });
+    archiving.load(() => VENUE_ID);
+    archiving.loadReports();
+    await settle();
+    await archiving.decide(approved.id, 'archive');
+    expect(archiving.reported()).toEqual([]);
+
+    TestBed.resetTestingModule();
+    const itemReports = vi
+      .fn()
+      .mockResolvedValueOnce([reportOn(approved.id)])
+      .mockResolvedValueOnce([]);
+    const repricing = setup({ updateItem: vi.fn().mockResolvedValue(approved), itemReports });
+    repricing.load(() => VENUE_ID);
+    repricing.loadReports();
+    await settle();
+    await repricing.updateItem(approved.id, { listPrice: { value: 74, currency: 'ILS' } });
+    await settle();
+    expect(itemReports).toHaveBeenCalledTimes(2);
+    expect(repricing.reported()).toEqual([]);
+  });
+
+  it('keeps the reports when confirming fails', async () => {
+    const store = setup({ confirmItem: vi.fn().mockRejectedValue(new Error('offline')) });
+    store.load(() => VENUE_ID);
+    store.loadReports();
+    await settle();
+    await expect(store.confirmItem(approved.id)).rejects.toThrow('offline');
+    expect(store.reported()).toHaveLength(1);
   });
 
   it('reads a venue the caller may not manage as not found', async () => {

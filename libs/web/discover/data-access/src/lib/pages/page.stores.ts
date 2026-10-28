@@ -1,4 +1,5 @@
 import { computed, inject, resource, signal } from '@angular/core';
+import { type CreateItemReportInput } from '@menu/shared/contracts';
 import { DeviceLocation } from '@menu/web/shared/util-device';
 import { loadStatus } from '@menu/web/shared/util-data';
 import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
@@ -19,12 +20,19 @@ export const ItemPageStore = signalStore(
     page: computed(() => (_page.hasValue() ? _page.value() : null)),
     status: loadStatus(_page),
   })),
-  withMethods(({ _id, _page }) => ({
+  withMethods(({ _id, _page }, api = inject(DiscoverApiClient)) => ({
     load(id: () => string): void {
       _id.set(id);
     },
     reload(): void {
       _page.reload();
+    },
+    async report(input: CreateItemReportInput): Promise<void> {
+      const itemId = _id()();
+      if (!itemId) {
+        throw new Error('Load the item first.');
+      }
+      await api.report(itemId, input);
     },
   })),
 );

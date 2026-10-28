@@ -56,4 +56,13 @@ export const he = {
   retry: 'לנסות שוב',
   notFound: 'המקום לא נמצא, או שאינו בניהולך.',
   toVenues: 'למקומות שלי',
+  reportsTitle: 'דיווחים מסועדים',
+  reportsIntro: 'סועדים דיווחו שפריטים כבר לא מוגשים או שהמחיר השתנה. לא נאמר לכם מי דיווח.',
+  reportsGone:
+    '{count, plural, =1 {סועד אחד דיווח שכבר לא מגישים} other {# דיווחו שכבר לא מגישים}}',
+  reportsPrice: '{count, plural, =1 {דיווח אחד על מחיר חדש:} other {# דיווחים על מחיר חדש:}}',
+  reportsListPrice: 'בתפריט: {price}',
+  reportsNoListPrice: 'אין מחיר בתפריט',
+  reportsConfirm: 'עדיין בתפריט',
+  reportsSetPrice: 'עדכון ל{price}',
 };

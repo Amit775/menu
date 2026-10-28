@@ -248,6 +248,7 @@ describe('ItemRepository', () => {
           findUniqueOrThrow: vi.fn().mockResolvedValue({ ...row, state: 'archived' }),
         },
         itemRevision: { create: vi.fn() },
+        itemReport: { deleteMany: vi.fn() },
       };
       const prisma = { $transaction: (fn: (t: typeof tx) => unknown) => fn(tx) };
       return { tx, repository: new ItemRepository(prisma as unknown as PrismaService) };
@@ -273,6 +274,53 @@ describe('ItemRepository', () => {
       expect(tx.itemRevision.create).toHaveBeenCalledWith({
         data: { itemId: 'i1', kind: 'archived', snapshot, changedById: 'a1' },
       });
+    });
+
+    it('closes the reports of an item taken off the menu', async () => {
+      const { tx, repository } = prismaWith(1);
+      await repository.transition('i1', 'approved', 'archived', null, 'a1');
+      expect(tx.itemReport.deleteMany).toHaveBeenCalledWith({ where: { itemId: 'i1' } });
+    });
+
+    it('keeps the reports when an item reaches the menu', async () => {
+      const { tx, repository } = prismaWith(1);
+      await repository.transition('i1', 'pending', 'approved', null, 'a1');
+      expect(tx.itemReport.deleteMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('confirm', () => {
+    function prismaWith(current: unknown) {
+      const tx = {
+        item: {
+          updateMany: vi.fn().mockResolvedValue({ count: current ? 1 : 0 }),
+          findUniqueOrThrow: vi.fn().mockResolvedValue(current),
+        },
+        itemRevision: { create: vi.fn() },
+        itemReport: { deleteMany: vi.fn() },
+      };
+      const prisma = { $transaction: (fn: (t: typeof tx) => unknown) => fn(tx) };
+      return { tx, repository: new ItemRepository(prisma as unknown as PrismaService) };
+    }
+
+    it('records that an item on the menu is still served and closes its reports', async () => {
+      const { tx, repository } = prismaWith(row);
+      await expect(repository.confirm('i1', 'w1')).resolves.toBe(true);
+      expect(tx.item.updateMany).toHaveBeenCalledWith({
+        where: { id: 'i1', state: 'approved' },
+        data: { state: 'approved' },
+      });
+      expect(tx.itemRevision.create).toHaveBeenCalledWith({
+        data: { itemId: 'i1', kind: 'confirmed', snapshot, changedById: 'w1' },
+      });
+      expect(tx.itemReport.deleteMany).toHaveBeenCalledWith({ where: { itemId: 'i1' } });
+    });
+
+    it('confirms nothing for an item that is not on the menu', async () => {
+      const { tx, repository } = prismaWith(null);
+      await expect(repository.confirm('i1', 'w1')).resolves.toBe(false);
+      expect(tx.itemRevision.create).not.toHaveBeenCalled();
+      expect(tx.itemReport.deleteMany).not.toHaveBeenCalled();
     });
   });
 
@@ -349,10 +397,25 @@ describe('ItemRepository', () => {
           findUniqueOrThrow: vi.fn().mockResolvedValue(row),
         },
         itemRevision: { create: vi.fn() },
+        itemReport: { deleteMany: vi.fn() },
       };
       const prisma = { $transaction: (fn: (t: typeof tx) => unknown) => fn(tx) };
       return { tx, repository: new ItemRepository(prisma as unknown as PrismaService) };
     }
+
+    it('closes price reports once the price changes', async () => {
+      const { tx, repository } = prismaWith({ ...row, listPriceValue: { toNumber: () => 60 } });
+      await repository.update('i1', { listPrice: { value: 68.5, currency: 'ILS' as const } }, 'w1');
+      expect(tx.itemReport.deleteMany).toHaveBeenCalledWith({
+        where: { itemId: 'i1', kind: 'price' },
+      });
+    });
+
+    it('keeps the reports through an edit that leaves the prices as they were', async () => {
+      const { tx, repository } = prismaWith(row);
+      await repository.update('i1', { listPrice: { value: 68.5, currency: 'ILS' as const } }, 'w1');
+      expect(tx.itemReport.deleteMany).not.toHaveBeenCalled();
+    });
 
     it('returns null for an unknown item', async () => {
       const { repository } = prismaWith(null);
@@ -360,7 +423,7 @@ describe('ItemRepository', () => {
     });
 
     it('puts an item moved to another section at its end', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' });
+      const { tx, repository } = prismaWith(row);
       await repository.update('i1', { sectionId: 's2' }, 'w1');
       expect(tx.item.updateMany).toHaveBeenCalledWith({
         where: { id: 'i1', state: { in: ['pending', 'approved'] } },
@@ -369,7 +432,7 @@ describe('ItemRepository', () => {
     });
 
     it('keeps the position when the section does not change', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' });
+      const { tx, repository } = prismaWith(row);
       await repository.update(
         'i1',
         {
@@ -385,7 +448,7 @@ describe('ItemRepository', () => {
     });
 
     it('clears the price and description', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' });
+      const { tx, repository } = prismaWith(row);
       await repository.update('i1', { listPrice: null, description: null }, 'w1');
       expect(tx.item.updateMany).toHaveBeenCalledWith({
         where: { id: 'i1', state: { in: ['pending', 'approved'] } },
@@ -394,7 +457,7 @@ describe('ItemRepository', () => {
     });
 
     it('replaces the tags in the given order', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' }, [{ id: 't1' }, { id: 't2' }]);
+      const { tx, repository } = prismaWith(row, [{ id: 't1' }, { id: 't2' }]);
       await repository.update('i1', { tagIds: ['t2', 't1'] }, 'w1');
       expect(tx.item.updateMany).toHaveBeenCalledWith({
         where: { id: 'i1', state: { in: ['pending', 'approved'] } },
@@ -403,7 +466,7 @@ describe('ItemRepository', () => {
     });
 
     it('refuses a tag that no longer exists', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' }, [{ id: 't1' }]);
+      const { tx, repository } = prismaWith(row, [{ id: 't1' }]);
       await expect(repository.update('i1', { tagIds: ['t1', 't2'] }, 'w1')).rejects.toThrow(
         UnknownTagError,
       );
@@ -412,7 +475,7 @@ describe('ItemRepository', () => {
     });
 
     it('replaces the variations and checks their tags', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' }, [{ id: 't1' }, { id: veganTag }]);
+      const { tx, repository } = prismaWith(row, [{ id: 't1' }, { id: veganTag }]);
       await repository.update('i1', { tagIds: ['t1'], variations: [vegan] }, 'w1');
       expect(tx.$queryRaw.mock.calls[0]?.slice(1)).toEqual([['t1', veganTag]]);
       expect(tx.item.updateMany).toHaveBeenCalledWith({
@@ -422,7 +485,7 @@ describe('ItemRepository', () => {
     });
 
     it('refuses a variation tag that no longer exists', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' }, []);
+      const { tx, repository } = prismaWith(row, []);
       await expect(repository.update('i1', { variations: [vegan] }, 'w1')).rejects.toThrow(
         UnknownTagError,
       );
@@ -430,7 +493,7 @@ describe('ItemRepository', () => {
     });
 
     it('records the edit with the item as it is afterwards', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' });
+      const { tx, repository } = prismaWith(row);
       await repository.update('i1', { listPrice: { value: 68.5, currency: 'ILS' as const } }, 'w1');
       expect(tx.itemRevision.create).toHaveBeenCalledWith({
         data: { itemId: 'i1', kind: 'updated', snapshot, changedById: 'w1' },
@@ -438,7 +501,7 @@ describe('ItemRepository', () => {
     });
 
     it('refuses an edit that lost a race with an archive or a rejection', async () => {
-      const { tx, repository } = prismaWith({ sectionId: 's1' }, [], 0);
+      const { tx, repository } = prismaWith(row, [], 0);
       await expect(repository.update('i1', { listPrice: null }, 'w1')).rejects.toThrow(
         ItemNotEditableError,
       );

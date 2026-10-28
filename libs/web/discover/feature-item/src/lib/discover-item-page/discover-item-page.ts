@@ -9,7 +9,14 @@ import { ItemPageStore, SavedItems } from '@menu/web/discover/data-access';
 import { Auth, Roles } from '@menu/web/shared/util-auth';
 import { DeviceShare } from '@menu/web/shared/util-device';
 import { ItemHistory, ItemRow, ScoreBadge } from '@menu/web/discover/ui';
-import { I18n, injectTranslate, LocalizePipe, PricePipe } from '@menu/web/shared/util-i18n';
+import {
+  I18n,
+  injectTranslate,
+  LocalizePipe,
+  PricePipe,
+  RelativeDatePipe,
+} from '@menu/web/shared/util-i18n';
+import { ItemReportForm } from '../item-report-form/item-report-form';
 import { itemI18n } from '../item.i18n';
 
 @Component({
@@ -24,8 +31,10 @@ import { itemI18n } from '../item.i18n';
     ItemRow,
     ItemHistory,
     ScoreBadge,
+    ItemReportForm,
     LocalizePipe,
     PricePipe,
+    RelativeDatePipe,
   ],
   templateUrl: './discover-item-page.html',
   styleUrl: './discover-item-page.scss',

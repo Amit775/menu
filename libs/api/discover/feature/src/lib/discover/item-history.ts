@@ -52,6 +52,17 @@ export function itemHistory(
   return events.reverse();
 }
 
+const CONFIRMING: readonly ItemRevisionRecord['kind'][] = [
+  'created',
+  'approved',
+  'updated',
+  'confirmed',
+];
+
+export function lastConfirmedAt(revisions: readonly ItemRevisionRecord[]): string | null {
+  return revisions.findLast((revision) => CONFIRMING.includes(revision.kind))?.changedAt ?? null;
+}
+
 function diff(
   before: ItemSnapshot,
   after: ItemSnapshot,

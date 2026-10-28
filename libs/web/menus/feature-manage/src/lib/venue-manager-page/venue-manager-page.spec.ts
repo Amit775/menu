@@ -5,7 +5,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { MenuApiClient } from '@menu/web/menus/data-access';
 import { Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
-import { classic, lamb, menuApi, VENUE_ID } from '../testing/manage-fixtures';
+import { classic, classicReport, lamb, menuApi, VENUE_ID } from '../testing/manage-fixtures';
 import { VenueManagerPage } from './venue-manager-page';
 
 describe('VenueManagerPage', () => {
@@ -68,6 +68,18 @@ describe('VenueManagerPage', () => {
     expect(element.querySelector('a.owners')?.getAttribute('href')).toBe(
       `/manage/people/owners/${VENUE_ID}`,
     );
+  });
+
+  it('counts diners’ reports with the items to approve, and opens on them', async () => {
+    const element = await render(
+      menuApi({
+        items: () => Promise.resolve([classic]),
+        itemReports: () => Promise.resolve([classicReport]),
+      }),
+    );
+    expect(tabs(element)[0]).toEqual({ label: 'לאישור · 1', selected: true });
+    expect(element.querySelector('.ok')).toBeNull();
+    expect(element.querySelector('menu-reported-items li.card h3')?.textContent).toBe('קלאסי');
   });
 
   it('says so when the venue is not one the user manages', async () => {

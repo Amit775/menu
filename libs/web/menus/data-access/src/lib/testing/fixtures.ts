@@ -2,6 +2,7 @@ import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   type Item,
+  type ItemReportSummary,
   type MenuSection,
   type Tag,
   type Venue,
@@ -51,6 +52,16 @@ export const tag: Tag = {
   name: { he: 'המבורגר', en: 'Hamburger' },
   kind: 'dish',
 };
+
+export function reportOn(itemId: string): ItemReportSummary {
+  return {
+    itemId,
+    goneCount: 2,
+    priceCount: 1,
+    reportedPrices: [{ value: 74, currency: 'ILS' }],
+    lastReportedAt: '2026-10-27T10:00:00.000Z',
+  };
+}
 
 export const insights: VenueInsights = {
   items: [

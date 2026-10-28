@@ -22,12 +22,31 @@ describe('page stores', () => {
   }
 
   it('loads an item page', async () => {
-    const page = { item, archived: false, tags: [], history: [], alsoGoodHere: [] };
+    const page = {
+      item,
+      archived: false,
+      lastConfirmedAt: null,
+      tags: [],
+      history: [],
+      alsoGoodHere: [],
+    };
     const { items } = setup({ item: vi.fn().mockResolvedValue(page) });
     items.load(() => ITEM_ID);
     await settle();
     expect(items.page()).toEqual(page);
     expect(items.status()).toBe('loaded');
+  });
+
+  it('reports the loaded item, and passes a failed report on', async () => {
+    const report = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('offline'));
+    const { items } = setup({ item: vi.fn().mockResolvedValue(null), report });
+    items.load(() => ITEM_ID);
+    await items.report({ kind: 'gone' });
+    expect(report).toHaveBeenCalledWith(ITEM_ID, { kind: 'gone' });
+    await expect(items.report({ kind: 'gone' })).rejects.toThrow('offline');
   });
 
   it('tells a missing item from a failed load', async () => {

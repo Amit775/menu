@@ -178,3 +178,9 @@ menu-item-row {
   margin-top: 8px;
   border-radius: 14px;
 }
+
+.confirmed {
+  margin: 0 0 4px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

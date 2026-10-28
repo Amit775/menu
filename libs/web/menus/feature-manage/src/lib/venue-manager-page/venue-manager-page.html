@@ -15,7 +15,7 @@
         <p class="crumbs">{{ roles.isAdmin() ? t('crumbsAdmin') : t('crumbs') }}</p>
         <h1>{{ venue.name | localize }}</h1>
         <p class="address">{{ venue.address | localize }}</p>
-        @if (store.pending().length === 0) {
+        @if (toReview() === 0) {
           <p class="ok"><mat-icon aria-hidden="true">check_circle</mat-icon>{{ t('menuOk') }}</p>
         }
         @if (roles.isAdmin()) {
@@ -34,8 +34,9 @@
         mat-stretch-tabs="false"
         animationDuration="0ms"
       >
-        <mat-tab [label]="t('pendingTab', { count: store.pending().length })">
+        <mat-tab [label]="t('pendingTab', { count: toReview() })">
           <menu-pending-queue />
+          <menu-reported-items />
         </mat-tab>
         <mat-tab [label]="t('menuTab')">
           <menu-menu-editor />

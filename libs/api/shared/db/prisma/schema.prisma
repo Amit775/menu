@@ -35,6 +35,7 @@ model Account {
   createdVenues     Venue[]
   submittedItems    Item[]
   itemRevisions     ItemRevision[]
+  itemReports       ItemReport[]
   contributorApplications ContributorApplication[] @relation("applicant")
   decidedApplications     ContributorApplication[] @relation("decider")
 
@@ -166,6 +167,7 @@ model Item {
   entries     Entry[]
   savedBy     SavedItem[]
   revisions   ItemRevision[]
+  reports     ItemReport[]
 
   @@index([venueId, state])
   @@index([tagIds], type: Gin)
@@ -182,6 +184,8 @@ enum ItemRevisionKind {
   rejected
   merged
   archived
+  /// The venue's Owner or an Admin said the item is still served, closing its reports.
+  confirmed
 }
 
 /// One change to an item, written in the same transaction as the change. `snapshot` holds the item's
@@ -252,4 +256,29 @@ model SavedItem {
   @@id([accountId, itemId])
   @@index([accountId, savedAt])
   @@map("saved_item")
+}
+
+enum ItemReportKind {
+  gone
+  price
+}
+
+/// A diner's report that an approved item is no longer served or costs something else. Open until the
+/// venue's Owner or an Admin archives the item, edits its price or confirms it; then it is deleted. The
+/// reporter is never sent.
+model ItemReport {
+  id            String         @id @default(uuid()) @db.Uuid
+  itemId        String         @map("item_id") @db.Uuid
+  reporterId    String         @map("reporter_id") @db.Uuid
+  kind          ItemReportKind
+  priceValue    Decimal?       @map("price_value") @db.Decimal(10, 2)
+  priceCurrency Currency?      @map("price_currency")
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  item     Item    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  reporter Account @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, reporterId])
+  @@index([reporterId])
+  @@map("item_report")
 }

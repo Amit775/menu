@@ -1,6 +1,6 @@
 import { type ItemRevisionRecord } from '@menu/api/discover/data-access';
 import { type ItemSnapshot, type ItemVariation, type Tag } from '@menu/shared/contracts';
-import { itemHistory } from './item-history';
+import { itemHistory, lastConfirmedAt } from './item-history';
 
 describe('itemHistory', () => {
   const mains = '1b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
@@ -182,5 +182,37 @@ describe('itemHistory', () => {
     expect(event).toMatchObject({
       changes: [{ field: 'section', from: null, to: { he: 'עיקריות', en: 'Mains' } }],
     });
+  });
+
+  it('adds no line when the venue confirms the item is still served', () => {
+    expect(history([revision('created', 1), revision('confirmed', 5)])).toHaveLength(1);
+  });
+});
+
+describe('lastConfirmedAt', () => {
+  const snapshot: ItemSnapshot = {
+    name: { he: 'המבורגר', en: null },
+    description: null,
+    listPrice: null,
+    sectionId: '1b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+    tagIds: [],
+    variations: [],
+  };
+
+  function at(kind: ItemRevisionRecord['kind'], day: number): ItemRevisionRecord {
+    return { kind, snapshot, changedAt: `2026-10-${String(day).padStart(2, '0')}T10:00:00.000Z` };
+  }
+
+  it('is the last time the menu said the item is served', () => {
+    expect(lastConfirmedAt([at('created', 1), at('updated', 3), at('confirmed', 9)])).toBe(
+      '2026-10-09T10:00:00.000Z',
+    );
+    expect(lastConfirmedAt([at('submitted', 1), at('approved', 4)])).toBe(
+      '2026-10-04T10:00:00.000Z',
+    );
+  });
+
+  it('is unknown for an item that never reached the menu', () => {
+    expect(lastConfirmedAt([at('submitted', 1)])).toBeNull();
   });
 });

@@ -136,6 +136,8 @@ export type VariationScore = z.infer<typeof VariationScoreSchema>;
 export const ItemPageSchema = z.object({
   item: DiscoverItemSchema,
   archived: z.boolean(),
+  /** The last time the menu showed the item is served (added, edited or confirmed); null once archived. */
+  lastConfirmedAt: z.iso.datetime().nullable(),
   tags: z.array(TagSchema),
   variations: z.array(VariationScoreSchema),
   history: z.array(ItemHistoryEventSchema),

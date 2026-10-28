@@ -14,6 +14,8 @@ import {
   type MapPin,
   MapPinSchema,
   type SavedItem,
+  type CreateItemReportInput,
+  itemReportsPath,
   savedItemPath,
   SavedItemSchema,
   type SearchResults,
@@ -96,6 +98,12 @@ export class DiscoverApiClient {
   async save(itemId: string): Promise<SavedItem> {
     const url = `/api/${savedItemPath}/${encodeURIComponent(itemId)}`;
     return SavedItemSchema.parse(await firstValueFrom(this.http.put<unknown>(url, {})));
+  }
+
+  async report(itemId: string, input: CreateItemReportInput): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`/api/${itemReportsPath(encodeURIComponent(itemId))}`, input),
+    );
   }
 
   async unsave(itemId: string): Promise<void> {

@@ -233,7 +233,11 @@ describe('DiscoverService', () => {
   describe('the item page', () => {
     it('shows an archived item, marked, with its tags', async () => {
       const page = await (await setup()).itemPage(null, 'archived', {});
-      expect(page).toMatchObject({ archived: true, tags: [{ slug: 'hamburger' }] });
+      expect(page).toMatchObject({
+        archived: true,
+        lastConfirmedAt: null,
+        tags: [{ slug: 'hamburger' }],
+      });
       expect(page.alsoGoodHere.map((i) => i.id)).toEqual(['ranked']);
     });
 
@@ -257,6 +261,7 @@ describe('DiscoverService', () => {
       ).itemPage(null, 'ranked', {});
       expect(listRevisions).toHaveBeenCalledWith('ranked');
       expect(listSections).toHaveBeenCalledWith(venueId);
+      expect(page.lastConfirmedAt).toBe('2026-10-01T00:00:00.000Z');
       expect(page.history).toEqual([
         {
           kind: 'added',

@@ -2,6 +2,7 @@ import { computed, inject, linkedSignal, resource, signal } from '@angular/core'
 import {
   type Item,
   type ItemDecision,
+  type ItemReportSummary,
   type Text,
   type MenuSection,
   type Tag,
@@ -26,14 +27,26 @@ interface ManagedVenue {
   tags: Tag[];
 }
 
+export interface ReportedItem {
+  item: Item;
+  report: ItemReportSummary;
+}
+
 const byPosition = (a: { position: number }, b: { position: number }): number =>
   a.position - b.position;
 
 export const VenueManagerStore = signalStore(
   withProps((_, api = inject(MenuApiClient)) => {
     const id = signal<() => string | undefined>(() => undefined);
+    const wantsReports = signal(false);
     return {
       _id: id,
+      _wantsReports: wantsReports,
+      // Apart from the venue's own load: Contributors open the item form with this store, and the reports are not theirs to read.
+      _reports: resource({
+        params: () => (wantsReports() ? id()() : undefined),
+        loader: ({ params }) => api.itemReports(params),
+      }),
       _managed: resource({
         params: () => id()(),
         loader: async ({ params }): Promise<ManagedVenue> => {
@@ -48,7 +61,7 @@ export const VenueManagerStore = signalStore(
       }),
     };
   }),
-  withComputed(({ _managed }) => {
+  withComputed(({ _managed, _reports }) => {
     const managed = computed(() => (_managed.hasValue() ? _managed.value() : null));
     return {
       status: loadStatus(_managed),
@@ -56,6 +69,7 @@ export const VenueManagerStore = signalStore(
       sections: computed(() => managed()?.sections ?? []),
       items: computed(() => managed()?.items ?? []),
       tags: computed(() => managed()?.tags ?? []),
+      reports: computed(() => (_reports.hasValue() ? _reports.value() : [])),
     };
   }),
   withProps(({ venue }) => ({
@@ -64,8 +78,16 @@ export const VenueManagerStore = signalStore(
       computation: () => null,
     }),
   })),
-  withComputed(({ sections, items, tags, _insights }) => ({
+  withComputed(({ sections, items, tags, reports, _insights }) => ({
     insights: computed(() => _insights()),
+    reported: computed<ReportedItem[]>(() =>
+      reports().flatMap((report) => {
+        const item = items().find(
+          (candidate) => candidate.id === report.itemId && candidate.state === 'approved',
+        );
+        return item ? [{ item, report }] : [];
+      }),
+    ),
     pending: computed(() => items().filter((item) => item.state === 'pending')),
     approved: computed(() => items().filter((item) => item.state === 'approved')),
     menu: computed<MenuSectionView[]>(() =>
@@ -95,6 +117,12 @@ export const VenueManagerStore = signalStore(
       }));
     }
 
+    function closeReports(itemId: string): void {
+      if (store._reports.hasValue()) {
+        store._reports.set(store._reports.value().filter((report) => report.itemId !== itemId));
+      }
+    }
+
     function venueId(): string {
       const venue = store.venue();
       if (!venue) {
@@ -109,6 +137,10 @@ export const VenueManagerStore = signalStore(
       },
       reload(): void {
         store._managed.reload();
+        store._reports.reload();
+      },
+      loadReports(): void {
+        store._wantsReports.set(true);
       },
       async loadInsights(): Promise<void> {
         const venue = store.venue();
@@ -120,7 +152,11 @@ export const VenueManagerStore = signalStore(
         }
       },
       async decide(id: string, decision: ItemDecision): Promise<void> {
-        replace(await api.decide(id, decision));
+        const item = await api.decide(id, decision);
+        replace(item);
+        if (item.state !== 'approved') {
+          closeReports(id);
+        }
         store._insights.set(null);
       },
       async merge(id: string, intoItemId: string): Promise<void> {
@@ -135,7 +171,14 @@ export const VenueManagerStore = signalStore(
       async updateItem(id: string, input: UpdateItem): Promise<Item> {
         const item = await api.updateItem(id, input);
         replace(item);
+        if (store.reports().some((report) => report.itemId === id)) {
+          store._reports.reload();
+        }
         return item;
+      },
+      async confirmItem(id: string): Promise<void> {
+        await api.confirmItem(id);
+        closeReports(id);
       },
       async setItemPhoto(id: string, photo: Blob | null): Promise<void> {
         replace(await (photo ? api.setItemPhoto(id, photo) : api.removeItemPhoto(id)));
