@@ -1,5 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { EntryRepository } from '@menu/api/entries/data-access';
+import { newCapabilityId } from '@menu/api/shared/util';
 import {
   cleanPhoto,
   PHOTO_STORAGE,
@@ -8,7 +9,6 @@ import {
 } from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { type Entry } from '@menu/shared/contracts';
-import { newCapabilityId } from '../entry/capability-id';
 import { DiaryEntry } from '../entry/diary-entry';
 import { deletePhoto, entryPhotoKey } from './entry-photo';
 

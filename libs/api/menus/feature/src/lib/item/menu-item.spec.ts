@@ -18,6 +18,9 @@ describe('MenuItem', () => {
     mergedIntoId: null,
     submittedById: 'submitter',
     position: 0,
+    photoUrl: null,
+    photoId: null,
+    photoType: null,
     createdAt: '2026-01-01T00:00:00.000Z',
   };
   const user = (accountId: string): Principal => ({

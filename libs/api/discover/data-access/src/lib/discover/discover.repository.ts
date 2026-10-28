@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService, readPrice, readText } from '@menu/api/shared/db';
+import { readPhotoColumn } from '@menu/api/shared/util-photos';
 import {
   type GeoPoint,
+  itemPhotoUrl,
   type ItemRevisionKind,
   type ItemSnapshot,
   ItemSnapshotSchema,
@@ -27,6 +29,7 @@ export interface CatalogItem {
   tagIds: string[];
   variations: ItemVariation[];
   listPrice: Price | null;
+  photoUrl: string | null;
   createdAt: Date;
 }
 
@@ -34,6 +37,11 @@ export interface ItemRevisionRecord {
   kind: ItemRevisionKind;
   snapshot: ItemSnapshot;
   changedAt: string;
+}
+
+function photoUrlOf(column: unknown): string | null {
+  const photo = readPhotoColumn(column);
+  return photo ? itemPhotoUrl(photo.id) : null;
 }
 
 const StoredSectionsSchema = MenuSectionSchema.pick({ id: true, name: true }).array();
@@ -65,6 +73,7 @@ export class DiscoverRepository {
       tagIds: row.tagIds,
       variations: ItemVariationsSchema.parse(row.variations),
       listPrice: readPrice(row.listPriceValue, row.listPriceCurrency),
+      photoUrl: photoUrlOf(row.photo),
       createdAt: row.createdAt,
     }));
   }

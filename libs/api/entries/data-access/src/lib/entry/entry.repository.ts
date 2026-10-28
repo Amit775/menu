@@ -7,14 +7,13 @@ import {
   writePrice,
 } from '@menu/api/shared/db';
 import { withoutUndefined } from '@menu/api/shared/util';
+import { readPhotoColumn } from '@menu/api/shared/util-photos';
 import {
   type Currency,
   type DiaryQuery,
   type Entry,
   type EntryVisibility,
-  PhotoIdSchema,
   type PhotoType,
-  PhotoTypeSchema,
   photoUrl,
   type Price,
   type UpdateEntry,
@@ -221,7 +220,7 @@ export class EntryRepository {
     return rows.map(({ pricePaidValue, pricePaidCurrency, photo, ...fact }) => ({
       ...fact,
       pricePaid: readPrice(pricePaidValue, pricePaidCurrency),
-      photoId: readPhoto(photo)?.id ?? null,
+      photoId: readPhotoColumn(photo)?.id ?? null,
     }));
   }
 
@@ -252,7 +251,7 @@ export class EntryRepository {
 }
 
 function toRecord(row: EntryRow): EntryRecord {
-  const photo = readPhoto(row.photo);
+  const photo = readPhotoColumn(row.photo);
   return {
     id: row.id,
     authorId: row.authorId,
@@ -272,19 +271,6 @@ function toRecord(row: EntryRow): EntryRecord {
     photoType: photo?.contentType ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  };
-}
-
-function readPhoto(column: unknown): { id: string; contentType: PhotoType } | null {
-  if (column === null) {
-    return null;
-  }
-  if (typeof column !== 'object' || !('id' in column) || !('contentType' in column)) {
-    throw new Error('A stored photo needs its id and content type.');
-  }
-  return {
-    id: PhotoIdSchema.parse(column.id),
-    contentType: PhotoTypeSchema.parse(column.contentType),
   };
 }
 

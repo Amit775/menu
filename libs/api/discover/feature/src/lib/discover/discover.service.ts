@@ -284,7 +284,7 @@ export class DiscoverService {
       ratingCount: stats.ratingCount,
       wouldOrderAgainPercent: stats.wouldOrderAgainPercent,
       latestPrice: item.listPrice ?? stats.latestPublicPrice,
-      photoUrl: stats.latestPublicPhotoUrl,
+      photoUrl: stats.latestPublicPhotoUrl ?? item.photoUrl,
       writtenByMe: snapshot.writtenByMe.has(item.id),
     };
   }

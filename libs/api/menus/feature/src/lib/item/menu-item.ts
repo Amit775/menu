@@ -74,7 +74,12 @@ export class MenuItem {
 
   /** The contract shape for this caller: approvers never learn who submitted it. */
   toContract(principal: Principal | null): Item {
-    const { submittedById, ...item } = this.record;
-    return { ...item, submittedByMe: principal !== null && submittedById === principal.accountId };
+    const { id, venueId, sectionId, name, description, listPrice, tagIds } = this.record;
+    const { variations, state, mergedIntoId, position, photoUrl, createdAt } = this.record;
+    return {
+      ...{ id, venueId, sectionId, name, description, listPrice, tagIds, variations, state },
+      ...{ mergedIntoId, position, photoUrl, createdAt },
+      submittedByMe: principal !== null && this.record.submittedById === principal.accountId,
+    };
   }
 }

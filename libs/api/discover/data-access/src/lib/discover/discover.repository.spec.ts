@@ -18,6 +18,7 @@ describe('DiscoverRepository', () => {
         position: 0,
         tagIds: ['t1'],
         variations: [],
+        photo: { id: 'abcdefghijklmnopqrstuv', contentType: 'image/jpeg' },
         listPriceValue: { toNumber: () => 68 },
         listPriceCurrency: 'ILS',
         createdAt: new Date('2026-10-01T00:00:00.000Z'),
@@ -33,6 +34,7 @@ describe('DiscoverRepository', () => {
       venueLocation: { lat: 32.08, lng: 34.78 },
       tagIds: ['t1'],
       listPrice: { value: 68, currency: 'ILS' as const },
+      photoUrl: '/api/item-photos/abcdefghijklmnopqrstuv',
     });
   });
 

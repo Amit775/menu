@@ -41,6 +41,7 @@ describe('DiscoverService', () => {
       tagIds: [burger],
       variations: [],
       listPrice: null,
+      photoUrl: null,
       createdAt: new Date('2026-10-01T00:00:00.000Z'),
       ...overrides,
     };
@@ -156,6 +157,24 @@ describe('DiscoverService', () => {
       expect((await tagged(`${burger},${vegan}`)).map((i) => i.id)).toEqual(['offered', 'split']);
       expect(await tagged(`${vegan},${spicy}`)).toEqual([]);
       expect((await tagged(vegan))[0]?.tagIds).toEqual([burger]);
+    });
+
+    it('shows a diner’s public photo first, else the item’s own photo', async () => {
+      const own = '/api/item-photos/abcdefghijklmnopqrstuv';
+      const diner = '/api/photos/abcdefghijklmnopqrstuw';
+      const service = await setup(
+        {
+          loadCatalog: vi
+            .fn()
+            .mockResolvedValue([item('owned', { photoUrl: own }), item('both', { photoUrl: own })]),
+        },
+        new Map([['both', { ...EMPTY_STATS, latestPublicPhotoUrl: diner }]]),
+      );
+      const feed = await service.feed(null, FeedQuerySchema.parse({}));
+      expect(Object.fromEntries(feed.items.map((i) => [i.id, i.photoUrl]))).toEqual({
+        owned: own,
+        both: diner,
+      });
     });
 
     it('filters by tag', async () => {
