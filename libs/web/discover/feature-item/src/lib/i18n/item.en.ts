@@ -21,4 +21,7 @@ export const en = {
   whatPeopleSay: 'What people say',
   allEntries: 'All entries',
   logIt: 'I had this',
+  variations: 'Variations',
+  variationPaused: 'Not offered now',
+  ratingCount: '{count, plural, =0 {No ratings} =1 {1 rating} other {# ratings}}',
 } satisfies typeof he;

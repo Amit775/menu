@@ -79,6 +79,37 @@
           </div>
         </dl>
 
+        @if (page.variations.length > 0) {
+          <section class="variations">
+            <h2>{{ t('variations') }}</h2>
+            <ul>
+              @for (option of page.variations; track option.variation.id) {
+                <li [class.paused]="!option.variation.available">
+                  <div class="names">
+                    <span class="name">{{ option.variation.name | localize }}</span>
+                    <span class="meta">
+                      @if (option.variation.price; as price) {
+                        <span>{{ price | price }}</span>
+                      }
+                      @for (tag of option.tags; track tag.id) {
+                        <span>{{ tag.name | localize }}</span>
+                      }
+                      @if (!option.variation.available) {
+                        <span>{{ t('variationPaused') }}</span>
+                      }
+                    </span>
+                  </div>
+                  @if (option.score !== null) {
+                    <menu-score-badge [score]="option.score" [count]="option.ratingCount" />
+                  } @else {
+                    <span class="count">{{ t('ratingCount', { count: option.ratingCount }) }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
         @if (page.history.length > 0) {
           <menu-item-history [events]="page.history" />
         }

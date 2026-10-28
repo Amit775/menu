@@ -105,6 +105,51 @@ menu-item-row {
   text-align: center;
 }
 
+.variations ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.variations li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+
+  &.paused {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .name {
+    font: var(--mat-sys-title-small);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    font: var(--mat-sys-body-small);
+  }
+
+  .count {
+    flex-shrink: 0;
+    font: var(--mat-sys-body-small);
+  }
+}
+
 .people {
   display: flex;
   align-items: baseline;
