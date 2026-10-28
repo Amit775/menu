@@ -1,6 +1,7 @@
-import { Logger, PayloadTooLargeException } from '@nestjs/common';
-import { type PhotoStorage } from '@menu/api/entries/data-access';
+import { PayloadTooLargeException, UnsupportedMediaTypeException } from '@nestjs/common';
 import { PHOTO_MAX_BYTES, type PhotoType } from '@menu/shared/contracts';
+import { withoutMetadata } from './photo-metadata';
+import { type StoredPhoto } from './photo-storage';
 
 const startsWith = (bytes: Buffer, signature: number[], at = 0): boolean =>
   signature.every((byte, index) => bytes[at + index] === byte);
@@ -37,18 +38,15 @@ export async function readBody(
   return Buffer.concat(chunks);
 }
 
-export function entryPhotoKey(entryId: string): string {
-  return `entries/${entryId}`;
-}
-
-/**
- * Removes an entry's stored photo after its id is gone. The id no longer
- * reaches it, so a failure is logged rather than failing the request.
- */
-export async function deletePhoto(storage: PhotoStorage, entryId: string): Promise<void> {
+/** The photo to store: a JPEG, PNG or WebP by its bytes, with its metadata dropped (ADR 0011). */
+export function cleanPhoto(bytes: Buffer): StoredPhoto {
+  const type = photoTypeOf(bytes);
+  if (!type) {
+    throw new UnsupportedMediaTypeException('Send a JPEG, PNG or WebP photo.');
+  }
   try {
-    await storage.delete(entryPhotoKey(entryId));
-  } catch (error) {
-    Logger.warn(`Could not delete the photo of entry ${entryId}: ${String(error)}`, 'Photos');
+    return { bytes: withoutMetadata(bytes, type), type };
+  } catch {
+    throw new UnsupportedMediaTypeException('This photo could not be read.');
   }
 }

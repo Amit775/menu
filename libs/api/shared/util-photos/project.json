@@ -1,0 +1,9 @@
+{
+  "name": "api-shared-util-photos",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/api/shared/util-photos/src",
+  "projectType": "library",
+  "tags": ["platform:api", "scope:shared", "type:util"],
+  "// targets": "to see all targets run: nx show project api-shared-util-photos --web",
+  "targets": {}
+}
