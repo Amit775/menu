@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { type ItemChange, type ItemHistoryEvent, type Text } from '@menu/shared/contracts';
-import { formatPrice, I18n, injectTranslate, MonthYearPipe } from '@menu/web/shared/util-i18n';
+import {
+  formatList,
+  formatPrice,
+  I18n,
+  injectTranslate,
+  MonthYearPipe,
+} from '@menu/web/shared/util-i18n';
 import { uiI18n } from '../ui.i18n';
 
 @Component({
@@ -30,40 +36,44 @@ export class ItemHistory {
       case 'archived':
         return [this.t('historyArchived')];
       case 'changed':
-        return event.changes.map((change) => this.describeChange(change));
+        return event.changes.flatMap((change) => this.describeChange(change));
     }
   }
 
-  private describeChange(change: ItemChange): string {
+  private describeChange(change: ItemChange): string[] {
     const pick = (text: Text) => this.i18n.pick(text);
+    const list = (texts: readonly Text[]) => formatList(texts.map(pick), this.i18n.language());
     switch (change.field) {
       case 'name':
-        return this.t('historyRenamed', { from: pick(change.from) });
+        return [this.t('historyRenamed', { from: pick(change.from) })];
       case 'description':
-        return this.t('historyDescription');
+        return [this.t('historyDescription')];
       case 'listPrice':
         if (change.from && change.to) {
-          return this.t('historyPrice', {
-            from: formatPrice(change.from),
-            to: formatPrice(change.to),
-          });
+          return [
+            this.t('historyPrice', { from: formatPrice(change.from), to: formatPrice(change.to) }),
+          ];
         }
-        return change.to
-          ? this.t('historyPriceSet', { to: formatPrice(change.to) })
-          : this.t('historyPriceRemoved');
+        return [
+          change.to
+            ? this.t('historyPriceSet', { to: formatPrice(change.to) })
+            : this.t('historyPriceRemoved'),
+        ];
       case 'section':
-        return change.to
-          ? this.t('historyMoved', { to: pick(change.to) })
-          : this.t('historyMovedUnnamed');
+        return [
+          change.to
+            ? this.t('historyMoved', { to: pick(change.to) })
+            : this.t('historyMovedUnnamed'),
+        ];
       case 'tags':
         return [
           ...(change.added.length > 0
-            ? [this.t('historyTagged', { tags: change.added.map(pick).join(', ') })]
+            ? [this.t('historyTagged', { tags: list(change.added) })]
             : []),
           ...(change.removed.length > 0
-            ? [this.t('historyUntagged', { tags: change.removed.map(pick).join(', ') })]
+            ? [this.t('historyUntagged', { tags: list(change.removed) })]
             : []),
-        ].join(' · ');
+        ];
     }
   }
 }

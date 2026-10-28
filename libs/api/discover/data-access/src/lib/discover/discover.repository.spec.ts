@@ -73,7 +73,7 @@ describe('DiscoverRepository', () => {
     ).resolves.toEqual([{ kind: 'created', snapshot, changedAt: '2026-10-01T00:00:00.000Z' }]);
     expect(findMany).toHaveBeenCalledWith({
       where: { itemId: 'i1' },
-      orderBy: { changedAt: 'asc' },
+      orderBy: [{ changedAt: 'asc' }, { seq: 'asc' }],
       select: { kind: true, snapshot: true, changedAt: true },
     });
   });

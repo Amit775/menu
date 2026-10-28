@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  ItemNotEditableError,
   type ItemRecord,
   ItemRepository,
   MenuSectionRepository,
@@ -66,7 +67,7 @@ export class ItemService {
     await this.assertVenueVisible(principal, venueId);
     await this.assertSection(venueId, input.sectionId);
     const approver = canEditVenue(principal, venueId);
-    const record = await rejectUnknownTags(
+    const record = await toHttpErrors(
       this.repository.create(
         {
           venueId,
@@ -84,7 +85,7 @@ export class ItemService {
     const item = await this.findVisible(principal, id);
     item.assertEditableBy(principal);
     await this.assertSection(item.record.venueId, input.sectionId);
-    const record = await rejectUnknownTags(this.repository.update(id, input, principal.accountId));
+    const record = await toHttpErrors(this.repository.update(id, input, principal.accountId));
     if (!record) {
       throw new NotFoundException('Item not found.');
     }
@@ -168,12 +169,15 @@ export class ItemService {
   }
 }
 
-async function rejectUnknownTags<T>(write: Promise<T>): Promise<T> {
+async function toHttpErrors<T>(write: Promise<T>): Promise<T> {
   try {
     return await write;
   } catch (error) {
     if (error instanceof UnknownTagError) {
       throw new BadRequestException('Unknown tag.');
+    }
+    if (error instanceof ItemNotEditableError) {
+      throw new ConflictException('The item changed meanwhile. Reload and try again.');
     }
     throw error;
   }

@@ -9,8 +9,6 @@ import {
   type Text,
 } from '@menu/shared/contracts';
 
-const HISTORY_LIMIT = 50;
-
 /**
  * The public history of an item, newest first. It starts when the item reached
  * the menu, so what changed while it was pending stays with its submitter and
@@ -50,7 +48,7 @@ export function itemHistory(
     }
     previous = revision.snapshot;
   }
-  return events.reverse().slice(0, HISTORY_LIMIT);
+  return events.reverse();
 }
 
 function diff(
