@@ -4,6 +4,7 @@ export const en = {
   newTitle: 'New entry',
   editTitle: 'Edit entry',
   cancel: 'Cancel',
+  variation: 'Which one?',
   change: 'Change',
   visit: '{count, plural, =1 {First visit} other {Visit #}}',
   pending: 'Waiting for approval. Until then only you can see it.',

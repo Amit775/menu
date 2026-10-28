@@ -1,6 +1,7 @@
 export const he = {
   newTitle: 'רשומה חדשה',
   editTitle: 'עריכת רשומה',
+  variation: 'איזו גרסה?',
   cancel: 'ביטול',
   change: 'שינוי',
   visit: '{count, plural, =1 {ביקור ראשון} other {ביקור #}}',

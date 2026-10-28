@@ -137,6 +137,78 @@ describe('EntriesLogPage', () => {
     expect(TestBed.inject(Router).url).toBe(`/items/${ITEM_ID}/entries`);
   });
 
+  describe('with variations', () => {
+    const beef = '5b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    const vegan = '6b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    const pumpkin = '8b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    const varied: ItemEntries = {
+      ...sheet,
+      item: {
+        ...sheet.item,
+        variations: [
+          { id: beef, name: { he: 'בקר', en: null }, price: null, available: true },
+          {
+            id: vegan,
+            name: { he: 'טבעוני', en: null },
+            price: { value: 62, currency: 'ILS' },
+            available: true,
+          },
+          { id: pumpkin, name: { he: 'דלעת', en: null }, price: null, available: false },
+        ],
+      },
+    };
+    const picks = (element: HTMLElement) =>
+      [...element.querySelectorAll<HTMLButtonElement>('.picks button')].map((button) => ({
+        name: button.textContent.trim(),
+        pressed: button.getAttribute('aria-pressed') === 'true',
+      }));
+
+    it('asks which one the diner had among those offered, and logs it', async () => {
+      const create = vi.fn().mockResolvedValue(entry);
+      const { harness, element, field } = await open(`/log/${ITEM_ID}`, {
+        forItem: vi.fn().mockResolvedValue({ ...varied, mine: [] }),
+        create,
+      });
+      expect(field('.variations legend').textContent).toBe('איזו גרסה?');
+      expect(picks(element)).toEqual([
+        { name: 'בקר', pressed: false },
+        { name: 'טבעוני', pressed: false },
+      ]);
+      element.querySelectorAll<HTMLButtonElement>('.picks button')[1]?.click();
+      harness.detectChanges();
+      expect(picks(element)[1]?.pressed).toBe(true);
+      expect(field('#price-hint').textContent.trim()).toBe('המחיר בתפריט היום ₪62.');
+      (field('button.save') as HTMLButtonElement).click();
+      await harness.fixture.whenStable();
+      expect(create.mock.calls[0]?.[1]).toHaveProperty('variationId', vegan);
+    });
+
+    it('keeps the paused variation an entry names, and clears it on a second tap', async () => {
+      const update = vi.fn().mockResolvedValue(entry);
+      const { harness, element } = await open(`/log/${ITEM_ID}/${entry.id}`, {
+        forItem: vi
+          .fn()
+          .mockResolvedValue({ ...varied, mine: [{ ...entry, variationId: pumpkin }] }),
+        update,
+      });
+      expect(picks(element)).toEqual([
+        { name: 'בקר', pressed: false },
+        { name: 'טבעוני', pressed: false },
+        { name: 'דלעת', pressed: true },
+      ]);
+      element.querySelectorAll<HTMLButtonElement>('.picks button')[2]?.click();
+      harness.detectChanges();
+      element.querySelector<HTMLButtonElement>('button.save')?.click();
+      await harness.fixture.whenStable();
+      expect(update.mock.calls[0]?.[1]).toHaveProperty('variationId', null);
+    });
+
+    it('asks nothing for an item without variations', async () => {
+      const { element } = await open(`/log/${ITEM_ID}`, {});
+      expect(element.querySelector('.variations')).toBeNull();
+    });
+  });
+
   it('refuses a price with more than two decimals', async () => {
     const create = vi.fn();
     const { harness, field } = await open(`/log/${ITEM_ID}`, { create });
