@@ -24,6 +24,7 @@ Phase 4 of the next-phase plan: four independent features on the item model from
 - Archiving closes all of an item's reports, a price or variation edit closes its price reports, and "still on the menu" closes all of them with a `confirmed` revision.
 - The item page shows "confirmed on the menu" from the latest added, approved, edited or confirmed revision.
 
-## 4d. WhatsApp link previews
+## 4d. WhatsApp link previews (done)
 
-A Firebase Hosting rewrite sends `/e/**` to an API route that returns the SPA's `index.html` with Open Graph tags for that entry (Q5). A private or deleted entry gets a generic preview.
+- Hosting rewrites `/e/*` to the API, which serves `GET /e/:token` outside `/api`: the web app's `index.html`, read from Hosting and kept a minute, with the entry's Open Graph tags (item, venue, rating, excerpt, author, photo) and `noindex` (ADR 0017).
+- A private, hidden, deleted or malformed link gets one generic preview. A person who opens the link gets the app as before.

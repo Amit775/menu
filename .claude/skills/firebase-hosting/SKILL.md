@@ -13,7 +13,7 @@ The web app is a static build of `apps/web` (`dist/apps/web/browser`) served by 
 - Do not add `firebase-tools` or the Firebase JS SDK to `package.json` (hard rule 6). The deploy action ships its own CLI. Using Firebase services from the app (Auth, Storage, ...) needs an ADR first.
 - Never commit service account keys or tokens. The project id lives in `.firebaserc` and the `FIREBASE_PROJECT_ID` repo variable; the key lives only in the `FIREBASE_SERVICE_ACCOUNT` secret.
 - Keep `/index.html` uncached and hashed assets immutable. Angular's production build hashes file names (`outputHashing: all`), which is what makes the long cache safe.
-- The SPA fallback (`"source": "**"` to `/index.html`) must stay the last rewrite. Put new rewrites, such as `/api/**` to Cloud Run, above it.
+- The SPA fallback (`"source": "**"` to `/index.html`) must stay the last rewrite. Put new rewrites, such as `/api/**` and `/e/*` (share-link previews, ADR 0017) to Cloud Run, above it.
 
 ## Change hosting config
 
