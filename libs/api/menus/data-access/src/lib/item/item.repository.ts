@@ -12,6 +12,8 @@ import { withoutUndefined } from '@menu/api/shared/util';
 import {
   type Currency,
   type Item,
+  type ItemRevisionKind,
+  type ItemSnapshot,
   type ItemState,
   MenuSectionSchema,
   type Price,
@@ -69,6 +71,25 @@ async function assertTagsExist(tx: Transaction, tagIds: readonly string[]): Prom
   if (found.length !== new Set(tagIds).size) {
     throw new UnknownTagError();
   }
+}
+
+const transitionKind: Record<ItemState, ItemRevisionKind> = {
+  pending: 'submitted',
+  approved: 'approved',
+  rejected: 'rejected',
+  merged: 'merged',
+  archived: 'archived',
+};
+
+async function recordRevision(
+  tx: Transaction,
+  row: ItemRow,
+  kind: ItemRevisionKind,
+  changedById: string,
+): Promise<void> {
+  await tx.itemRevision.create({
+    data: { itemId: row.id, kind, snapshot: snapshotOf(toRecord(row)), changedById },
+  });
 }
 
 @Injectable()
@@ -129,14 +150,14 @@ export class ItemRepository {
     return rows.map(toRecord);
   }
 
-  async create(input: NewItem): Promise<ItemRecord> {
+  async create(input: NewItem, changedById: string): Promise<ItemRecord> {
     const row = await this.prisma.$transaction(async (tx) => {
       await assertTagsExist(tx, input.tagIds);
       const last = await tx.item.aggregate({
         where: { sectionId: input.sectionId },
         _max: { position: true },
       });
-      return tx.item.create({
+      const created = await tx.item.create({
         data: {
           venueId: input.venueId,
           sectionId: input.sectionId,
@@ -149,6 +170,13 @@ export class ItemRepository {
           position: (last._max.position ?? -1) + 1,
         },
       });
+      await recordRevision(
+        tx,
+        created,
+        input.state === 'approved' ? 'created' : 'submitted',
+        changedById,
+      );
+      return created;
     });
     return toRecord(row);
   }
@@ -157,7 +185,7 @@ export class ItemRepository {
    * Updates fields; a new `tagIds` replaces the item's tags in the given order,
    * and a new section puts the item at the end of that section.
    */
-  async update(id: string, input: UpdateItem): Promise<ItemRecord | null> {
+  async update(id: string, input: UpdateItem, changedById: string): Promise<ItemRecord | null> {
     const { description, listPrice, tagIds, ...rest } = input;
     const row = await this.prisma.$transaction(async (tx) => {
       const current = await tx.item.findUnique({ where: { id }, select: { sectionId: true } });
@@ -183,7 +211,9 @@ export class ItemRepository {
           ...(listPrice === undefined ? {} : priceColumns(listPrice)),
         }),
       });
-      return tx.item.findUniqueOrThrow({ where: { id } });
+      const updated = await tx.item.findUniqueOrThrow({ where: { id } });
+      await recordRevision(tx, updated, 'updated', changedById);
+      return updated;
     });
     return row ? toRecord(row) : null;
   }
@@ -193,13 +223,22 @@ export class ItemRepository {
     id: string,
     from: ItemState,
     to: ItemState,
-    mergedIntoId: string | null = null,
+    mergedIntoId: string | null,
+    changedById: string,
   ): Promise<ItemRecord | null> {
-    const { count } = await this.prisma.item.updateMany({
-      where: { id, state: from },
-      data: { state: to, mergedIntoId },
+    const row = await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.item.updateMany({
+        where: { id, state: from },
+        data: { state: to, mergedIntoId },
+      });
+      if (count === 0) {
+        return null;
+      }
+      const moved = await tx.item.findUniqueOrThrow({ where: { id } });
+      await recordRevision(tx, moved, transitionKind[to], changedById);
+      return moved;
     });
-    return count === 0 ? null : this.findById(id);
+    return row ? toRecord(row) : null;
   }
 }
 
@@ -217,6 +256,16 @@ function toRecord(row: ItemRow): ItemRecord {
     submittedById: row.submittedById,
     position: row.position,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function snapshotOf(record: ItemRecord): ItemSnapshot {
+  return {
+    name: record.name,
+    description: record.description,
+    listPrice: record.listPrice,
+    sectionId: record.sectionId,
+    tagIds: record.tagIds,
   };
 }
 

@@ -137,6 +137,7 @@ describe('ItemService', () => {
       const create = vi.fn().mockResolvedValue(record());
       await (await setup({ create })).create(owner, venueId, input);
       expect(create.mock.calls[0]?.[0]).toMatchObject({ state: 'approved', submittedById: null });
+      expect(create.mock.calls[0]?.[1]).toBe('w');
     });
 
     it('keeps a user’s submission pending and remembers who sent it', async () => {
@@ -170,6 +171,7 @@ describe('ItemService', () => {
       ).resolves.toMatchObject({
         listPrice: { value: 72, currency: 'ILS' as const },
       });
+      expect(update).toHaveBeenCalledWith('i1', { listPrice: { value: 72, currency: 'ILS' } }, 'w');
     });
 
     it('fails with 404 when the item disappeared meanwhile', async () => {
@@ -220,7 +222,7 @@ describe('ItemService', () => {
       const transition = vi.fn().mockResolvedValue({ ...pending, state: 'approved' });
       const service = await setup({ findById: vi.fn().mockResolvedValue(pending), transition });
       const item = await service.decide(owner, 'i1', 'approve');
-      expect(transition).toHaveBeenCalledWith('i1', 'pending', 'approved', null);
+      expect(transition).toHaveBeenCalledWith('i1', 'pending', 'approved', null, 'w');
       expect(item).toMatchObject({ state: 'approved', submittedByMe: false });
     });
 
@@ -228,7 +230,7 @@ describe('ItemService', () => {
       const transition = vi.fn().mockResolvedValue(record({ state: 'archived' }));
       const service = await setup({ findById: vi.fn().mockResolvedValue(record()), transition });
       await service.decide(admin, 'i1', 'archive');
-      expect(transition).toHaveBeenCalledWith('i1', 'approved', 'archived', null);
+      expect(transition).toHaveBeenCalledWith('i1', 'approved', 'archived', null, 'a');
     });
 
     it('forbids a submitter who is not an approver from approving', async () => {
@@ -264,7 +266,7 @@ describe('ItemService', () => {
         { listener: { onItemMerged } },
       );
       await service.merge(owner, 'i1', 'i2');
-      expect(transition).toHaveBeenCalledWith('i1', 'pending', 'merged', 'i2');
+      expect(transition).toHaveBeenCalledWith('i1', 'pending', 'merged', 'i2', 'w');
       expect(onItemMerged).toHaveBeenCalledWith('i1', 'i2');
     });
 
