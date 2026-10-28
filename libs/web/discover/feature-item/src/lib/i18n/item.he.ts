@@ -19,4 +19,7 @@ export const he = {
   whatPeopleSay: 'מה אומרים',
   allEntries: 'לכל הרשומות',
   logIt: 'אכלתי את זה',
+  variations: 'גרסאות',
+  variationPaused: 'לא מוגש כרגע',
+  ratingCount: '{count, plural, =0 {אין דירוגים} =1 {דירוג אחד} other {# דירוגים}}',
 };

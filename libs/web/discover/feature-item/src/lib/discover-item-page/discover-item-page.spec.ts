@@ -91,6 +91,54 @@ describe('DiscoverItemPage', () => {
     expect(element.querySelector('menu-item-row')?.textContent).toContain('צ׳יפס');
   });
 
+  it('scores each variation, with its price and tags, and marks one not offered now', async () => {
+    const vegan = {
+      id: '6a1d3c4e-3333-4c1c-9a57-6f7a5d3c2b10',
+      slug: 'vegan',
+      name: { he: 'טבעוני', en: null },
+      kind: 'diet' as const,
+    };
+    const { element } = await render(
+      vi.fn().mockResolvedValue({
+        ...page,
+        variations: [
+          {
+            variation: {
+              id: '6b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+              name: { he: 'טבעוני', en: null },
+              price: { value: 62, currency: 'ILS' },
+              available: true,
+            },
+            tags: [vegan],
+            score: 4.4,
+            ratingCount: 5,
+          },
+          {
+            variation: {
+              id: '8b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+              name: { he: 'דלעת', en: null },
+              price: null,
+              available: false,
+            },
+            tags: [],
+            score: null,
+            ratingCount: 1,
+          },
+        ],
+      } satisfies ItemPage),
+    );
+    expect(element.querySelector('.variations h2')?.textContent).toBe('גרסאות');
+    const rows = [...element.querySelectorAll('.variations li')].map((li) =>
+      li.textContent.replace(/\s+/g, ' ').trim(),
+    );
+    expect(rows[0]).toContain('טבעוני');
+    expect(rows[0]).toContain('₪62');
+    expect(rows[0]).toContain('4.4');
+    expect(rows[1]).toContain('לא מוגש כרגע');
+    expect(rows[1]).toContain('דירוג אחד');
+    expect(element.querySelector('.variations li.paused')).not.toBeNull();
+  });
+
   it('leads to what people say and to logging the item', async () => {
     const { element } = await render(vi.fn().mockResolvedValue(page));
     expect(element.querySelector('.people a')?.getAttribute('href')).toBe(
