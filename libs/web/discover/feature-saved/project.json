@@ -1,0 +1,10 @@
+{
+  "name": "web-discover-feature-saved",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/web/discover/feature-saved/src",
+  "prefix": "menu",
+  "projectType": "library",
+  "tags": ["platform:web", "scope:discover", "type:feature"],
+  "// targets": "to see all targets run: nx show project web-discover-feature-saved --web",
+  "targets": {}
+}

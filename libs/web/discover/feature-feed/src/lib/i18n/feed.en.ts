@@ -20,6 +20,8 @@ export const en = {
   previousAtVenue: 'Previous item here',
   nextAtVenue: 'Next item here',
   swipeUp: 'Swipe up for the venue',
+  wantToTry: 'Want to try',
+  saveFailed: 'Not saved',
   share: 'Share',
   copied: 'Link copied',
   entries: '{count, plural, =1 {1 entry} other {# entries}}',

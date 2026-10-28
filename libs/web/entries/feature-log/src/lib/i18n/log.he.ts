@@ -26,6 +26,7 @@ export const he = {
   preparingPhoto: 'מכין תמונה…',
   photoRejected: 'הרשומה נשמרה, אבל אי אפשר להשתמש בתמונה הזו. נסו JPEG,‏ PNG או WebP עד 8MB.',
   photoFailed: 'הרשומה נשמרה, אבל התמונה לא עלתה. נסו שוב.',
+  unsave: 'להוריד מרשימת "רוצה לנסות"',
   visibility: 'מי יראה את זה',
   private: 'רק אני',
   shared: 'מי שיש לו קישור',

@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { ITEM_ID, item, VENUE_ID } from '../testing/fixtures';
 import { DiscoverApiClient } from '../api/discover.api-client';
 import { DeviceLocation } from '@menu/web/shared/util-device';
-import { ItemPageStore, VenuePageStore } from './page.stores';
+import { ItemPageStore, SavedPageStore, VenuePageStore } from './page.stores';
 
 describe('page stores', () => {
   const settle = () => TestBed.inject(ApplicationRef).whenStable();
@@ -92,5 +92,26 @@ describe('page stores', () => {
     await settle();
     expect(venues.status()).toBe('not-found');
     expect(venues.page()).toBeNull();
+  });
+
+  it('loads the Want to try list near the user, and reports a failure', async () => {
+    const saved = vi.fn().mockResolvedValueOnce([item]).mockRejectedValueOnce(new Error('offline'));
+    TestBed.configureTestingModule({
+      providers: [
+        SavedPageStore,
+        { provide: DiscoverApiClient, useValue: { saved } },
+        {
+          provide: DeviceLocation,
+          useValue: { locate: () => Promise.resolve({ lat: 32, lng: 34 }) },
+        },
+      ],
+    });
+    const store = TestBed.inject(SavedPageStore);
+    await settle();
+    expect(store.items()).toEqual([item]);
+    expect(saved).toHaveBeenCalledWith({ lat: 32, lng: 34 });
+    store.reload();
+    await settle();
+    expect(store.status()).toBe('error');
   });
 });

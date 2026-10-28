@@ -55,6 +55,14 @@ a:focus-visible {
   flex: none;
 }
 
+.saved {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  color: var(--mat-sys-primary);
+  flex: none;
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;

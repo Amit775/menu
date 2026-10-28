@@ -16,6 +16,7 @@ const item = {
   latestPrice: { value: 68, currency: 'ILS' as const },
   photoUrl,
   writtenByMe: false,
+  savedByMe: false,
 };
 const entry = {
   id: '3f1d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
@@ -65,7 +66,9 @@ async function stubBackends(page: Page): Promise<void> {
     }),
   );
   await page.route(`**/api/items/${item.id}/entries`, (route) =>
-    route.fulfill({ json: { item: itemRef, itemIsPublic: true, mine: [], others: [entry] } }),
+    route.fulfill({
+      json: { item: itemRef, itemIsPublic: true, savedByMe: false, mine: [], others: [entry] },
+    }),
   );
   await page.route(`**/api/shared/${token}`, (route) =>
     route.fulfill({ json: { status: 'visible', entry, item: itemRef } }),

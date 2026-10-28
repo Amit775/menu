@@ -53,3 +53,18 @@ export const VenuePageStore = signalStore(
     },
   })),
 );
+
+export const SavedPageStore = signalStore(
+  withProps((_, api = inject(DiscoverApiClient), location = inject(DeviceLocation)) => ({
+    _items: resource({ loader: async () => api.saved(await location.locate()) }),
+  })),
+  withComputed(({ _items }) => ({
+    items: computed(() => (_items.hasValue() ? _items.value() : [])),
+    status: loadStatus(_items),
+  })),
+  withMethods(({ _items }) => ({
+    reload(): void {
+      _items.reload();
+    },
+  })),
+);

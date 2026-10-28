@@ -15,4 +15,5 @@ export const item = {
   latestPrice: { value: 68, currency: 'ILS' as const },
   photoUrl: null,
   writtenByMe: false,
+  savedByMe: false,
 };

@@ -72,6 +72,7 @@ describe('FeedStore', () => {
       itemCount: 2,
       bestScore: 4.6,
       writtenByMe: false,
+      savedByMe: false,
     };
     const map = vi.fn().mockResolvedValue([pin]);
     const feed = vi.fn();
@@ -104,6 +105,7 @@ describe('FeedStore', () => {
         itemCount: 1,
         bestScore: null,
         writtenByMe: false,
+        savedByMe: false,
       },
     ]);
     await loading;

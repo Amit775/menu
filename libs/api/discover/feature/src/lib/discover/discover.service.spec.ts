@@ -105,6 +105,7 @@ describe('DiscoverService', () => {
           useValue: {
             statsByItem: vi.fn().mockResolvedValue(itemStats),
             itemIdsWrittenBy: vi.fn().mockResolvedValue(new Set(['new'])),
+            itemIdsSavedBy: vi.fn().mockResolvedValue(['far', 'archived', 'ranked']),
             countEntriesAt: vi.fn().mockResolvedValue(2),
           },
         },
@@ -122,6 +123,7 @@ describe('DiscoverService', () => {
       expect(feed.items[1]).toMatchObject({
         score: null,
         writtenByMe: true,
+        savedByMe: false,
         latestPrice: { value: 42, currency: 'ILS' as const },
       });
       expect(feed.nextOffset).toBeNull();
@@ -196,6 +198,21 @@ describe('DiscoverService', () => {
     expect(pins.find((pin) => pin.venue.id === venueId)).toMatchObject({
       itemCount: 2,
       writtenByMe: true,
+    });
+  });
+
+  describe('the Want to try list', () => {
+    it('lists the caller’s saved items newest first, leaving out ones off the menu', async () => {
+      const saved = await (await setup()).saved(me, here);
+      expect(saved.map((i) => i.id)).toEqual(['far', 'ranked']);
+      expect(saved.every((i) => i.savedByMe)).toBe(true);
+      expect(saved[1]?.distanceMeters).toBe(0);
+    });
+
+    it('flags saved items in the feed', async () => {
+      const feed = await (await setup()).feed(me, FeedQuerySchema.parse({}));
+      expect(feed.items.find((i) => i.id === 'ranked')?.savedByMe).toBe(true);
+      expect(feed.items.find((i) => i.id === 'new')?.savedByMe).toBe(false);
     });
   });
 

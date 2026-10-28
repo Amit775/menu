@@ -1,15 +1,21 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { FakeAuthBackend } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { boundaries, sampleItem, VENUE_ID } from '../testing/feed-fixtures';
 import { ReelCard } from './reel-card';
 
 describe('ReelCard', () => {
-  async function render(share = vi.fn(), item = sampleItem(1, { writtenByMe: true })) {
+  async function render(
+    share = vi.fn(),
+    item = sampleItem(1, { writtenByMe: true }),
+    api: Record<string, unknown> = {},
+    backend = new FakeAuthBackend(),
+  ) {
     const siblings = [sampleItem(1), sampleItem(2), sampleItem(3, { score: null })];
     const venue = vi.fn().mockResolvedValue({ sections: [{ items: siblings }] });
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), ...boundaries({ venue }, share)],
+      providers: [provideRouter([]), ...boundaries({ venue, ...api }, share, backend)],
     });
     TestBed.inject(I18n).setLanguage('he');
     const fixture = TestBed.createComponent(ReelCard);
@@ -25,6 +31,34 @@ describe('ReelCard', () => {
     expect(element.querySelector('.numbers')?.textContent).toContain('90% יזמינו שוב');
     expect(element.querySelector('.price')?.textContent).toBe('₪68');
     expect(element.querySelector('.flag')?.textContent).toBe('יש לך רשומה');
+  });
+
+  it('saves the item to try for someone signed in, and shows it at once', async () => {
+    const save = vi.fn().mockResolvedValue({});
+    const backend = new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null });
+    const { fixture, element } = await render(vi.fn(), sampleItem(1), { save }, backend);
+    const button = element.querySelector<HTMLButtonElement>('button.save');
+    expect(button?.getAttribute('aria-pressed')).toBe('false');
+    expect(button?.textContent).toContain('רוצה לנסות');
+    button?.click();
+    await fixture.whenStable();
+    expect(save).toHaveBeenCalledWith(sampleItem(1).id);
+    expect(button?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('says so when saving fails', async () => {
+    const save = vi.fn().mockRejectedValue(new Error('offline'));
+    const backend = new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null });
+    const { fixture, element } = await render(vi.fn(), sampleItem(1), { save }, backend);
+    element.querySelector<HTMLButtonElement>('button.save')?.click();
+    await fixture.whenStable();
+    expect(element.querySelector('.side [role="alert"]')?.textContent).toBe('לא נשמר');
+    expect(element.querySelector('button.save')?.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('offers no bookmark to a visitor', async () => {
+    const { element } = await render();
+    expect(element.querySelector('button.save')).toBeNull();
   });
 
   it('opens what people say and the log form for the item', async () => {

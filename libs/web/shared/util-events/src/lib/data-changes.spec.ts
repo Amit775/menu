@@ -21,4 +21,12 @@ describe('DataChanges', () => {
     changes.on('entries').subscribe(late);
     expect(late).not.toHaveBeenCalled();
   });
+
+  it('carries which item was saved or taken off the list', () => {
+    const changes = TestBed.inject(DataChanges);
+    const listener = vi.fn();
+    changes.on('saved').subscribe(listener);
+    changes.notify('saved', { itemId: 'i1', saved: false });
+    expect(listener).toHaveBeenCalledWith({ itemId: 'i1', saved: false });
+  });
 });

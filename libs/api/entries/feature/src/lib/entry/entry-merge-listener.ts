@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { EntryRepository } from '@menu/api/entries/data-access';
+import { EntryRepository, SavedItemRepository } from '@menu/api/entries/data-access';
 import { type ItemMergeListener } from '@menu/api/shared/util-ports';
 
 @Injectable()
 export class EntryMergeListener implements ItemMergeListener {
-  constructor(private readonly repository: EntryRepository) {}
+  constructor(
+    private readonly repository: EntryRepository,
+    private readonly saved: SavedItemRepository,
+  ) {}
 
-  onItemMerged(sourceItemId: string, targetItemId: string): Promise<void> {
-    return this.repository.moveToItem(sourceItemId, targetItemId);
+  async onItemMerged(sourceItemId: string, targetItemId: string): Promise<void> {
+    await this.repository.moveToItem(sourceItemId, targetItemId);
+    await this.saved.moveToItem(sourceItemId, targetItemId);
   }
 }

@@ -54,6 +54,7 @@ export const publicEntry: PublicEntry = {
 export const sheet: ItemEntries = {
   item: itemRef,
   itemIsPublic: true,
+  savedByMe: false,
   mine: [entry],
   others: [publicEntry],
 };

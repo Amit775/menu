@@ -1,3 +1,4 @@
+import { MatIconModule } from '@angular/material/icon';
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -8,7 +9,15 @@ import { uiI18n } from '../ui.i18n';
 
 @Component({
   selector: 'menu-item-row',
-  imports: [NgOptimizedImage, RouterLink, ScoreBadge, LocalizePipe, DistancePipe, PricePipe],
+  imports: [
+    NgOptimizedImage,
+    RouterLink,
+    MatIconModule,
+    ScoreBadge,
+    LocalizePipe,
+    DistancePipe,
+    PricePipe,
+  ],
   templateUrl: './item-row.html',
   styleUrl: './item-row.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

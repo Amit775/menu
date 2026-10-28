@@ -180,6 +180,12 @@
           </mat-button-toggle-group>
         </div>
 
+        @if (offerUnsave()) {
+          <mat-checkbox class="unsave" [checked]="unsave()" (change)="unsave.set($event.checked)">
+            {{ t('unsave') }}
+          </mat-checkbox>
+        }
+
         @switch (saveError()) {
           @case ('closed') {
             <p class="error" role="alert">{{ t('closed') }}</p>

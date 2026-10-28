@@ -36,6 +36,7 @@ const sheet: ItemEntries = {
     venue: { id: VENUE_ID, name: { he: 'בורגר 24', en: null } },
   },
   itemIsPublic: true,
+  savedByMe: false,
   mine: [mine],
   others: [
     {

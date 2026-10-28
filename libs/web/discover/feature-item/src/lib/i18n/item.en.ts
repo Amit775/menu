@@ -4,6 +4,8 @@ export const en = {
   back: 'Back',
   loading: 'Loading…',
   edit: 'Edit item',
+  wantToTry: 'Want to try',
+  saveFailed: 'Could not save. Try again.',
   share: 'Share',
   copied: 'Link copied',
   loadFailed: 'Could not load this item.',

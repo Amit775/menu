@@ -49,6 +49,20 @@
       <span class="side-count">{{ current.ratingCount }}</span>
       <span class="side-label">{{ t('entriesWord') }}</span>
     </a>
+    @if (auth.signedIn()) {
+      <button
+        type="button"
+        class="side-item save"
+        [attr.aria-pressed]="saved()"
+        (click)="toggleSaved()"
+      >
+        <mat-icon aria-hidden="true">{{ saved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+        <span class="side-label">{{ t('wantToTry') }}</span>
+      </button>
+      @if (saveFailed()) {
+        <span class="side-label" role="alert">{{ t('saveFailed') }}</span>
+      }
+    }
     <button type="button" class="side-item" (click)="share()">
       <mat-icon aria-hidden="true">share</mat-icon>
       <span class="side-label">{{ t('share') }}</span>

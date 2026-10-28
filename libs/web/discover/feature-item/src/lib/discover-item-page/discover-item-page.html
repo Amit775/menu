@@ -7,9 +7,23 @@
     <mat-icon aria-hidden="true">{{ backIcon() }}</mat-icon>
   </button>
   @if (store.page()) {
-    <button mat-icon-button type="button" [attr.aria-label]="t('share')" (click)="share()">
-      <mat-icon aria-hidden="true">share</mat-icon>
-    </button>
+    <span class="actions">
+      @if (auth.signedIn() && (!store.page()?.archived || saved())) {
+        <button
+          mat-icon-button
+          type="button"
+          class="save"
+          [attr.aria-label]="t('wantToTry')"
+          [attr.aria-pressed]="saved()"
+          (click)="toggleSaved()"
+        >
+          <mat-icon aria-hidden="true">{{ saved() ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+        </button>
+      }
+      <button mat-icon-button type="button" [attr.aria-label]="t('share')" (click)="share()">
+        <mat-icon aria-hidden="true">share</mat-icon>
+      </button>
+    </span>
   }
 </div>
 
@@ -61,6 +75,9 @@
         }
         @if (copied()) {
           <p role="status">{{ t('copied') }}</p>
+        }
+        @if (saveFailed()) {
+          <p class="error" role="alert">{{ t('saveFailed') }}</p>
         }
 
         <div class="score">

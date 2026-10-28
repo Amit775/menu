@@ -10,6 +10,10 @@
         <span class="flag" aria-hidden="true" [title]="t('writtenByMe')"></span>
         <span class="visually-hidden">{{ t('writtenByMe') }}</span>
       }
+      @if (current.savedByMe) {
+        <mat-icon class="saved" aria-hidden="true" [title]="t('savedByMe')">bookmark</mat-icon>
+        <span class="visually-hidden">{{ t('savedByMe') }}</span>
+      }
     </span>
     <span class="meta">
       @if (showVenue()) {

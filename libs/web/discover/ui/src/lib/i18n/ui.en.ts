@@ -7,6 +7,7 @@ export const en = {
   scoreLabel: 'Score {score} out of 5',
   beFirst: 'Be the first',
   writtenByMe: 'You wrote about this',
+  savedByMe: 'Want to try',
   historyTitle: 'History',
   historyAdded: 'Added to the menu',
   historyAddedAt: 'Added to the menu at {price}',

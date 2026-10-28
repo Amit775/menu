@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { disabled, form, FormField, maxLength, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -58,6 +59,7 @@ type PhotoChange =
     MatInputModule,
     MatProgressSpinnerModule,
     RatingInput,
+    MatCheckboxModule,
     LocalizePipe,
     PricePipe,
   ],
@@ -93,6 +95,10 @@ export class EntriesLogPage {
     computation: () => ({ kind: 'keep' }),
   });
   protected readonly preparingPhoto = signal(false);
+  protected readonly unsave = linkedSignal({ source: this.itemId, computation: () => true });
+  protected readonly offerUnsave = computed(
+    () => this.editing() === undefined && (this.store.sheet()?.savedByMe ?? false),
+  );
   private readonly created = linkedSignal<string, string | undefined>({
     source: this.itemId,
     computation: () => undefined,
@@ -275,6 +281,10 @@ export class EntriesLogPage {
       );
       this.saving.set(false);
       return;
+    }
+    if (this.offerUnsave() && this.unsave()) {
+      // The entry is logged either way; the item just stays on the list if this fails.
+      await this.store.unsave(this.itemId()).catch(() => undefined);
     }
     try {
       await this.savePhoto(saved.id);

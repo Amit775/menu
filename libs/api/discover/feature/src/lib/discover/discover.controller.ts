@@ -7,7 +7,9 @@ import {
   type Principal,
 } from '@menu/api/shared/util-auth';
 import {
+  type DiscoverItem,
   discoverPath,
+  discoverSavedPath,
   type Feed,
   type FeedQuery,
   FeedQuerySchema,
@@ -36,6 +38,15 @@ export class DiscoverController {
     @Query(new ZodValidationPipe(FeedQuerySchema)) query: FeedQuery,
   ): Promise<Feed> {
     return this.service.feed(principal, query);
+  }
+
+  @Get(discoverSavedPath)
+  @Authenticated()
+  saved(
+    @CurrentPrincipal() principal: Principal,
+    @Query(new ZodValidationPipe(NearQuery)) near: Near,
+  ): Promise<DiscoverItem[]> {
+    return this.service.saved(principal, near);
   }
 
   @Get('map')

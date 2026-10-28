@@ -6,7 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { EntryRepository } from '@menu/api/entries/data-access';
+import { EntryRepository, SavedItemRepository } from '@menu/api/entries/data-access';
 import { newCapabilityId, withoutUndefined } from '@menu/api/shared/util';
 import { PHOTO_STORAGE, type PhotoStorage } from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -35,6 +35,7 @@ export class EntryService {
 
   constructor(
     private readonly repository: EntryRepository,
+    private readonly saved: SavedItemRepository,
     @Inject(ITEM_CATALOG) private readonly catalog: ItemCatalog,
     @Inject(AUTHOR_DIRECTORY) private readonly authors: AuthorDirectory,
     @Inject(PHOTO_STORAGE) private readonly photos: PhotoStorage,
@@ -42,10 +43,11 @@ export class EntryService {
 
   async listForItem(principal: Principal | null, itemId: string): Promise<ItemEntries> {
     const item = await this.findItem(principal, itemId);
-    const [refs, mine, others] = await Promise.all([
+    const [refs, mine, others, savedByMe] = await Promise.all([
       this.catalog.refsFor([itemId]),
       principal ? this.repository.listByAuthor(principal.accountId, { itemId }) : [],
       item.isPublic ? this.repository.listPublicByItem(itemId, principal?.accountId ?? null) : [],
+      principal ? this.saved.isSaved(principal.accountId, itemId) : false,
     ]);
     const ref = refs.get(itemId);
     if (!ref) {
@@ -55,6 +57,7 @@ export class EntryService {
     return {
       item: ref,
       itemIsPublic: item.isPublic,
+      savedByMe,
       mine: mine.map((record) => new DiaryEntry(record).toContract()),
       others: others.map((record) =>
         new DiaryEntry(record).toPublic(names.get(record.authorId) ?? ''),

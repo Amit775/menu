@@ -2,6 +2,8 @@ export const he = {
   back: 'חזרה',
   loading: 'טוען…',
   edit: 'עריכת הפריט',
+  wantToTry: 'רוצה לנסות',
+  saveFailed: 'לא הצלחנו לשמור. נסו שוב.',
   share: 'שיתוף',
   copied: 'הקישור הועתק',
   loadFailed: 'לא הצלחנו לטעון את הפריט.',
