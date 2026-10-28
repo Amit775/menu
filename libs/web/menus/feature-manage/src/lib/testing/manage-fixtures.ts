@@ -53,6 +53,7 @@ export const classic: Item = {
   description: null,
   listPrice: { value: 62, currency: 'ILS' as const },
   tagIds: [burgerTag.id],
+  variations: [],
   state: 'approved',
   mergedIntoId: null,
   submittedByMe: false,

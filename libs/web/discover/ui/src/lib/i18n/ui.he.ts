@@ -18,4 +18,11 @@ export const he = {
   historyMovedUnnamed: 'הועבר לקטגוריה אחרת',
   historyTagged: 'תויג {tags}',
   historyUntagged: 'הוסר התיוג {tags}',
+  historyVariationAdded: 'נוספה גרסה: {names}',
+  historyVariationRemoved: 'הגרסה הוסרה: {names}',
+  historyVariationBack: 'חזר להגשה: {names}',
+  historyVariationPaused: 'לא מוגש כרגע: {names}',
+  historyVariationPrice: 'המחיר של {variation} השתנה מ־{from} ל־{to}',
+  historyVariationPriceSet: 'נקבע מחיר ל{variation}: {to}',
+  historyVariationPriceRemoved: 'המחיר של {variation} הוסר',
 };

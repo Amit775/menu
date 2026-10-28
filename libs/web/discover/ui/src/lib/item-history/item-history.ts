@@ -1,5 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { type ItemChange, type ItemHistoryEvent, type Text } from '@menu/shared/contracts';
+import {
+  type ItemChange,
+  type ItemHistoryEvent,
+  type Price,
+  type Text,
+} from '@menu/shared/contracts';
 import {
   formatList,
   formatPrice,
@@ -43,22 +48,15 @@ export class ItemHistory {
   private describeChange(change: ItemChange): string[] {
     const pick = (text: Text) => this.i18n.pick(text);
     const list = (texts: readonly Text[]) => formatList(texts.map(pick), this.i18n.language());
+    const when = (texts: readonly Text[], line: (names: string) => string) =>
+      texts.length > 0 ? [line(list(texts))] : [];
     switch (change.field) {
       case 'name':
         return [this.t('historyRenamed', { from: pick(change.from) })];
       case 'description':
         return [this.t('historyDescription')];
       case 'listPrice':
-        if (change.from && change.to) {
-          return [
-            this.t('historyPrice', { from: formatPrice(change.from), to: formatPrice(change.to) }),
-          ];
-        }
-        return [
-          change.to
-            ? this.t('historyPriceSet', { to: formatPrice(change.to) })
-            : this.t('historyPriceRemoved'),
-        ];
+        return [this.describePrice(change.from, change.to, null)];
       case 'section':
         return [
           change.to
@@ -67,13 +65,34 @@ export class ItemHistory {
         ];
       case 'tags':
         return [
-          ...(change.added.length > 0
-            ? [this.t('historyTagged', { tags: list(change.added) })]
-            : []),
-          ...(change.removed.length > 0
-            ? [this.t('historyUntagged', { tags: list(change.removed) })]
-            : []),
+          ...when(change.added, (tags) => this.t('historyTagged', { tags })),
+          ...when(change.removed, (tags) => this.t('historyUntagged', { tags })),
         ];
+      case 'variations':
+        return [
+          ...when(change.added, (names) => this.t('historyVariationAdded', { names })),
+          ...when(change.removed, (names) => this.t('historyVariationRemoved', { names })),
+          ...when(change.nowAvailable, (names) => this.t('historyVariationBack', { names })),
+          ...when(change.nowUnavailable, (names) => this.t('historyVariationPaused', { names })),
+        ];
+      case 'variationPrice':
+        return [this.describePrice(change.from, change.to, pick(change.variation))];
     }
+  }
+
+  private describePrice(from: Price | null, to: Price | null, variation: string | null): string {
+    if (variation !== null) {
+      if (from && to) {
+        const prices = { variation, from: formatPrice(from), to: formatPrice(to) };
+        return this.t('historyVariationPrice', prices);
+      }
+      return to
+        ? this.t('historyVariationPriceSet', { variation, to: formatPrice(to) })
+        : this.t('historyVariationPriceRemoved', { variation });
+    }
+    if (from && to) {
+      return this.t('historyPrice', { from: formatPrice(from), to: formatPrice(to) });
+    }
+    return to ? this.t('historyPriceSet', { to: formatPrice(to) }) : this.t('historyPriceRemoved');
   }
 }

@@ -11,6 +11,7 @@ const ITEM_ID = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
 const entry: Entry = {
   id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
   itemId: ITEM_ID,
+  variationId: null,
   venueId: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 4,
@@ -29,6 +30,7 @@ const sheet: ItemEntries = {
     id: ITEM_ID,
     name: { he: 'המבורגר הקלאסי', en: null },
     listPrice: { value: 68, currency: 'ILS' as const },
+    variations: [],
     venue: { id: entry.venueId, name: { he: 'בורגר 24', en: null } },
   },
   itemIsPublic: true,

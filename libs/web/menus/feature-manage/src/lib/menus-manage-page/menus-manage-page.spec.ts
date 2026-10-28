@@ -31,6 +31,7 @@ const pending: Item = {
   description: null,
   listPrice: { value: 72, currency: 'ILS' as const },
   tagIds: [],
+  variations: [],
   state: 'pending',
   mergedIntoId: null,
   submittedByMe: false,

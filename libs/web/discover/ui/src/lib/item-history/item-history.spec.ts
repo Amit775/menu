@@ -26,6 +26,22 @@ describe('ItemHistory', () => {
           removed: [{ he: 'בשרי', en: 'Meat' }],
         },
         { field: 'description' },
+        {
+          field: 'variations',
+          added: [{ he: 'טבעוני', en: 'Vegan' }],
+          removed: [],
+          nowAvailable: [],
+          nowUnavailable: [
+            { he: 'עוף', en: 'Chicken' },
+            { he: 'דלעת', en: 'Pumpkin' },
+          ],
+        },
+        {
+          field: 'variationPrice',
+          variation: { he: 'טבעוני', en: 'Vegan' },
+          from: null,
+          to: { value: 62, currency: 'ILS' },
+        },
       ],
     },
     { kind: 'added', at: '2026-03-01T10:00:00.000Z', listPrice: { value: 58, currency: 'ILS' } },
@@ -59,11 +75,46 @@ describe('ItemHistory', () => {
       'Tagged Vegan and Spicy',
       'No longer tagged Meat',
       'Description updated',
+      'New variations: Vegan',
+      'Not offered for now: Chicken and Pumpkin',
+      'Vegan price set to ₪62',
       'Added to the menu at ₪58',
     ]);
     expect(element.querySelector('time')?.getAttribute('datetime')).toBe(
       '2026-10-20T10:00:00.000Z',
     );
+  });
+
+  it('names variations that went away or came back', async () => {
+    TestBed.inject(I18n).setLanguage('en');
+    const fixture = TestBed.createComponent(ItemHistory);
+    fixture.componentRef.setInput('events', [
+      {
+        kind: 'changed',
+        at: '2026-09-10T10:00:00.000Z',
+        changes: [
+          {
+            field: 'variations',
+            added: [],
+            removed: [{ he: 'עוף', en: 'Chicken' }],
+            nowAvailable: [{ he: 'דלעת', en: 'Pumpkin' }],
+            nowUnavailable: [],
+          },
+          {
+            field: 'variationPrice',
+            variation: { he: 'דלעת', en: 'Pumpkin' },
+            from: { value: 58, currency: 'ILS' },
+            to: { value: 60, currency: 'ILS' },
+          },
+        ],
+      },
+    ] satisfies ItemHistoryEvent[]);
+    await fixture.whenStable();
+    expect(lines(fixture.nativeElement as HTMLElement)).toEqual([
+      'Variations removed: Chicken',
+      'Offered again: Pumpkin',
+      'Pumpkin price changed from ₪58 to ₪60',
+    ]);
   });
 
   it('speaks Hebrew by default', async () => {

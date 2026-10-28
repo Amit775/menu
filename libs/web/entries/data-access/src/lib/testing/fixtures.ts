@@ -14,12 +14,14 @@ export const itemRef: ItemRef = {
   id: ITEM_ID,
   name: { he: 'המבורגר הקלאסי', en: 'Classic burger' },
   listPrice: { value: 68, currency: 'ILS' as const },
+  variations: [],
   venue: { id: VENUE_ID, name: { he: 'בורגר 24', en: 'Burger 24' } },
 };
 
 export const entry: Entry = {
   id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
   itemId: ITEM_ID,
+  variationId: null,
   venueId: VENUE_ID,
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 5,
@@ -37,6 +39,7 @@ export const entry: Entry = {
 export const publicEntry: PublicEntry = {
   id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
   itemId: ITEM_ID,
+  variationId: null,
   venueId: VENUE_ID,
   eatenAt: '2026-10-19T19:30:00.000Z',
   rating: 4,

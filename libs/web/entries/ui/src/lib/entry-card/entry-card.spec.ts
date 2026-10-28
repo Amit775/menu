@@ -10,6 +10,7 @@ describe('EntryCard', () => {
   const own: Entry = {
     id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
     itemId: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+    variationId: null,
     venueId: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
     eatenAt: yesterday,
     rating: 5,
@@ -26,6 +27,7 @@ describe('EntryCard', () => {
   const others: PublicEntry = {
     id: own.id,
     itemId: own.itemId,
+    variationId: null,
     venueId: own.venueId,
     eatenAt: yesterday,
     rating: null,
