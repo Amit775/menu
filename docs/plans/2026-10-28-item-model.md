@@ -17,10 +17,10 @@
 
 ## Slices
 
-| #   | Slice                                                                                       | Status      |
-| --- | ------------------------------------------------------------------------------------------- | ----------- |
-| 1   | Item history: contract, `item_revision` table with backfill, menus writes revisions         | in progress |
-| 2   | Item history on the item page; remove the paid-price history (contract, entries stats, web) | todo        |
-| 3   | Variations: contract, `item.variations`, `entry.variation_id`, API rules                    | todo        |
-| 4   | Variations in the web: item form, log form picker, item page, search by a variation's tags  | todo        |
-| 5   | Item photos: upload by Owner or Admin, shown on feed cards without an entry photo           | todo        |
+| #   | Slice                                                                                       | Status |
+| --- | ------------------------------------------------------------------------------------------- | ------ |
+| 1   | Item history: contract, `item_revision` table with backfill, menus writes revisions         | done   |
+| 2   | Item history on the item page; remove the paid-price history (contract, entries stats, web) | done   |
+| 3   | Variations: contract, `item.variations`, `entry.variation_id`, API rules                    | todo   |
+| 4   | Variations in the web: item form, log form picker, item page, search by a variation's tags  | todo   |
+| 5   | Item photos: upload by Owner or Admin, shown on feed cards without an entry photo           | todo   |

@@ -79,8 +79,8 @@
           </div>
         </dl>
 
-        @if (page.priceHistory.length > 0) {
-          <menu-price-history [points]="page.priceHistory" />
+        @if (page.history.length > 0) {
+          <menu-item-history [events]="page.history" />
         }
 
         <section class="people">

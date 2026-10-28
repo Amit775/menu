@@ -32,8 +32,11 @@ export function formatRelativeDate(iso: string, language: Language, now = new Da
   return format.format(Math.round(days / 365), 'year');
 }
 
-export function formatMonth(month: string, language: Language): string {
-  return new Intl.DateTimeFormat(language, { month: 'short', timeZone: 'UTC' }).format(
-    new Date(`${month}-01`),
-  );
+/** Months follow the diners' calendar, not UTC. */
+export function formatMonthYear(iso: string, language: Language): string {
+  return new Intl.DateTimeFormat(language, {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Jerusalem',
+  }).format(new Date(iso));
 }
