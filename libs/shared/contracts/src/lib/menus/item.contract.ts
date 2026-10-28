@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PriceSchema, LongTextSchema, TextSchema } from '../common/values.contract';
+import { PhotoUrlSchema } from '../entries/photo.contract';
 
 export const itemPath = 'items';
 
@@ -87,6 +88,7 @@ export const ItemSchema = z.object({
   mergedIntoId: z.uuid().nullable(),
   submittedByMe: z.boolean(),
   position: z.number().int().min(0),
+  photoUrl: PhotoUrlSchema.nullable(),
   createdAt: z.iso.datetime(),
 });
 
