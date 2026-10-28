@@ -25,6 +25,16 @@ export const en = {
   retry: 'Try again',
   notFound: 'This item was not found, or you do not manage it.',
   toVenue: 'Back to the venue',
+  photo: 'Photo',
+  photoAlt: 'The item’s photo',
+  photoHint: 'Shown in discover until a diner shares a photo of it.',
+  addPhoto: 'Add a photo',
+  changePhoto: 'Change photo',
+  removePhoto: 'Remove photo',
+  preparingPhoto: 'Preparing photo…',
+  photoRejected:
+    'The item was saved, but this photo can’t be used. Try a JPEG, PNG or WebP up to 8 MB.',
+  photoFailed: 'The item was saved, but the photo did not upload. Try again.',
   variations: 'Variations (optional)',
   variationsHint:
     'Versions people pick when they log it: beef, chicken or vegan, a seasonal fruit.',

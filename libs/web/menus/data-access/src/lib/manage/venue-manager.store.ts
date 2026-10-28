@@ -137,6 +137,9 @@ export const VenueManagerStore = signalStore(
         replace(item);
         return item;
       },
+      async setItemPhoto(id: string, photo: Blob | null): Promise<void> {
+        replace(await (photo ? api.setItemPhoto(id, photo) : api.removeItemPhoto(id)));
+      },
       async addSection(name: Text): Promise<void> {
         const section = await api.addSection(venueId(), { name });
         patch(({ sections }) => ({ sections: [...sections, section] }));
