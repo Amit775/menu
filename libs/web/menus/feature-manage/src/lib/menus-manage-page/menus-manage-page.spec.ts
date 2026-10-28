@@ -36,6 +36,7 @@ const pending: Item = {
   mergedIntoId: null,
   submittedByMe: false,
   position: 0,
+  photoUrl: null,
   createdAt: '2026-10-21T10:00:00.000Z',
 };
 
