@@ -34,6 +34,7 @@ describe('ItemController', () => {
       description: null,
       listPrice: null,
       tagIds: [],
+      variations: [],
     };
     await (await setup({ create })).venueItems.create(principal, 'v1', input);
     expect(create).toHaveBeenCalledWith(principal, 'v1', input);

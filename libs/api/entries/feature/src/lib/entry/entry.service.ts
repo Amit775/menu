@@ -1,4 +1,11 @@
-import { ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { EntryRepository, PHOTO_STORAGE, type PhotoStorage } from '@menu/api/entries/data-access';
 import { withoutUndefined } from '@menu/api/shared/util';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -60,6 +67,7 @@ export class EntryService {
     if (!item.acceptsEntry) {
       throw new ForbiddenException('This item is not open to entries.');
     }
+    assertOffered(item, input.variationId);
     const record = await this.repository.create({
       ...input,
       eatenAt: input.eatenAt ?? new Date().toISOString(),
@@ -90,6 +98,13 @@ export class EntryService {
 
   async update(principal: Principal, id: string, input: UpdateEntry): Promise<Entry> {
     const entry = await this.findOwn(principal, id);
+    if (input.variationId !== undefined && input.variationId !== entry.record.variationId) {
+      const item = await this.findItem(principal, entry.record.itemId);
+      if (!item.acceptsEntry) {
+        throw new ForbiddenException('This item is not open to entries.');
+      }
+      assertOffered(item, input.variationId);
+    }
     const next = new DiaryEntry({ ...entry.record, ...withoutUndefined(input) });
     const record = await this.repository.update(id, principal.accountId, {
       ...input,
@@ -149,5 +164,12 @@ export class EntryService {
     const entry = new DiaryEntry(record);
     entry.assertAuthor(principal);
     return entry;
+  }
+}
+
+function assertOffered(item: EntryTarget, variationId: string | null): void {
+  const variation = item.variations.find((candidate) => candidate.id === variationId);
+  if (variationId !== null && !variation?.available) {
+    throw new BadRequestException('This item does not come in that variation now.');
   }
 }

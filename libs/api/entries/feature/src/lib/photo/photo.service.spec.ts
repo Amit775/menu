@@ -23,6 +23,7 @@ describe('PhotoService', () => {
       id: 'e1',
       authorId: 'a1',
       itemId: 'i1',
+      variationId: null,
       venueId: 'v1',
       eatenAt: '2026-10-20T19:30:00.000Z',
       rating: 4,

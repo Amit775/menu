@@ -8,6 +8,7 @@ describe('DiaryEntry', () => {
     id: 'i1',
     name: { he: 'המבורגר', en: null },
     listPrice: { value: 68, currency: 'ILS' as const },
+    variations: [],
     venue: { id: 'v1', name: { he: 'מוזס', en: null } },
   };
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
@@ -16,6 +17,7 @@ describe('DiaryEntry', () => {
     id: 'e1',
     authorId: 'a1',
     itemId: 'i1',
+    variationId: null,
     venueId: 'v1',
     eatenAt: '2026-10-20T19:30:00.000Z',
     rating: 4,

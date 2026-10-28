@@ -4,6 +4,7 @@ import { type ItemEntryStats as ItemStats } from '@menu/api/shared/util-ports';
 export const EMPTY_STATS: ItemStats = {
   ratingCount: 0,
   ratingSum: 0,
+  variationRatings: new Map(),
   wouldOrderAgainPercent: null,
   publicEntryCount: 0,
   otherEntryCount: null,

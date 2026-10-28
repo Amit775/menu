@@ -5,6 +5,7 @@ describe('summarizeEntries', () => {
   function fact(overrides: Partial<EntryFact>): EntryFact {
     return {
       itemId: 'i1',
+      variationId: null,
       authorId: 'a1',
       rating: null,
       wouldOrderAgain: null,
@@ -96,6 +97,42 @@ describe('summarizeEntries', () => {
       }),
     ]);
     expect(stats.latestPublicPrice).toEqual({ value: 60, currency: 'ILS' });
+  });
+
+  it('rates each variation from the diners’ latest ratings', () => {
+    const stats = summarizeEntries([
+      fact({
+        variationId: 'beef',
+        rating: 2,
+        visibility: 'public',
+        eatenAt: new Date('2026-09-01'),
+      }),
+      fact({ variationId: 'vegan', rating: 5, visibility: 'public' }),
+      fact({ authorId: 'a2', variationId: 'beef', rating: 4, visibility: 'public' }),
+      fact({ authorId: 'a3', rating: 3, visibility: 'public' }),
+    ]);
+    expect(stats.variationRatings).toEqual(
+      new Map([
+        ['vegan', { ratingCount: 1, ratingSum: 5 }],
+        ['beef', { ratingCount: 1, ratingSum: 4 }],
+      ]),
+    );
+  });
+
+  it('counts private ratings per variation only when no variation could reveal one', () => {
+    const vegan = authors(3, { variationId: 'vegan', rating: 4, visibility: 'private' });
+    expect(summarizeEntries(vegan).variationRatings.get('vegan')).toEqual({
+      ratingCount: 3,
+      ratingSum: 12,
+    });
+    const withOneBeef = [
+      ...vegan,
+      fact({ authorId: 'b1', variationId: 'beef', rating: 1, visibility: 'private' }),
+      fact({ authorId: 'b2', variationId: 'beef', rating: 5, visibility: 'public' }),
+    ];
+    const stats = summarizeEntries(withOneBeef);
+    expect(stats.ratingCount).toBe(5);
+    expect(stats.variationRatings).toEqual(new Map([['beef', { ratingCount: 1, ratingSum: 5 }]]));
   });
 
   it('groups facts per item', () => {

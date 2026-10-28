@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { isPrismaError, PrismaErrorCode, PrismaService, readText } from '@menu/api/shared/db';
 import { withoutUndefined } from '@menu/api/shared/util';
 import {
+  ItemVariationsSchema,
   type CreateTag,
   type Tag,
   type TagKind,
@@ -69,12 +70,26 @@ export class TagRepository {
         return false;
       }
       const items = await tx.item.findMany({
-        where: { tagIds: { has: fromTagId } },
-        select: { id: true, tagIds: true },
+        where: {
+          OR: [
+            { tagIds: { has: fromTagId } },
+            { variations: { array_contains: [{ tagIds: [fromTagId] }] } },
+          ],
+        },
+        select: { id: true, tagIds: true, variations: true },
       });
+      const repoint = (ids: readonly string[]) => [
+        ...new Set(ids.map((id) => (id === fromTagId ? intoTagId : id))),
+      ];
       for (const item of items) {
-        const tagIds = [...new Set(item.tagIds.map((id) => (id === fromTagId ? intoTagId : id)))];
-        await tx.item.update({ where: { id: item.id }, data: { tagIds } });
+        const variations = ItemVariationsSchema.parse(item.variations).map((variation) => ({
+          ...variation,
+          tagIds: repoint(variation.tagIds),
+        }));
+        await tx.item.update({
+          where: { id: item.id },
+          data: { tagIds: repoint(item.tagIds), variations },
+        });
       }
       await tx.tag.delete({ where: { id: fromTagId } });
       return true;

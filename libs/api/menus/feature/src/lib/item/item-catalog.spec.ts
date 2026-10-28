@@ -23,6 +23,7 @@ describe('MenusItemCatalog', () => {
     description: null,
     listPrice: null,
     tagIds: [],
+    variations: [],
     state: 'approved',
     mergedIntoId: null,
     submittedById: null,
@@ -52,7 +53,31 @@ describe('MenusItemCatalog', () => {
       venueId,
       isPublic: true,
       acceptsEntry: true,
+      variations: [],
     });
+  });
+
+  const seasonal = {
+    id: '5d2d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
+    name: { he: 'תות', en: 'Strawberry' },
+    price: { value: 34, currency: 'ILS' as const },
+    tagIds: ['3a2d3c4e-3333-4c1c-9a57-6f7a5d3c2b10'],
+    available: false,
+  };
+
+  it('tells entries which variations an item has and which take entries', async () => {
+    const target = await catalog({ ...base, variations: [seasonal] }).findForEntries(
+      submitter,
+      'i1',
+    );
+    expect(target?.variations).toEqual([{ id: seasonal.id, available: false }]);
+  });
+
+  it('names an item’s variations without their tags', async () => {
+    const refs = await catalog({ ...base, variations: [seasonal] }).refsFor(['i1']);
+    expect(refs.get('i1')?.variations).toEqual([
+      { id: seasonal.id, name: seasonal.name, price: seasonal.price, available: false },
+    ]);
   });
 
   it('lets visitors see an approved item without logging on it', async () => {
@@ -109,6 +134,7 @@ describe('MenusItemCatalog', () => {
       name: { he: 'פיצה', en: null },
       listPrice: { value: 42, currency: 'ILS' as const },
       venue: { id: venueId, name: { he: 'מוזס', en: null } },
+      variations: [],
     });
   });
 

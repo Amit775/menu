@@ -1,4 +1,4 @@
-import { ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   type EntryRecord,
@@ -13,14 +13,27 @@ import { EntryService } from './entry.service';
 describe('EntryService', () => {
   const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
   const other: Principal = { ...author, accountId: 'a2' };
-  const item: EntryTarget = { id: 'i1', venueId: 'v1', isPublic: true, acceptsEntry: true };
+  const beef = '5b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+  const seasonal = '6b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+  const item: EntryTarget = {
+    id: 'i1',
+    venueId: 'v1',
+    isPublic: true,
+    acceptsEntry: true,
+    variations: [
+      { id: beef, available: true },
+      { id: seasonal, available: false },
+    ],
+  };
   const itemRef = {
     id: 'i1',
     name: { he: 'המבורגר', en: null },
     listPrice: { value: 68, currency: 'ILS' as const },
+    variations: [],
     venue: { id: 'v1', name: { he: 'מוזס', en: null } },
   };
   const input = {
+    variationId: null,
     rating: 4,
     wouldOrderAgain: true,
     pricePaid: { value: 68, currency: 'ILS' as const },
@@ -33,6 +46,7 @@ describe('EntryService', () => {
       id: 'e1',
       authorId: 'a1',
       itemId: 'i1',
+      variationId: null,
       venueId: 'v1',
       eatenAt: '2026-10-20T19:30:00.000Z',
       rating: 4,
@@ -101,6 +115,21 @@ describe('EntryService', () => {
         'shareToken',
         expect.stringMatching(/^[\w-]{22}$/),
       );
+    });
+
+    it('records the variation the diner had', async () => {
+      const create = vi.fn().mockResolvedValue(record({ variationId: beef }));
+      await (await setup({ create })).create(author, 'i1', { ...input, variationId: beef });
+      expect(create.mock.calls[0]?.[0]).toHaveProperty('variationId', beef);
+    });
+
+    it('refuses a variation the item does not offer now', async () => {
+      const service = await setup({ create: vi.fn() });
+      for (const variationId of [seasonal, '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10']) {
+        await expect(service.create(author, 'i1', { ...input, variationId })).rejects.toThrow(
+          BadRequestException,
+        );
+      }
     });
 
     it('refuses an item that is not open to the caller', async () => {
@@ -202,6 +231,32 @@ describe('EntryService', () => {
       update.mockClear();
       await service.update(author, 'e1', { text: 'עוד' });
       expect(update.mock.calls[0]?.[2]).toEqual({ text: 'עוד' });
+    });
+
+    it('keeps a variation that is no longer offered, but does not switch to one', async () => {
+      const seasonalEntry = record({ variationId: seasonal });
+      const update = vi.fn().mockResolvedValue(seasonalEntry);
+      const service = await setup({ findById: vi.fn().mockResolvedValue(seasonalEntry), update });
+      await service.update(author, 'e1', { variationId: seasonal, text: 'עוד' });
+      await service.update(author, 'e1', { variationId: beef });
+      await service.update(author, 'e1', { variationId: null });
+      expect(update).toHaveBeenCalledTimes(3);
+
+      const beefEntry = record({ variationId: beef });
+      const fromBeef = await setup({ findById: vi.fn().mockResolvedValue(beefEntry), update });
+      await expect(fromBeef.update(author, 'e1', { variationId: seasonal })).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('does not switch the variation on an item closed to entries', async () => {
+      const service = await setup(
+        { findById: vi.fn().mockResolvedValue(record()), update: vi.fn() },
+        { ...item, acceptsEntry: false },
+      );
+      await expect(service.update(author, 'e1', { variationId: beef })).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('fails with 404 for someone else’s entry', async () => {

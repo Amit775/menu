@@ -12,6 +12,8 @@ import {
   type MapQuery,
   type Near,
   type SearchResults,
+  type Tag,
+  type VariationScore,
   type VenueInsights,
   type VenuePage,
 } from '@menu/shared/contracts';
@@ -45,6 +47,22 @@ function pointOf(near: Near): GeoPoint | null {
 
 function byScoreThenName(a: DiscoverItem, b: DiscoverItem): number {
   return (b.score ?? 0) - (a.score ?? 0) || a.name.he.localeCompare(b.name.he, 'he');
+}
+
+function tagsOf(ids: readonly string[], tags: readonly Tag[]): Tag[] {
+  return ids.flatMap((id) => tags.filter((tag) => tag.id === id));
+}
+
+function peerMeanOf(snapshot: Snapshot, item: CatalogItem): number {
+  return snapshot.means.get(item.tagIds[0] ?? '') ?? NEUTRAL_MEAN;
+}
+
+/** All the wanted tags must hold for one way to order it: the item itself or a variation offered now. */
+function hasTags(item: CatalogItem, wanted: readonly string[]): boolean {
+  const ways = [[], ...item.variations.filter((v) => v.available).map((v) => v.tagIds)];
+  return ways.some((extra) =>
+    wanted.every((tagId) => item.tagIds.includes(tagId) || extra.includes(tagId)),
+  );
 }
 
 /**
@@ -150,7 +168,8 @@ export class DiscoverService {
     return {
       item: this.toItem(snapshot, record, point),
       archived: record.state === 'archived',
-      tags: record.tagIds.flatMap((id) => tags.filter((tag) => tag.id === id)),
+      tags: tagsOf(record.tagIds, tags),
+      variations: this.variationScores(snapshot, record, tags),
       history: itemHistory(revisions, sections, tags),
       alsoGoodHere: snapshot.catalog
         .filter(
@@ -231,16 +250,29 @@ export class DiscoverService {
     const point = pointOf(query);
     return snapshot.catalog
       .filter((item) => item.state === 'approved')
-      .filter((item) => query.tagIds.every((tagId) => item.tagIds.includes(tagId)))
+      .filter((item) => hasTags(item, query.tagIds))
       .map((item) => this.toItem(snapshot, item, point))
       .filter(
         (item) => item.distanceMeters === null || item.distanceMeters <= query.radiusKm * 1000,
       );
   }
 
+  private variationScores(snapshot: Snapshot, item: CatalogItem, tags: Tag[]): VariationScore[] {
+    const ratings = (snapshot.stats.get(item.id) ?? EMPTY_STATS).variationRatings;
+    return item.variations.map(({ tagIds, ...variation }) => {
+      const rating = ratings.get(variation.id) ?? { ratingCount: 0, ratingSum: 0 };
+      return {
+        variation,
+        tags: tagsOf(tagIds, tags),
+        score: this.ranking.score({ ...EMPTY_STATS, ...rating }, peerMeanOf(snapshot, item)),
+        ratingCount: rating.ratingCount,
+      };
+    });
+  }
+
   private toItem(snapshot: Snapshot, item: CatalogItem, point: GeoPoint | null): DiscoverItem {
     const stats = snapshot.stats.get(item.id) ?? EMPTY_STATS;
-    const peerMean = snapshot.means.get(item.tagIds[0] ?? '') ?? NEUTRAL_MEAN;
+    const peerMean = peerMeanOf(snapshot, item);
     return {
       id: item.id,
       name: item.name,

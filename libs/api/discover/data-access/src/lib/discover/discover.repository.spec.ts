@@ -17,6 +17,7 @@ describe('DiscoverRepository', () => {
         sectionId: 's1',
         position: 0,
         tagIds: ['t1'],
+        variations: [],
         listPriceValue: { toNumber: () => 68 },
         listPriceCurrency: 'ILS',
         createdAt: new Date('2026-10-01T00:00:00.000Z'),
@@ -62,6 +63,7 @@ describe('DiscoverRepository', () => {
       listPrice: { value: 58.5, currency: 'ILS' },
       sectionId: '1b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
       tagIds: [],
+      variations: [],
     };
     const findMany = vi
       .fn()

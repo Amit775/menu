@@ -32,6 +32,7 @@ describe('Entry controllers', () => {
     const create = vi.fn().mockResolvedValue({});
     const input = {
       rating: null,
+      variationId: null,
       wouldOrderAgain: null,
       pricePaid: null,
       text: '',

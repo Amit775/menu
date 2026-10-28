@@ -15,6 +15,8 @@ import {
   type ItemRevisionKind,
   type ItemSnapshot,
   type ItemState,
+  type ItemVariation,
+  ItemVariationsSchema,
   MenuSectionSchema,
   type Price,
   type Text,
@@ -23,6 +25,9 @@ import {
 
 export type ItemRecord = Omit<Item, 'submittedByMe'> & { submittedById: string | null };
 
+/** An edit with every variation already given its id by the service. */
+export type ItemChanges = Omit<UpdateItem, 'variations'> & { variations?: ItemVariation[] };
+
 export interface NewItem {
   venueId: string;
   sectionId: string;
@@ -30,6 +35,7 @@ export interface NewItem {
   description: Text | null;
   listPrice: Price | null;
   tagIds: readonly string[];
+  variations: readonly ItemVariation[];
   state: Extract<ItemState, 'pending' | 'approved'>;
   submittedById: string | null;
 }
@@ -43,6 +49,7 @@ interface ItemRow {
   listPriceValue: DecimalColumn | null;
   listPriceCurrency: Currency | null;
   tagIds: string[];
+  variations: unknown;
   state: ItemState;
   submittedById: string | null;
   mergedIntoId: string | null;
@@ -160,7 +167,7 @@ export class ItemRepository {
 
   async create(input: NewItem, changedById: string): Promise<ItemRecord> {
     const row = await this.prisma.$transaction(async (tx) => {
-      await assertTagsExist(tx, input.tagIds);
+      await assertTagsExist(tx, allTagIds(input.tagIds, input.variations));
       const last = await tx.item.aggregate({
         where: { sectionId: input.sectionId },
         _max: { position: true },
@@ -173,6 +180,7 @@ export class ItemRepository {
           description: input.description ?? DbNull,
           ...priceColumns(input.listPrice),
           tagIds: [...input.tagIds],
+          variations: [...input.variations],
           state: input.state,
           submittedById: input.submittedById,
           position: (last._max.position ?? -1) + 1,
@@ -193,14 +201,14 @@ export class ItemRepository {
    * Updates fields; a new `tagIds` replaces the item's tags in the given order,
    * and a new section puts the item at the end of that section.
    */
-  async update(id: string, input: UpdateItem, changedById: string): Promise<ItemRecord | null> {
-    const { description, listPrice, tagIds, ...rest } = input;
+  async update(id: string, input: ItemChanges, changedById: string): Promise<ItemRecord | null> {
+    const { description, listPrice, tagIds, variations, ...rest } = input;
     const row = await this.prisma.$transaction(async (tx) => {
       const current = await tx.item.findUnique({ where: { id }, select: { sectionId: true } });
       if (!current) {
         return null;
       }
-      await assertTagsExist(tx, tagIds ?? []);
+      await assertTagsExist(tx, allTagIds(tagIds ?? [], variations ?? []));
       let position: number | undefined;
       if (rest.sectionId !== undefined && rest.sectionId !== current.sectionId) {
         const last = await tx.item.aggregate({
@@ -216,6 +224,7 @@ export class ItemRepository {
           ...rest,
           position,
           tagIds: tagIds ? [...tagIds] : undefined,
+          variations,
           ...(description === undefined ? {} : { description: description ?? DbNull }),
           ...(listPrice === undefined ? {} : priceColumns(listPrice)),
         }),
@@ -263,6 +272,7 @@ function toRecord(row: ItemRow): ItemRecord {
     description: row.description === null ? null : readLongText(row.description),
     listPrice: readPrice(row.listPriceValue, row.listPriceCurrency),
     tagIds: row.tagIds,
+    variations: ItemVariationsSchema.parse(row.variations),
     state: row.state,
     mergedIntoId: row.mergedIntoId,
     submittedById: row.submittedById,
@@ -278,7 +288,12 @@ function snapshotOf(record: ItemRecord): ItemSnapshot {
     listPrice: record.listPrice,
     sectionId: record.sectionId,
     tagIds: record.tagIds,
+    variations: record.variations,
   };
+}
+
+function allTagIds(tagIds: readonly string[], variations: readonly ItemVariation[]): string[] {
+  return [...new Set([...tagIds, ...variations.flatMap((variation) => variation.tagIds)])];
 }
 
 function priceColumns(price: Price | null) {
