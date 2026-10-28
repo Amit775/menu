@@ -7,7 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { ItemPageStore } from '@menu/web/discover/data-access';
 import { DeviceShare } from '@menu/web/shared/util-device';
-import { ItemRow, PriceHistory, ScoreBadge } from '@menu/web/discover/ui';
+import { ItemHistory, ItemRow, ScoreBadge } from '@menu/web/discover/ui';
 import { I18n, injectTranslate, LocalizePipe, PricePipe } from '@menu/web/shared/util-i18n';
 import { itemI18n } from '../item.i18n';
 
@@ -21,7 +21,7 @@ import { itemI18n } from '../item.i18n';
     MatIconModule,
     MatProgressSpinnerModule,
     ItemRow,
-    PriceHistory,
+    ItemHistory,
     ScoreBadge,
     LocalizePipe,
     PricePipe,

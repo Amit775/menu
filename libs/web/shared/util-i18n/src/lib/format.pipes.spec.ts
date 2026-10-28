@@ -1,5 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { DistancePipe, PricePipe, RelativeDatePipe, ShekelsPipe } from './format.pipes';
+import {
+  DistancePipe,
+  MonthYearPipe,
+  PricePipe,
+  RelativeDatePipe,
+  ShekelsPipe,
+} from './format.pipes';
 import { I18n } from './i18n';
 
 describe('format pipes', () => {
@@ -26,5 +32,11 @@ describe('format pipes', () => {
   it('shows a date relative to today', () => {
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     expect(create(RelativeDatePipe).transform(yesterday)).toBe('אתמול');
+  });
+
+  it('shows a month and year in the current language', () => {
+    const pipe = create(MonthYearPipe);
+    TestBed.inject(I18n).setLanguage('en');
+    expect(pipe.transform('2026-03-10T10:00:00.000Z')).toBe('Mar 2026');
   });
 });

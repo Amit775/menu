@@ -1,0 +1,13 @@
+<section>
+  <h2>{{ t('historyTitle') }}</h2>
+  <ol>
+    @for (row of rows(); track $index) {
+      <li>
+        <time [attr.datetime]="row.at">{{ row.at | monthYear }}</time>
+        @for (line of row.lines; track $index) {
+          <p>{{ line }}</p>
+        }
+      </li>
+    }
+  </ol>
+</section>

@@ -36,8 +36,12 @@ describe('DiscoverItemPage', () => {
         kind: 'dish',
       },
     ],
-    priceHistory: [
-      { month: '2026-09', averagePrice: { value: 65, currency: 'ILS' as const }, count: 3 },
+    history: [
+      {
+        kind: 'added' as const,
+        at: '2026-09-01T10:00:00.000Z',
+        listPrice: { value: 65, currency: 'ILS' as const },
+      },
     ],
     alsoGoodHere: [
       { ...item, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10', name: { he: 'צ׳יפס', en: null } },
@@ -77,8 +81,12 @@ describe('DiscoverItemPage', () => {
       '₪68',
       '12',
     ]);
-    expect(element.querySelector('menu-price-history')).not.toBeNull();
-    expect(element.querySelector('section:not(.people) h2')?.textContent).toBe('עוד טעים במוזס');
+    expect(element.querySelector('menu-item-history li')?.textContent).toContain(
+      'נוסף לתפריט במחיר ₪65',
+    );
+    expect(element.querySelector('article > section:not(.people) h2')?.textContent).toBe(
+      'עוד טעים במוזס',
+    );
     expect(element.querySelector('menu-item-row')?.textContent).toContain('צ׳יפס');
   });
 
@@ -102,11 +110,11 @@ describe('DiscoverItemPage', () => {
       photoUrl: null,
     };
     const { element } = await render(
-      vi.fn().mockResolvedValue({ ...page, item: quiet, archived: true, priceHistory: [] }),
+      vi.fn().mockResolvedValue({ ...page, item: quiet, archived: true, history: [] }),
     );
     expect(element.querySelector('.score')?.textContent).toContain('היו הראשונים');
     expect(element.querySelector('[role=note]')?.textContent).toContain('כבר לא בתפריט');
-    expect(element.querySelector('menu-price-history')).toBeNull();
+    expect(element.querySelector('menu-item-history')).toBeNull();
     expect(element.querySelector('a.log')).toBeNull();
   });
 

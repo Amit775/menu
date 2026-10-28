@@ -22,7 +22,7 @@ describe('page stores', () => {
   }
 
   it('loads an item page', async () => {
-    const page = { item, archived: false, tags: [], priceHistory: [], alsoGoodHere: [] };
+    const page = { item, archived: false, tags: [], history: [], alsoGoodHere: [] };
     const { items } = setup({ item: vi.fn().mockResolvedValue(page) });
     items.load(() => ITEM_ID);
     await settle();
