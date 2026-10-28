@@ -67,12 +67,15 @@ export class ItemService {
     await this.assertSection(venueId, input.sectionId);
     const approver = canEditVenue(principal, venueId);
     const record = await rejectUnknownTags(
-      this.repository.create({
-        venueId,
-        ...input,
-        state: approver ? 'approved' : 'pending',
-        submittedById: approver ? null : principal.accountId,
-      }),
+      this.repository.create(
+        {
+          venueId,
+          ...input,
+          state: approver ? 'approved' : 'pending',
+          submittedById: approver ? null : principal.accountId,
+        },
+        principal.accountId,
+      ),
     );
     return new MenuItem(record).toContract(principal);
   }
@@ -81,7 +84,7 @@ export class ItemService {
     const item = await this.findVisible(principal, id);
     item.assertEditableBy(principal);
     await this.assertSection(item.record.venueId, input.sectionId);
-    const record = await rejectUnknownTags(this.repository.update(id, input));
+    const record = await rejectUnknownTags(this.repository.update(id, input, principal.accountId));
     if (!record) {
       throw new NotFoundException('Item not found.');
     }
@@ -91,7 +94,7 @@ export class ItemService {
   async decide(principal: Principal, id: string, decision: ItemDecision): Promise<Item> {
     const item = await this.findVisible(principal, id);
     const from = item.assertDecision(principal, decision);
-    const record = await this.transition(id, from, decisionTarget[decision]);
+    const record = await this.transition(principal, id, from, decisionTarget[decision]);
     return new MenuItem(record).toContract(principal);
   }
 
@@ -116,18 +119,25 @@ export class ItemService {
     const from = item.assertDecision(principal, 'merge');
     const target = await this.findVisible(principal, intoItemId);
     item.assertCanMergeInto(target);
-    const record = await this.transition(id, from, 'merged', intoItemId);
+    const record = await this.transition(principal, id, from, 'merged', intoItemId);
     await this.mergeListener.onItemMerged(id, intoItemId);
     return new MenuItem(record).toContract(principal);
   }
 
   private async transition(
+    principal: Principal,
     id: string,
     from: ItemState,
     to: ItemState,
     mergedIntoId: string | null = null,
   ): Promise<ItemRecord> {
-    const record = await this.repository.transition(id, from, to, mergedIntoId);
+    const record = await this.repository.transition(
+      id,
+      from,
+      to,
+      mergedIntoId,
+      principal.accountId,
+    );
     if (!record) {
       throw new ConflictException('The item changed meanwhile. Reload and try again.');
     }
