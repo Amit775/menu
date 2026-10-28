@@ -40,3 +40,7 @@ export function formatMonthYear(iso: string, language: Language): string {
     timeZone: 'Asia/Jerusalem',
   }).format(new Date(iso));
 }
+
+export function formatList(items: readonly string[], language: Language): string {
+  return new Intl.ListFormat(language, { type: 'conjunction' }).format(items);
+}

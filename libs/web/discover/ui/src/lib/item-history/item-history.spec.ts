@@ -23,7 +23,7 @@ describe('ItemHistory', () => {
             { he: 'טבעוני', en: 'Vegan' },
             { he: 'חריף', en: 'Spicy' },
           ],
-          removed: [],
+          removed: [{ he: 'בשרי', en: 'Meat' }],
         },
         { field: 'description' },
       ],
@@ -56,7 +56,8 @@ describe('ItemHistory', () => {
       'Price changed from ₪58 to ₪64',
       'Renamed from Burger',
       'Moved to Mains',
-      'Tagged Vegan, Spicy',
+      'Tagged Vegan and Spicy',
+      'No longer tagged Meat',
       'Description updated',
       'Added to the menu at ₪58',
     ]);

@@ -52,6 +52,14 @@ interface ItemRow {
 
 const SectionIdsSchema = MenuSectionSchema.pick({ id: true }).array();
 
+export class ItemNotEditableError extends Error {
+  constructor() {
+    super('The item is no longer editable.');
+  }
+}
+
+const EDITABLE_STATES: ItemState[] = ['pending', 'approved'];
+
 export class UnknownTagError extends Error {
   constructor() {
     super('Unknown tag.');
@@ -201,8 +209,9 @@ export class ItemRepository {
         });
         position = (last._max.position ?? -1) + 1;
       }
-      await tx.item.update({
-        where: { id },
+      // Guarded on the state, so an edit that races an archive or a rejection is refused, not recorded after it.
+      const { count } = await tx.item.updateMany({
+        where: { id, state: { in: EDITABLE_STATES } },
         data: withoutUndefined({
           ...rest,
           position,
@@ -211,6 +220,9 @@ export class ItemRepository {
           ...(listPrice === undefined ? {} : priceColumns(listPrice)),
         }),
       });
+      if (count === 0) {
+        throw new ItemNotEditableError();
+      }
       const updated = await tx.item.findUniqueOrThrow({ where: { id } });
       await recordRevision(tx, updated, 'updated', changedById);
       return updated;

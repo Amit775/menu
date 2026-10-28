@@ -112,11 +112,12 @@ export class DiscoverRepository {
   async listRevisions(itemId: string): Promise<ItemRevisionRecord[]> {
     const rows = await this.prisma.itemRevision.findMany({
       where: { itemId },
-      orderBy: { changedAt: 'asc' },
+      orderBy: [{ changedAt: 'asc' }, { seq: 'asc' }],
       select: { kind: true, snapshot: true, changedAt: true },
     });
     return rows.map((row) => ({
       kind: row.kind,
+      // A snapshot that does not parse is a data bug, so the page fails rather than show a wrong history.
       snapshot: ItemSnapshotSchema.parse(row.snapshot),
       changedAt: row.changedAt.toISOString(),
     }));

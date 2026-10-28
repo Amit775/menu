@@ -161,6 +161,8 @@ model ItemRevision {
   snapshot    Json
   changedById String?          @map("changed_by_id") @db.Uuid
   changedAt   DateTime         @default(now()) @map("changed_at")
+  /// Orders revisions written in the same millisecond, such as the backfill's.
+  seq         Int              @default(autoincrement())
 
   item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
   changedBy Account? @relation(fields: [changedById], references: [id], onDelete: SetNull)

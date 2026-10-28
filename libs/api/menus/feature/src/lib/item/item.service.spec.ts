@@ -9,6 +9,7 @@ import {
   type ItemRecord,
   ItemRepository,
   MenuSectionRepository,
+  ItemNotEditableError,
   UnknownTagError,
   VenueRepository,
 } from '@menu/api/menus/data-access';
@@ -191,6 +192,16 @@ describe('ItemService', () => {
       });
       await expect(service.update(owner, 'i1', { tagIds: ['t'] })).rejects.toThrow(
         BadRequestException,
+      );
+    });
+
+    it('fails with 409 when the item was archived meanwhile', async () => {
+      const service = await setup({
+        findById: vi.fn().mockResolvedValue(record()),
+        update: vi.fn().mockRejectedValue(new ItemNotEditableError()),
+      });
+      await expect(service.update(owner, 'i1', { listPrice: null })).rejects.toThrow(
+        ConflictException,
       );
     });
 

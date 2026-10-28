@@ -13,7 +13,7 @@ export const ItemRevisionKindSchema = z.enum([
 
 export type ItemRevisionKind = z.infer<typeof ItemRevisionKindSchema>;
 
-/** The item's catalog fields as one revision stored them (`item_revision.snapshot`). */
+/** The item's catalog fields as one revision stored them (`item_revision.snapshot`); never sent over HTTP. */
 export const ItemSnapshotSchema = z.object({
   name: TextSchema,
   description: LongTextSchema.nullable(),
