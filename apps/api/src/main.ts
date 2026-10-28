@@ -1,12 +1,15 @@
-import { Logger } from '@nestjs/common';
+import { Logger, RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { sharedEntryLinkRoute } from '@menu/shared/contracts';
 import { AppModule } from './app/app.module';
 
 const GLOBAL_PREFIX = 'api';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix(GLOBAL_PREFIX);
+  app.setGlobalPrefix(GLOBAL_PREFIX, {
+    exclude: [{ path: sharedEntryLinkRoute, method: RequestMethod.GET }],
+  });
   app.enableShutdownHooks();
   const port = Number(process.env['PORT'] ?? 3000);
   await app.listen(port);

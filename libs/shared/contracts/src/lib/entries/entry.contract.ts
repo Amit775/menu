@@ -18,6 +18,13 @@ export function sharedEntryPath(token: string): string {
 
 export const sharedEntryRoute = 'shared/:token';
 
+/** The share link people send (`/e/<token>`), outside `/api`, so link previews get the entry's Open Graph tags. */
+export function sharedEntryLinkPath(token: string): string {
+  return `e/${token}`;
+}
+
+export const sharedEntryLinkRoute = 'e/:token';
+
 /**
  * - `private`: the author only. Still counts toward the item's score, anonymously.
  * - `shared`: anyone holding the link; not listed anywhere.

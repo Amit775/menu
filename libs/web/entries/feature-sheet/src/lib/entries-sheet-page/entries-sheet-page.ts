@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
-import { type Entry, type PublicEntry } from '@menu/shared/contracts';
+import { type Entry, type PublicEntry, sharedEntryLinkPath } from '@menu/shared/contracts';
 import { ItemEntriesStore } from '@menu/web/entries/data-access';
 import { EntryCard } from '@menu/web/entries/ui';
 import { Roles } from '@menu/web/shared/util-auth';
@@ -101,7 +101,7 @@ export class EntriesSheetPage {
       return;
     }
     const outcome = await this.deviceShare.share(
-      `/e/${entry.shareToken}`,
+      `/${sharedEntryLinkPath(entry.shareToken)}`,
       this.i18n.pick(sheet.item.name),
     );
     this.notice.set(outcome === 'copied' ? 'copied' : outcome === 'failed' ? 'share-failed' : null);
