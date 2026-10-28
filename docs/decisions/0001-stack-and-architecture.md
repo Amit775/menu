@@ -16,7 +16,7 @@ Menu is a new app for reviewing, sharing and giving feedback on items at restaur
 - **Tests:** Vitest for unit tests everywhere (Angular's unit-test builder for the app, AnalogJS Vitest for Angular libs), Playwright for e2e.
 - **Mobile:** Capacitor wrapping the Angular SPA, added later. SSR only for public share routes if link previews need it, via Angular's per-route render modes.
 - **Structure:** `libs/<platform>/<domain>/<type>` with `platform:*`, `scope:*` and `type:*` tags enforced by `@nx/enforce-module-boundaries` (config in `tools/eslint/module-boundaries.json`) and a custom `require-project-tags` lint rule. Domains are registered with the `domain` generator.
-- **Guardrails:** strict TypeScript (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, strict templates, extended diagnostics as errors), `typescript-eslint` strict-type-checked, angular-eslint signal and OnPush rules, Prettier, commitlint, Husky. Claude Code hooks format on edit, block edits to guardrail files, and refuse to stop while affected checks fail. CI runs the same checks, with Nx Cloud.
+- **Guardrails:** strict TypeScript (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, strict templates, extended diagnostics as errors), `typescript-eslint` strict-type-checked, angular-eslint signal and OnPush rules, Prettier, commitlint, Husky. Claude Code hooks format on edit, block edits to guardrail files, and refuse to stop while affected checks fail. CI runs the same checks, with Nx Cloud (replaced by the GitHub Actions cache in ADR 0018).
 
 ## Consequences
 

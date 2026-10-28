@@ -78,6 +78,5 @@
     "@nx/angular:library": { "linter": "eslint", "unitTestRunner": "vitest-analog" },
     "@nx/angular:component": { "style": "scss", "changeDetection": "OnPush", "type": "component" }
   },
-  "defaultBase": "main",
-  "nxCloudId": "6adb22f88f02d3c6cbb53809"
+  "defaultBase": "main"
 }

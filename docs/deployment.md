@@ -1,20 +1,17 @@
 # Deployment and CI services
 
-What runs where, and the one-time steps a human does in web consoles. Agents cannot do these: they need your accounts, and `cloud.nx.app` is not reachable from agent sandboxes.
+What runs where, and the one-time steps a human does in web consoles. Agents cannot do these: they need your accounts.
 
-| Piece                    | Where                       | Deployed by                          |
-| ------------------------ | --------------------------- | ------------------------------------ |
-| Web app (`apps/web`)     | Firebase Hosting            | `.github/workflows/deploy-web.yml`   |
-| API (`apps/api`)         | Cloud Run, behind `/api/**` | `.github/workflows/deploy-api.yml`   |
-| Postgres                 | Cloud SQL for PostgreSQL    | Migrations in `deploy-api.yml`       |
-| CI cache and e2e sharing | Nx Cloud                    | `.github/workflows/ci.yml` (nx.json) |
+| Piece                | Where                       | Deployed by                           |
+| -------------------- | --------------------------- | ------------------------------------- |
+| Web app (`apps/web`) | Firebase Hosting            | `.github/workflows/deploy-web.yml`    |
+| API (`apps/api`)     | Cloud Run, behind `/api/**` | `.github/workflows/deploy-api.yml`    |
+| Postgres             | Cloud SQL for PostgreSQL    | Migrations in `deploy-api.yml`        |
+| CI task cache        | GitHub Actions cache        | `.github/workflows/ci.yml` (ADR 0018) |
 
-## 1. Connect Nx Cloud (done 2026-10-23)
+## 1. CI cache
 
-1. Sign in at https://cloud.nx.app with GitHub and choose **Connect a repository**, then pick `Amit775/menu`. It opens a PR that adds `nxCloudId` to `nx.json`. Merge it. (Alternative from your machine: `pnpm nx connect`, then commit the `nx.json` change.)
-2. In the Nx Cloud workspace settings, keep the GitHub integration on so PRs get the Nx Cloud run summary comment.
-3. If Nx Cloud shows a CI access token for this workspace, add it as the repository secret `NX_CLOUD_ACCESS_TOKEN` (GitHub repo, **Settings > Secrets and variables > Actions**). Without one, runs still read from the cache.
-4. Optional: the atomized `e2e-ci` target (one parallel, separately cached task per Playwright file) only runs on **Nx Agents** (distributed CI, uses Nx Cloud credits). Enable them in Nx Cloud and tell Claude to switch CI to `nx-cloud start-ci-run --distribute-on` with `e2e-ci`. Until then CI runs plain `e2e`.
+Nothing to set up. CI keeps Nx's local cache (`.nx/cache`) in the GitHub Actions cache. Nx Cloud was dropped on 2026-10-28 when the free plan ran out (ADR 0018).
 
 ## 2. Create the Firebase project
 
