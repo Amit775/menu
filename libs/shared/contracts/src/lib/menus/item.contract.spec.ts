@@ -9,6 +9,15 @@ describe('Item contract', () => {
     description: { he: 'קציצת בקר 220 גרם', en: null },
     listPrice: { value: 68, currency: 'ILS' },
     tagIds: ['3a2d3c4e-3333-4c1c-9a57-6f7a5d3c2b10'],
+    variations: [
+      {
+        id: '5d2d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
+        name: { he: 'טבעוני', en: 'Vegan' },
+        price: { value: 62, currency: 'ILS' },
+        tagIds: [],
+        available: true,
+      },
+    ],
     state: 'approved',
     mergedIntoId: null,
     submittedByMe: false,
@@ -46,7 +55,32 @@ describe('Item contract', () => {
       description: null,
       listPrice: null,
       tagIds: [],
+      variations: [],
     });
+  });
+
+  it('defaults a new variation to available, at the item price, untagged', () => {
+    const { variations } = CreateItemSchema.parse({
+      sectionId: valid.sectionId,
+      name: { he: 'המבורגר', en: null },
+      variations: [{ name: { he: 'עוף', en: null } }],
+    });
+    expect(variations).toEqual([
+      { name: { he: 'עוף', en: null }, price: null, tagIds: [], available: true },
+    ]);
+  });
+
+  it('rejects two variations with one id', () => {
+    const [variation] = valid.variations;
+    expect(UpdateItemSchema.safeParse({ variations: [variation, variation] }).success).toBe(false);
+  });
+
+  it('rejects two variations with one name', () => {
+    expect(
+      UpdateItemSchema.safeParse({
+        variations: [{ name: { he: 'עוף', en: null } }, { name: { he: ' עוף ', en: 'Chicken' } }],
+      }).success,
+    ).toBe(false);
   });
 
   it('names an item with its venue and list price', () => {
@@ -55,6 +89,14 @@ describe('Item contract', () => {
       name: { he: 'המבורגר', en: null },
       listPrice: { value: 68, currency: 'ILS' },
       venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס', en: null } },
+      variations: [
+        {
+          id: '5d2d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
+          name: { he: 'טבעוני', en: null },
+          price: null,
+          available: false,
+        },
+      ],
     };
     expect(ItemRefSchema.parse(ref)).toEqual(ref);
     expect(ItemRefSchema.safeParse({ ...ref, venue: { id: 'x' } }).success).toBe(false);

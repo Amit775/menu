@@ -14,6 +14,7 @@ describe('Entry contract', () => {
     itemId: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
     venueId: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
     eatenAt: '2026-10-20T19:30:00.000Z',
+    variationId: null,
     rating: 4,
     wouldOrderAgain: true,
     pricePaid: { value: 68, currency: 'ILS' },
@@ -42,6 +43,7 @@ describe('Entry contract', () => {
 
   it('fills in a bare entry: private, no rating, no text', () => {
     expect(CreateEntrySchema.parse({})).toEqual({
+      variationId: null,
       rating: null,
       wouldOrderAgain: null,
       pricePaid: null,
@@ -79,6 +81,7 @@ describe('Entry contract', () => {
     name: { he: 'המבורגר', en: null },
     listPrice: null,
     venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'מוזס', en: null } },
+    variations: [],
   };
 
   it('names the item and venue of a diary line', () => {
@@ -92,6 +95,7 @@ describe('Entry contract', () => {
       itemId: valid.itemId,
       venueId: valid.venueId,
       eatenAt: valid.eatenAt,
+      variationId: null,
       rating: 4,
       wouldOrderAgain: true,
       pricePaid: { value: 68, currency: 'ILS' },

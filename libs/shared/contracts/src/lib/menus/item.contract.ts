@@ -26,6 +26,50 @@ const TagIdsSchema = z
   .refine((ids) => new Set(ids).size === ids.length, 'A tag can be applied once.');
 
 /**
+ * `price` overrides the item's list price. An unavailable variation keeps its
+ * old entries but takes no new ones.
+ */
+export const ItemVariationSchema = z.object({
+  id: z.uuid(),
+  name: TextSchema,
+  price: PriceSchema.nullable(),
+  tagIds: TagIdsSchema,
+  available: z.boolean(),
+});
+
+export type ItemVariation = z.infer<typeof ItemVariationSchema>;
+
+/** A variation as an editor sends it: without an id it is new, and the server gives it one. */
+export const ItemVariationInputSchema = ItemVariationSchema.extend({
+  id: z.uuid().optional(),
+  price: PriceSchema.nullable().default(null),
+  tagIds: TagIdsSchema.default([]),
+  available: z.boolean().default(true),
+});
+
+export type ItemVariationInput = z.infer<typeof ItemVariationInputSchema>;
+
+function variationsOf<T extends z.ZodType<{ id?: string | undefined; name: { he: string } }>>(
+  variation: T,
+) {
+  return z
+    .array(variation)
+    .max(20)
+    .refine((variations) => {
+      const ids = variations.flatMap((v) => (v.id ? [v.id] : []));
+      return new Set(ids).size === ids.length;
+    }, 'A variation can appear once.')
+    .refine((variations) => {
+      const names = variations.map((v) => v.name.he);
+      return new Set(names).size === names.length;
+    }, 'Two variations cannot share a name.');
+}
+
+export const ItemVariationsSchema = variationsOf(ItemVariationSchema);
+
+const ItemVariationInputsSchema = variationsOf(ItemVariationInputSchema);
+
+/**
  * One dish or drink at one venue. `tagIds` are ordered: the first is the primary
  * tag that ranks the item against its peers. The submitter is never exposed;
  * `submittedByMe` tells the caller whether it is theirs.
@@ -38,6 +82,7 @@ export const ItemSchema = z.object({
   description: LongTextSchema.nullable(),
   listPrice: PriceSchema.nullable(),
   tagIds: TagIdsSchema,
+  variations: ItemVariationsSchema,
   state: ItemStateSchema,
   mergedIntoId: z.uuid().nullable(),
   submittedByMe: z.boolean(),
@@ -57,6 +102,7 @@ export const CreateItemSchema = z.object({
   description: LongTextSchema.nullable().default(null),
   listPrice: PriceSchema.nullable().default(null),
   tagIds: TagIdsSchema.default([]),
+  variations: ItemVariationInputsSchema.default([]),
 });
 
 export type CreateItem = z.infer<typeof CreateItemSchema>;
@@ -68,6 +114,7 @@ export const UpdateItemSchema = z
     description: LongTextSchema.nullable(),
     listPrice: PriceSchema.nullable(),
     tagIds: TagIdsSchema,
+    variations: ItemVariationInputsSchema,
   })
   .partial();
 
@@ -90,6 +137,7 @@ export const ItemRefSchema = z.object({
   name: TextSchema,
   listPrice: PriceSchema.nullable(),
   venue: z.object({ id: z.uuid(), name: TextSchema }),
+  variations: z.array(ItemVariationSchema.omit({ tagIds: true })),
 });
 
 export type ItemRef = z.infer<typeof ItemRefSchema>;

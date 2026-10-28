@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PhotoUrlSchema } from '../entries/photo.contract';
 import { GeoPointSchema, PriceSchema, ShekelsSchema, TextSchema } from '../common/values.contract';
 import { ItemHistoryEventSchema } from '../menus/item-history.contract';
+import { ItemVariationSchema } from '../menus/item.contract';
 import { MenuSectionSchema } from '../menus/menu-section.contract';
 import { TagSchema } from '../menus/tag.contract';
 import { VenueSchema } from '../menus/venue.contract';
@@ -117,10 +118,21 @@ export const VenuePageSchema = z.object({
 
 export type VenuePage = z.infer<typeof VenuePageSchema>;
 
+/** A variation on the item page; its score follows the same floor as the item's. */
+export const VariationScoreSchema = z.object({
+  variation: ItemVariationSchema.omit({ tagIds: true }),
+  tags: z.array(TagSchema),
+  score: z.number().min(1).max(5).nullable(),
+  ratingCount: z.number().int().min(0),
+});
+
+export type VariationScore = z.infer<typeof VariationScoreSchema>;
+
 export const ItemPageSchema = z.object({
   item: DiscoverItemSchema,
   archived: z.boolean(),
   tags: z.array(TagSchema),
+  variations: z.array(VariationScoreSchema),
   history: z.array(ItemHistoryEventSchema),
   alsoGoodHere: z.array(DiscoverItemSchema).max(3),
 });

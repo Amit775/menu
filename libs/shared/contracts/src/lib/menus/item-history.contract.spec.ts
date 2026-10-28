@@ -10,7 +10,11 @@ describe('ItemHistory contract', () => {
   };
 
   it('accepts a stored snapshot', () => {
-    expect(ItemSnapshotSchema.parse(snapshot)).toEqual(snapshot);
+    expect(ItemSnapshotSchema.parse(snapshot)).toEqual({ ...snapshot, variations: [] });
+  });
+
+  it('reads a snapshot stored before variations as having none', () => {
+    expect(ItemSnapshotSchema.parse(snapshot).variations).toEqual([]);
   });
 
   it('rejects a snapshot without a section', () => {

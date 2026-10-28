@@ -38,6 +38,7 @@ const EatenAtSchema = z.iso
 
 const EntryFieldsSchema = z.object({
   eatenAt: EatenAtSchema,
+  variationId: z.uuid().nullable(),
   rating: RatingSchema.nullable(),
   wouldOrderAgain: z.boolean().nullable(),
   pricePaid: PriceSchema.nullable(),
@@ -65,6 +66,7 @@ export type Entry = z.infer<typeof EntrySchema>;
 
 export const CreateEntrySchema = EntryFieldsSchema.extend({
   eatenAt: EatenAtSchema.optional(),
+  variationId: z.uuid().nullable().default(null),
   rating: RatingSchema.nullable().default(null),
   wouldOrderAgain: z.boolean().nullable().default(null),
   pricePaid: PriceSchema.nullable().default(null),
