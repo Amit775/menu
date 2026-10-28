@@ -23,7 +23,8 @@ import {
   ShekelsSchema,
   type UpdateEntry,
 } from '@menu/shared/contracts';
-import { ItemEntriesStore, LastVisibility, PhotoShrinker } from '@menu/web/entries/data-access';
+import { ItemEntriesStore, LastVisibility } from '@menu/web/entries/data-access';
+import { PhotoShrinker } from '@menu/web/shared/util-device';
 import { RatingInput } from '@menu/web/entries/ui';
 import { injectTranslate, LocalizePipe, PricePipe } from '@menu/web/shared/util-i18n';
 import { logI18n } from '../log.i18n';

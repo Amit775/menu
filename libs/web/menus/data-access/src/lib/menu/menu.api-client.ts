@@ -9,6 +9,7 @@ import {
   type Item,
   type ItemDecision,
   itemPath,
+  itemPhotoUploadPath,
   ItemSchema,
   type MenuSection,
   menuSectionPath,
@@ -105,6 +106,18 @@ export class MenuApiClient {
 
   updateItem(id: string, input: UpdateItem): Promise<Item> {
     return this.send('patch', `${itemPath}/${id}`, input, ItemSchema);
+  }
+
+  async setItemPhoto(id: string, photo: Blob): Promise<Item> {
+    const body = await firstValueFrom(
+      this.http.put<unknown>(`/api/${itemPhotoUploadPath(id)}`, photo),
+    );
+    return ItemSchema.parse(body);
+  }
+
+  async removeItemPhoto(id: string): Promise<Item> {
+    const body = await firstValueFrom(this.http.delete<unknown>(`/api/${itemPhotoUploadPath(id)}`));
+    return ItemSchema.parse(body);
   }
 
   decide(id: string, decision: ItemDecision): Promise<Item> {

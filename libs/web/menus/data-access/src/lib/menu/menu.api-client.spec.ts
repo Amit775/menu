@@ -135,6 +135,22 @@ describe('MenuApiClient', () => {
     await expect(merged).resolves.toMatchObject({ state: 'merged' });
   });
 
+  it('uploads an item photo as the raw body, removes it, and checks the item it returns', async () => {
+    const photo = new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: 'image/jpeg' });
+    const shown = { ...item, photoUrl: '/api/item-photos/abcdefghijklmnopqrstuv' };
+    const set = client.setItemPhoto(item.id, photo);
+    const put = http.expectOne(`/api/items/${item.id}/photo`);
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body).toBe(photo);
+    put.flush(shown);
+    await expect(set).resolves.toEqual(shown);
+    const removed = client.removeItemPhoto(item.id);
+    const remove = http.expectOne(`/api/items/${item.id}/photo`);
+    expect(remove.request.method).toBe('DELETE');
+    remove.flush({ ...item, photoUrl: 'https://example.com/x.jpg' });
+    await expect(removed).rejects.toThrow();
+  });
+
   it('reads the pending queue and rejects an item that breaks the contract', async () => {
     const pending = client.pending();
     http.expectOne('/api/items/pending').flush([{ ...item, name: 'שקשוקה' }]);

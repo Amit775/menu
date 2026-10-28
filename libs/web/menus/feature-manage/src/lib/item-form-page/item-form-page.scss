@@ -104,3 +104,30 @@ fieldset {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.photo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  > span {
+    font: var(--mat-sys-title-small);
+  }
+
+  .hint {
+    margin: 0;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.preview {
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container) center / cover no-repeat;
+}
+
+.photo-actions {
+  display: flex;
+  gap: 8px;
+}

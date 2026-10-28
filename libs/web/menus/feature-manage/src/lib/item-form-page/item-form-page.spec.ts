@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { DOCUMENT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
@@ -8,6 +9,11 @@ import { burgerTag, classic, drinks, mains, menuApi, VENUE_ID } from '../testing
 import { ItemFormPage } from './item-form-page';
 
 describe('ItemFormPage', () => {
+  beforeEach(() => {
+    // jsdom has no object URLs.
+    Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:preview'), revokeObjectURL: vi.fn() });
+  });
+
   async function render(api: Partial<MenuApiClient>, url: string): Promise<HTMLElement> {
     TestBed.configureTestingModule({
       providers: [
@@ -203,6 +209,82 @@ describe('ItemFormPage', () => {
     expect(element.querySelector('.variation mat-error')?.textContent).toBe(
       'לכל גרסה צריך שם משלה בעברית.',
     );
+  });
+
+  describe('the item’s photo', () => {
+    const photoUrl = '/api/item-photos/abcdefghijklmnopqrstuv';
+
+    function pickPhoto(element: HTMLElement, photo: Blob): void {
+      const input = element.querySelector<HTMLInputElement>('.photo input[type="file"]');
+      if (!input) {
+        throw new Error('No photo input');
+      }
+      Object.defineProperty(input, 'files', { value: [photo], configurable: true });
+      input.dispatchEvent(new Event('change'));
+    }
+
+    it('uploads a picked photo once a new item is added', async () => {
+      const added = { ...classic, id: '8a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10' };
+      const addItem = vi.fn().mockResolvedValue(added);
+      const setItemPhoto = vi.fn().mockResolvedValue({ ...added, photoUrl });
+      const element = await render(
+        menuApi({ addItem, setItemPhoto }),
+        `/manage/venues/${VENUE_ID}/items/new?sectionId=${drinks.id}`,
+      );
+      TestBed.tick();
+      type(field(element, 'nameHe'), 'לימונדה');
+      const photo = new Blob(['jpeg'], { type: 'image/jpeg' });
+      pickPhoto(element, photo);
+      await vi.waitFor(() => {
+        TestBed.tick();
+        expect(element.querySelector('.photo .preview')).not.toBeNull();
+      });
+      submit(element);
+      await vi.waitFor(() => {
+        expect(TestBed.inject(Router).url).toBe(`/manage/venues/${VENUE_ID}`);
+      });
+      expect(setItemPhoto).toHaveBeenCalledWith(added.id, photo);
+    });
+
+    it('shows the item’s photo and removes it on save', async () => {
+      const shown = { ...classic, photoUrl };
+      const updateItem = vi.fn().mockResolvedValue(shown);
+      const removeItemPhoto = vi.fn().mockResolvedValue(classic);
+      const element = await render(
+        menuApi({ items: () => Promise.resolve([shown]), updateItem, removeItemPhoto }),
+        `/manage/venues/${VENUE_ID}/items/${classic.id}`,
+      );
+      expect(element.querySelector('.photo .preview')?.getAttribute('style')).toContain(photoUrl);
+      element.querySelector<HTMLButtonElement>('.photo button.remove-photo')?.click();
+      TestBed.tick();
+      expect(element.querySelector('.photo .preview')).toBeNull();
+      submit(element);
+      await vi.waitFor(() => {
+        expect(removeItemPhoto).toHaveBeenCalledWith(classic.id);
+      });
+    });
+
+    it('keeps the saved item and says so when the photo is refused', async () => {
+      const updateItem = vi.fn().mockResolvedValue(classic);
+      const setItemPhoto = vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 415 }));
+      const element = await render(
+        menuApi({ updateItem, setItemPhoto }),
+        `/manage/venues/${VENUE_ID}/items/${classic.id}`,
+      );
+      pickPhoto(element, new Blob(['gif'], { type: 'image/gif' }));
+      await vi.waitFor(() => {
+        TestBed.tick();
+        expect(element.querySelector('.photo .preview')).not.toBeNull();
+      });
+      submit(element);
+      await vi.waitFor(() => {
+        TestBed.tick();
+        expect(element.querySelector('.error')?.textContent).toBe(
+          'הפריט נשמר, אבל אי אפשר להשתמש בתמונה הזו. נסו JPEG,‏ PNG או WebP עד 8MB.',
+        );
+      });
+      expect(TestBed.inject(Router).url).toBe(`/manage/venues/${VENUE_ID}/items/${classic.id}`);
+    });
   });
 
   it('says so when the item is not on this venue', async () => {

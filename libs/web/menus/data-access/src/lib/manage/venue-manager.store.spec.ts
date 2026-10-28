@@ -116,6 +116,30 @@ describe('VenueManagerStore', () => {
     ]);
   });
 
+  it('puts a photo on an item and takes it off', async () => {
+    const shown = { ...approved, photoUrl: '/api/item-photos/abcdefghijklmnopqrstuv' };
+    const setItemPhoto = vi.fn().mockResolvedValue(shown);
+    const removeItemPhoto = vi.fn().mockResolvedValue(approved);
+    const store = setup({ setItemPhoto, removeItemPhoto });
+    store.load(() => VENUE_ID);
+    await settle();
+    const photo = new Blob([new Uint8Array([1])]);
+    await store.setItemPhoto(approved.id, photo);
+    expect(setItemPhoto).toHaveBeenCalledWith(approved.id, photo);
+    expect(store.items().find((i) => i.id === approved.id)?.photoUrl).toBe(shown.photoUrl);
+    await store.setItemPhoto(approved.id, null);
+    expect(removeItemPhoto).toHaveBeenCalledWith(approved.id);
+    expect(store.items().find((i) => i.id === approved.id)?.photoUrl).toBeNull();
+  });
+
+  it('rejects when the photo upload fails, keeping the item as it was', async () => {
+    const store = setup({ setItemPhoto: vi.fn().mockRejectedValue(new Error('413')) });
+    store.load(() => VENUE_ID);
+    await settle();
+    await expect(store.setItemPhoto(approved.id, new Blob([]))).rejects.toThrow('413');
+    expect(store.items().find((i) => i.id === approved.id)?.photoUrl).toBeNull();
+  });
+
   it('adds, renames and moves sections', async () => {
     const desserts = { ...section, id: '3c2f4d1a-2222-4c1c-9a57-6f7a5d3c2b10', position: 2 };
     const reorderSections = vi
