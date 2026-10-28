@@ -29,6 +29,8 @@ import {
   IdSchema,
   type ItemEntries,
   itemEntriesRoute,
+  type PersonalStats,
+  personalStatsRoute,
   type SetEntryHidden,
   SetEntryHiddenSchema,
   sharedEntryRoute,
@@ -73,6 +75,12 @@ export class EntryController {
     @Query(new ZodValidationPipe(DiaryQuerySchema)) query: DiaryQuery,
   ): Promise<EntryWithItem[]> {
     return this.service.diary(principal, query);
+  }
+
+  @Get(personalStatsRoute)
+  @Authenticated()
+  stats(@CurrentPrincipal() principal: Principal): Promise<PersonalStats> {
+    return this.service.stats(principal);
   }
 
   @Get(':id')

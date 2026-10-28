@@ -4,6 +4,7 @@ import {
   type Entry,
   type ItemEntries,
   type ItemRef,
+  type PersonalStats,
   type PublicEntry,
 } from '@menu/shared/contracts';
 
@@ -57,6 +58,19 @@ export const sheet: ItemEntries = {
   savedByMe: false,
   mine: [entry],
   others: [publicEntry],
+};
+
+export const stats: PersonalStats = {
+  entryCount: 3,
+  venueCount: 1,
+  itemCount: 1,
+  averageRating: 4.5,
+  months: [
+    { month: '2026-09', entryCount: 1, spent: [] },
+    { month: '2026-10', entryCount: 2, spent: [{ value: 124, currency: 'ILS' as const }] },
+  ],
+  topTags: [{ name: { he: 'בשרי', en: 'Meat' }, count: 3 }],
+  mostOrdered: { item: itemRef, count: 3 },
 };
 
 export function settle(): Promise<void> {

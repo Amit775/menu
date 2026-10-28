@@ -41,6 +41,13 @@ export function formatMonthYear(iso: string, language: Language): string {
   }).format(new Date(iso));
 }
 
+/** A `YYYY-MM` month that is already in the diners' calendar, so read as UTC. */
+export function formatMonth(month: string, language: Language): string {
+  return new Intl.DateTimeFormat(language, { month: 'short', timeZone: 'UTC' }).format(
+    new Date(`${month}-01T00:00:00Z`),
+  );
+}
+
 export function formatList(items: readonly string[], language: Language): string {
   return new Intl.ListFormat(language, { type: 'conjunction' }).format(items);
 }

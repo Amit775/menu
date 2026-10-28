@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ItemRepository, VenueRepository } from '@menu/api/menus/data-access';
+import { ItemRepository, TagRepository, VenueRepository } from '@menu/api/menus/data-access';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
-import { type EntryTarget, type ItemCatalog } from '@menu/api/shared/util-ports';
+import { type EntryTarget, type ItemCatalog, type ItemTag } from '@menu/api/shared/util-ports';
 import { type ItemRef } from '@menu/shared/contracts';
 import { MenuItem } from './menu-item';
 
@@ -10,6 +10,7 @@ export class MenusItemCatalog implements ItemCatalog {
   constructor(
     private readonly repository: ItemRepository,
     private readonly venues: VenueRepository,
+    private readonly tags: TagRepository,
   ) {}
 
   async findForEntries(principal: Principal | null, itemId: string): Promise<EntryTarget | null> {
@@ -56,5 +57,25 @@ export class MenusItemCatalog implements ItemCatalog {
       }
     }
     return refs;
+  }
+
+  async tagsFor(itemIds: readonly string[]): Promise<ReadonlyMap<string, readonly ItemTag[]>> {
+    if (itemIds.length === 0) {
+      return new Map();
+    }
+    const [items, tags] = await Promise.all([
+      this.repository.findByIds([...new Set(itemIds)]),
+      this.tags.list(),
+    ]);
+    const names = new Map(tags.map((tag) => [tag.id, tag.name]));
+    return new Map(
+      items.map((item) => [
+        item.id,
+        item.tagIds.flatMap((id) => {
+          const name = names.get(id);
+          return name ? [{ id, name }] : [];
+        }),
+      ]),
+    );
   }
 }

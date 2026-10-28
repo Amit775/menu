@@ -2,6 +2,7 @@ import { inject, Pipe, type PipeTransform } from '@angular/core';
 import { type Price } from '@menu/shared/contracts';
 import {
   formatDistance,
+  formatMonth,
   formatMonthYear,
   formatPrice,
   formatRelativeDate,
@@ -39,6 +40,15 @@ export class RelativeDatePipe implements PipeTransform {
 
   transform(iso: string): string {
     return formatRelativeDate(iso, this.i18n.language());
+  }
+}
+
+@Pipe({ name: 'month', pure: false })
+export class MonthPipe implements PipeTransform {
+  private readonly i18n = inject(I18n);
+
+  transform(month: string): string {
+    return formatMonth(month, this.i18n.language());
   }
 }
 

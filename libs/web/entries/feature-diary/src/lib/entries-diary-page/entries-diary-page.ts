@@ -3,8 +3,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
-import { DiaryStore } from '@menu/web/entries/data-access';
-import { EntryCard } from '@menu/web/entries/ui';
+import { DiaryStore, PersonalStatsStore } from '@menu/web/entries/data-access';
+import { EntryCard, PersonalStatsCard } from '@menu/web/entries/ui';
 import { I18n, injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { diaryI18n } from '../diary.i18n';
 
@@ -16,15 +16,17 @@ import { diaryI18n } from '../diary.i18n';
     MatIconModule,
     MatProgressSpinnerModule,
     EntryCard,
+    PersonalStatsCard,
     LocalizePipe,
   ],
   templateUrl: './entries-diary-page.html',
   styleUrl: './entries-diary-page.scss',
-  providers: [DiaryStore],
+  providers: [DiaryStore, PersonalStatsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EntriesDiaryPage {
   protected readonly store = inject(DiaryStore);
+  protected readonly stats = inject(PersonalStatsStore);
   private readonly i18n = inject(I18n);
   protected readonly t = injectTranslate(diaryI18n);
 
@@ -43,6 +45,7 @@ export class EntriesDiaryPage {
       const venueId = this.venueId();
       return venueId ? { venueId } : {};
     });
+    this.stats.load(() => !this.venueId());
   }
 
   protected retry(): void {

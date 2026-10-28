@@ -11,6 +11,9 @@ import {
   EntryWithItemSchema,
   type ItemEntries,
   itemEntriesPath,
+  type PersonalStats,
+  personalStatsPath,
+  PersonalStatsSchema,
   savedItemPath,
   ItemEntriesSchema,
   sharedEntryPath,
@@ -36,6 +39,11 @@ export class EntryApiClient {
     }
     const body = await firstValueFrom(this.http.get<unknown>(this.baseUrl, { params }));
     return z.array(EntryWithItemSchema).parse(body);
+  }
+
+  async stats(): Promise<PersonalStats> {
+    const body = await firstValueFrom(this.http.get<unknown>(`/api/${personalStatsPath}`));
+    return PersonalStatsSchema.parse(body);
   }
 
   async get(id: string): Promise<Entry> {
