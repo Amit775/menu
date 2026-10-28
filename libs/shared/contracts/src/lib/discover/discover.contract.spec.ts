@@ -1,9 +1,4 @@
-import {
-  DiscoverItemSchema,
-  FeedQuerySchema,
-  PricePointSchema,
-  SearchQuerySchema,
-} from './discover.contract';
+import { DiscoverItemSchema, FeedQuerySchema, SearchQuerySchema } from './discover.contract';
 
 describe('Discover contract', () => {
   it('reads a feed query from strings with defaults', () => {
@@ -56,15 +51,5 @@ describe('Discover contract', () => {
       writtenByMe: true,
     };
     expect(DiscoverItemSchema.parse(item)).toEqual(item);
-  });
-
-  it('rejects a price point under the anonymity floor', () => {
-    expect(
-      PricePointSchema.safeParse({
-        month: '2026-10',
-        averagePrice: { value: 68, currency: 'ILS' },
-        count: 2,
-      }).success,
-    ).toBe(false);
   });
 });

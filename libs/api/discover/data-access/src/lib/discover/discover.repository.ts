@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService, readPrice, readText } from '@menu/api/shared/db';
 import {
   type GeoPoint,
+  type ItemRevisionKind,
+  type ItemSnapshot,
+  ItemSnapshotSchema,
   type MenuSection,
   MenuSectionSchema,
   type Price,
@@ -22,6 +25,12 @@ export interface CatalogItem {
   tagIds: string[];
   listPrice: Price | null;
   createdAt: Date;
+}
+
+export interface ItemRevisionRecord {
+  kind: ItemRevisionKind;
+  snapshot: ItemSnapshot;
+  changedAt: string;
 }
 
 const StoredSectionsSchema = MenuSectionSchema.pick({ id: true, name: true }).array();
@@ -98,5 +107,18 @@ export class DiscoverRepository {
     return rows
       .map((row) => ({ id: row.id, slug: row.slug, name: readText(row.name), kind: row.kind }))
       .sort((a, b) => a.name.he.localeCompare(b.name.he, 'he'));
+  }
+
+  async listRevisions(itemId: string): Promise<ItemRevisionRecord[]> {
+    const rows = await this.prisma.itemRevision.findMany({
+      where: { itemId },
+      orderBy: { changedAt: 'asc' },
+      select: { kind: true, snapshot: true, changedAt: true },
+    });
+    return rows.map((row) => ({
+      kind: row.kind,
+      snapshot: ItemSnapshotSchema.parse(row.snapshot),
+      changedAt: row.changedAt.toISOString(),
+    }));
   }
 }

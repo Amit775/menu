@@ -1,4 +1,4 @@
-import { type Price, type PricePoint } from '@menu/shared/contracts';
+import { type Price } from '@menu/shared/contracts';
 
 /**
  * One item's entries summed up, already safe to show. Entries that are not
@@ -13,7 +13,6 @@ export interface ItemEntryStats {
   otherEntryCount: number | null;
   latestPublicPrice: Price | null;
   latestPublicPhotoUrl: string | null;
-  priceHistory: PricePoint[];
 }
 
 export interface EntryStatsSource {

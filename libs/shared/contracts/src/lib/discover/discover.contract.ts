@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { PhotoUrlSchema } from '../entries/photo.contract';
 import { GeoPointSchema, PriceSchema, ShekelsSchema, TextSchema } from '../common/values.contract';
+import { ItemHistoryEventSchema } from '../menus/item-history.contract';
 import { MenuSectionSchema } from '../menus/menu-section.contract';
 import { TagSchema } from '../menus/tag.contract';
 import { VenueSchema } from '../menus/venue.contract';
@@ -116,19 +117,11 @@ export const VenuePageSchema = z.object({
 
 export type VenuePage = z.infer<typeof VenuePageSchema>;
 
-export const PricePointSchema = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/),
-  averagePrice: PriceSchema,
-  count: z.number().int().min(SCORE_FLOOR),
-});
-
-export type PricePoint = z.infer<typeof PricePointSchema>;
-
 export const ItemPageSchema = z.object({
   item: DiscoverItemSchema,
   archived: z.boolean(),
   tags: z.array(TagSchema),
-  priceHistory: z.array(PricePointSchema),
+  history: z.array(ItemHistoryEventSchema),
   alsoGoodHere: z.array(DiscoverItemSchema).max(3),
 });
 

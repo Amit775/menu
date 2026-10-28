@@ -98,37 +98,6 @@ describe('summarizeEntries', () => {
     expect(stats.latestPublicPrice).toEqual({ value: 60, currency: 'ILS' });
   });
 
-  it('keeps a private price out of a month it could be recovered from', () => {
-    const stats = summarizeEntries([
-      ...authors(3, { pricePaid: { value: 60, currency: 'ILS' as const }, visibility: 'public' }),
-      fact({ authorId: 'secret', pricePaid: { value: 90, currency: 'ILS' as const } }),
-    ]);
-    expect(stats.priceHistory).toEqual([
-      { month: '2026-10', averagePrice: { value: 60, currency: 'ILS' as const }, count: 3 },
-    ]);
-  });
-
-  it('averages a month to the agora', () => {
-    const prices = [10, 10.5, 10.26].map((value) => ({ value, currency: 'ILS' as const }));
-    const stats = summarizeEntries(
-      prices.map((pricePaid, index) =>
-        fact({ authorId: `a${index}`, pricePaid, visibility: 'public' }),
-      ),
-    );
-    expect(stats.priceHistory[0]?.averagePrice).toEqual({ value: 10.25, currency: 'ILS' });
-  });
-
-  it('puts an entry from just after midnight in Israel into the new month', () => {
-    const stats = summarizeEntries(
-      authors(3, {
-        pricePaid: { value: 50, currency: 'ILS' as const },
-        visibility: 'public',
-        eatenAt: new Date('2026-09-30T22:30:00.000Z'),
-      }),
-    );
-    expect(stats.priceHistory[0]?.month).toBe('2026-10');
-  });
-
   it('groups facts per item', () => {
     const stats = summarizeByItem([
       fact({ rating: 3, visibility: 'public' }),
