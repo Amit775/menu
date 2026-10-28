@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ItemNotEditableError, type ItemRecord, ItemRepository } from '@menu/api/menus/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -53,7 +53,7 @@ describe('ItemPhotoService', () => {
     return moduleRef.get(ItemPhotoService);
   }
 
-  it('lets the venue’s Owner set the photo, saving a fresh id before the bytes', async () => {
+  it('lets the venue’s Owner replace the photo, storing the bytes under a fresh id first', async () => {
     const order: string[] = [];
     const setPhoto = vi.fn((_id: string, photo: { photoId: string }) => {
       order.push('id');
@@ -61,7 +61,12 @@ describe('ItemPhotoService', () => {
         record({ photoId: photo.photoId, photoUrl: `/api/item-photos/${photo.photoId}` }),
       );
     });
-    const photos = await setup({ findById: vi.fn().mockResolvedValue(record()), setPhoto });
+    const old = 'oldPhotoIdoldPhotoId00';
+    const photos = await setup({
+      findById: vi.fn().mockResolvedValue(record({ photoId: old, photoType: 'image/jpeg' })),
+      setPhoto,
+    });
+    await storage.put(`items/${old}`, { bytes: jpeg, type: 'image/jpeg' });
     const put = storage.put.bind(storage);
     vi.spyOn(storage, 'put').mockImplementation((key, photo) => {
       order.push('bytes');
@@ -70,8 +75,10 @@ describe('ItemPhotoService', () => {
 
     const item = await photos.set(owner, 'i1', jpeg);
 
-    expect(order).toEqual(['id', 'bytes']);
-    expect(storage.photos.get('items/i1')).toEqual({ bytes: jpeg, type: 'image/jpeg' });
+    expect(order).toEqual(['bytes', 'id']);
+    const photoId = (setPhoto.mock.calls[0]?.[1] as { photoId: string }).photoId;
+    expect(storage.photos.get(`items/${photoId}`)).toEqual({ bytes: jpeg, type: 'image/jpeg' });
+    expect(storage.photos.has(`items/${old}`)).toBe(false);
     expect(setPhoto).toHaveBeenCalledWith('i1', {
       photoId: expect.stringMatching(/^[\w-]{22}$/) as unknown,
       photoType: 'image/jpeg',
@@ -99,12 +106,30 @@ describe('ItemPhotoService', () => {
   });
 
   it('removes the photo and its bytes', async () => {
+    const photoId = 'abcdefghijklmnopqrstuv';
     const setPhoto = vi.fn().mockResolvedValue(record());
-    const photos = await setup({ findById: vi.fn().mockResolvedValue(record()), setPhoto });
-    await storage.put('items/i1', { bytes: jpeg, type: 'image/jpeg' });
+    const photos = await setup({
+      findById: vi.fn().mockResolvedValue(record({ photoId, photoType: 'image/jpeg' })),
+      setPhoto,
+    });
+    await storage.put(`items/${photoId}`, { bytes: jpeg, type: 'image/jpeg' });
     await photos.remove(owner, 'i1');
     expect(setPhoto).toHaveBeenCalledWith('i1', null);
-    expect(storage.photos.has('items/i1')).toBe(false);
+    expect(storage.photos.has(`items/${photoId}`)).toBe(false);
+  });
+
+  it('still removes the photo when its bytes cannot be deleted', async () => {
+    const setPhoto = vi.fn().mockResolvedValue(record());
+    const photos = await setup({
+      findById: vi
+        .fn()
+        .mockResolvedValue(record({ photoId: 'abcdefghijklmnopqrstuv', photoType: 'image/jpeg' })),
+      setPhoto,
+    });
+    vi.spyOn(storage, 'delete').mockRejectedValue(new Error('storage down'));
+    const warn = vi.spyOn(Logger, 'warn').mockImplementation(() => undefined);
+    await expect(photos.remove(owner, 'i1')).resolves.toMatchObject({ id: 'i1' });
+    expect(warn).toHaveBeenCalled();
   });
 
   it('serves a photo by its id, and nothing for an unknown one', async () => {
@@ -113,7 +138,7 @@ describe('ItemPhotoService', () => {
       .mockResolvedValueOnce(record({ photoId: 'abcdefghijklmnopqrstuv' }))
       .mockResolvedValueOnce(null);
     const photos = await setup({ findByPhotoId });
-    await storage.put('items/i1', { bytes: jpeg, type: 'image/jpeg' });
+    await storage.put('items/abcdefghijklmnopqrstuv', { bytes: jpeg, type: 'image/jpeg' });
     await expect(photos.read('abcdefghijklmnopqrstuv')).resolves.toEqual({
       bytes: jpeg,
       type: 'image/jpeg',

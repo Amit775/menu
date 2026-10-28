@@ -91,5 +91,6 @@ describe('Item photo controllers', () => {
     const file = await read.read('abcdefghijklmnopqrstuv', { setHeader });
     expect(file.getHeaders()).toMatchObject({ type: 'image/jpeg', length: 3 });
     expect(setHeader).toHaveBeenCalledWith('Cache-Control', 'public, max-age=31536000, immutable');
+    expect(setHeader).toHaveBeenCalledWith('X-Content-Type-Options', 'nosniff');
   });
 });
