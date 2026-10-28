@@ -36,6 +36,7 @@ describe('DiscoverItemPage', () => {
         kind: 'dish',
       },
     ],
+    variations: [],
     history: [
       {
         kind: 'added' as const,

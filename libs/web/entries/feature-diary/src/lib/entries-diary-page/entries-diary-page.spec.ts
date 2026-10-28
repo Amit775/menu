@@ -9,6 +9,7 @@ import { EntriesDiaryPage } from './entries-diary-page';
 const line: EntryWithItem = {
   id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
   itemId: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+  variationId: null,
   venueId: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 5,
@@ -25,6 +26,7 @@ const line: EntryWithItem = {
     id: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
     name: { he: 'המבורגר הקלאסי', en: null },
     listPrice: { value: 68, currency: 'ILS' as const },
+    variations: [],
     venue: { id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10', name: { he: 'בורגר 24', en: null } },
   },
 };

@@ -15,6 +15,7 @@ const visible: SharedEntryView = {
   entry: {
     id: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
     itemId: ITEM_ID,
+    variationId: null,
     venueId: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
     eatenAt: '2026-10-22T19:30:00.000Z',
     rating: 5,
@@ -29,6 +30,7 @@ const visible: SharedEntryView = {
     id: ITEM_ID,
     name: { he: 'המבורגר הקלאסי', en: 'Classic Burger' },
     listPrice: { value: 68, currency: 'ILS' as const },
+    variations: [],
     venue: {
       id: '9c2d3c4e-2222-4c1c-9a57-6f7a5d3c2b10',
       name: { he: 'בורגר 24', en: 'Burger 24' },

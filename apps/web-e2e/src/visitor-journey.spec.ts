@@ -20,6 +20,7 @@ const item = {
 const entry = {
   id: '3f1d3c4e-4444-4c1c-9a57-6f7a5d3c2b10',
   itemId: item.id,
+  variationId: null,
   venueId: venue.id,
   eatenAt: '2026-10-20T19:30:00.000Z',
   rating: 5,
@@ -34,6 +35,7 @@ const itemRef = {
   id: item.id,
   name: item.name,
   listPrice: { value: 68, currency: 'ILS' as const },
+  variations: [],
   venue,
 };
 const token = 'shareTokenShareToken00';
@@ -56,6 +58,7 @@ async function stubBackends(page: Page): Promise<void> {
         item,
         archived: false,
         tags: [],
+        variations: [],
         history: [{ kind: 'added', at: '2026-09-01T10:00:00.000Z', listPrice: null }],
         alsoGoodHere: [],
       },

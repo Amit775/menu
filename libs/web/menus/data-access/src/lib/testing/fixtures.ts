@@ -36,6 +36,7 @@ export const item: Item = {
   description: null,
   listPrice: { value: 54, currency: 'ILS' as const },
   tagIds: [],
+  variations: [],
   state: 'pending',
   mergedIntoId: null,
   submittedByMe: true,

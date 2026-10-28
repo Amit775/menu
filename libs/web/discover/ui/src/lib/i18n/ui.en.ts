@@ -20,4 +20,11 @@ export const en = {
   historyMovedUnnamed: 'Moved to another section',
   historyTagged: 'Tagged {tags}',
   historyUntagged: 'No longer tagged {tags}',
+  historyVariationAdded: 'New variations: {names}',
+  historyVariationRemoved: 'Variations removed: {names}',
+  historyVariationBack: 'Offered again: {names}',
+  historyVariationPaused: 'Not offered for now: {names}',
+  historyVariationPrice: '{variation} price changed from {from} to {to}',
+  historyVariationPriceSet: '{variation} price set to {to}',
+  historyVariationPriceRemoved: '{variation} price removed',
 } satisfies typeof he;
