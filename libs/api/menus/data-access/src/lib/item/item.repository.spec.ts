@@ -17,6 +17,7 @@ describe('ItemRepository', () => {
     submittedById: null,
     mergedIntoId: null,
     position: 0,
+    photo: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
   };
   const record = {
@@ -32,6 +33,9 @@ describe('ItemRepository', () => {
     mergedIntoId: null,
     submittedById: null,
     position: 0,
+    photoUrl: null,
+    photoId: null,
+    photoType: null,
     createdAt: '2026-01-01T00:00:00.000Z',
   };
 
@@ -269,6 +273,58 @@ describe('ItemRepository', () => {
       expect(tx.itemRevision.create).toHaveBeenCalledWith({
         data: { itemId: 'i1', kind: 'archived', snapshot, changedById: 'a1' },
       });
+    });
+  });
+
+  it('reads an item’s photo as its public URL', async () => {
+    const findUnique = vi.fn().mockResolvedValue({
+      ...row,
+      photo: { id: 'abcdefghijklmnopqrstuv', contentType: 'image/webp' },
+    });
+    const repository = new ItemRepository({ item: { findUnique } } as unknown as PrismaService);
+    await expect(repository.findById('i1')).resolves.toMatchObject({
+      photoUrl: '/api/item-photos/abcdefghijklmnopqrstuv',
+      photoId: 'abcdefghijklmnopqrstuv',
+      photoType: 'image/webp',
+    });
+  });
+
+  it('finds an item by its photo id, or none', async () => {
+    const $queryRaw = vi
+      .fn()
+      .mockResolvedValueOnce([{ id: 'i1' }])
+      .mockResolvedValueOnce([]);
+    const findUnique = vi.fn().mockResolvedValue(row);
+    const repository = new ItemRepository({
+      $queryRaw,
+      item: { findUnique },
+    } as unknown as PrismaService);
+    await expect(repository.findByPhotoId('abcdefghijklmnopqrstuv')).resolves.toMatchObject({
+      id: 'i1',
+    });
+    expect($queryRaw.mock.calls[0]?.[1]).toBe('{"id":"abcdefghijklmnopqrstuv"}');
+    await expect(repository.findByPhotoId('abcdefghijklmnopqrstuv')).resolves.toBeNull();
+  });
+
+  it('sets and clears the photo of an item that is still editable', async () => {
+    const updateMany = vi
+      .fn()
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 0 });
+    const findUnique = vi.fn().mockResolvedValue(row);
+    const repository = new ItemRepository({
+      item: { updateMany, findUnique },
+    } as unknown as PrismaService);
+    const photo = { photoId: 'abcdefghijklmnopqrstuv', photoType: 'image/jpeg' as const };
+    await expect(repository.setPhoto('i1', photo)).resolves.toMatchObject({ id: 'i1' });
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: 'i1', state: { in: ['pending', 'approved'] } },
+      data: { photo: { id: 'abcdefghijklmnopqrstuv', contentType: 'image/jpeg' } },
+    });
+    await expect(repository.setPhoto('i1', null)).rejects.toThrow(ItemNotEditableError);
+    expect(updateMany).toHaveBeenLastCalledWith({
+      where: { id: 'i1', state: { in: ['pending', 'approved'] } },
+      data: { photo: DbNull },
     });
   });
 

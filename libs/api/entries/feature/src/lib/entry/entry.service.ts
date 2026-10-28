@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EntryRepository } from '@menu/api/entries/data-access';
-import { withoutUndefined } from '@menu/api/shared/util';
+import { newCapabilityId, withoutUndefined } from '@menu/api/shared/util';
 import { PHOTO_STORAGE, type PhotoStorage } from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
 import {
@@ -27,7 +27,6 @@ import {
   type UpdateEntry,
 } from '@menu/shared/contracts';
 import { deletePhoto } from '../photo/entry-photo';
-import { newCapabilityId } from './capability-id';
 import { DiaryEntry } from './diary-entry';
 
 @Injectable()

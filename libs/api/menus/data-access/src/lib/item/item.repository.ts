@@ -9,21 +9,33 @@ import {
   writePrice,
 } from '@menu/api/shared/db';
 import { withoutUndefined } from '@menu/api/shared/util';
+import { readPhotoColumn } from '@menu/api/shared/util-photos';
 import {
   type Currency,
   type Item,
   type ItemRevisionKind,
   type ItemSnapshot,
   type ItemState,
+  itemPhotoUrl,
   type ItemVariation,
   ItemVariationsSchema,
   MenuSectionSchema,
+  type PhotoType,
   type Price,
   type Text,
   type UpdateItem,
 } from '@menu/shared/contracts';
 
-export type ItemRecord = Omit<Item, 'submittedByMe'> & { submittedById: string | null };
+export type ItemRecord = Omit<Item, 'submittedByMe'> & {
+  submittedById: string | null;
+  photoId: string | null;
+  photoType: PhotoType | null;
+};
+
+export interface ItemPhotoRef {
+  photoId: string;
+  photoType: PhotoType;
+}
 
 /** An edit with every variation already given its id by the service. */
 export type ItemChanges = Omit<UpdateItem, 'variations'> & { variations?: ItemVariation[] };
@@ -54,6 +66,7 @@ interface ItemRow {
   submittedById: string | null;
   mergedIntoId: string | null;
   position: number;
+  photo: unknown;
   createdAt: Date;
 }
 
@@ -165,6 +178,24 @@ export class ItemRepository {
     return rows.map(toRecord);
   }
 
+  async findByPhotoId(photoId: string): Promise<ItemRecord | null> {
+    const [match] = await this.prisma.$queryRaw<{ id: string }[]>`
+      SELECT "id" FROM "item" WHERE "photo" @> ${JSON.stringify({ id: photoId })}::jsonb LIMIT 1`;
+    return match ? this.findById(match.id) : null;
+  }
+
+  async setPhoto(id: string, photo: ItemPhotoRef | null): Promise<ItemRecord> {
+    const { count } = await this.prisma.item.updateMany({
+      where: { id, state: { in: EDITABLE_STATES } },
+      data: { photo: photo ? { id: photo.photoId, contentType: photo.photoType } : DbNull },
+    });
+    const record = count === 0 ? null : await this.findById(id);
+    if (!record) {
+      throw new ItemNotEditableError();
+    }
+    return record;
+  }
+
   async create(input: NewItem, changedById: string): Promise<ItemRecord> {
     const row = await this.prisma.$transaction(async (tx) => {
       await assertTagsExist(tx, allTagIds(input.tagIds, input.variations));
@@ -264,6 +295,7 @@ export class ItemRepository {
 }
 
 function toRecord(row: ItemRow): ItemRecord {
+  const photo = readPhotoColumn(row.photo);
   return {
     id: row.id,
     venueId: row.venueId,
@@ -277,6 +309,9 @@ function toRecord(row: ItemRow): ItemRecord {
     mergedIntoId: row.mergedIntoId,
     submittedById: row.submittedById,
     position: row.position,
+    photoUrl: photo ? itemPhotoUrl(photo.id) : null,
+    photoId: photo?.id ?? null,
+    photoType: photo?.contentType ?? null,
     createdAt: row.createdAt.toISOString(),
   };
 }

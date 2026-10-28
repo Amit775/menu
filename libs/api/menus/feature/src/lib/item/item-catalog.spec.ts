@@ -28,6 +28,9 @@ describe('MenusItemCatalog', () => {
     mergedIntoId: null,
     submittedById: null,
     position: 0,
+    photoUrl: null,
+    photoId: null,
+    photoType: null,
     createdAt: '2026-10-23T10:00:00.000Z',
   };
 
