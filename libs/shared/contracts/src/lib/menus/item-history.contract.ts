@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LongTextSchema, PriceSchema, TextSchema } from '../common/values.contract';
+import { ItemVariationSchema } from './item.contract';
 
 export const ItemRevisionKindSchema = z.enum([
   'created',
@@ -20,6 +21,7 @@ export const ItemSnapshotSchema = z.object({
   listPrice: PriceSchema.nullable(),
   sectionId: z.uuid(),
   tagIds: z.array(z.uuid()),
+  variations: z.array(ItemVariationSchema).default([]),
 });
 
 export type ItemSnapshot = z.infer<typeof ItemSnapshotSchema>;
@@ -37,6 +39,19 @@ export const ItemChangeSchema = z.discriminatedUnion('field', [
     field: z.literal('tags'),
     added: z.array(TextSchema),
     removed: z.array(TextSchema),
+  }),
+  z.object({
+    field: z.literal('variations'),
+    added: z.array(TextSchema),
+    removed: z.array(TextSchema),
+    nowAvailable: z.array(TextSchema),
+    nowUnavailable: z.array(TextSchema),
+  }),
+  z.object({
+    field: z.literal('variationPrice'),
+    variation: TextSchema,
+    from: PriceSchema.nullable(),
+    to: PriceSchema.nullable(),
   }),
 ]);
 
