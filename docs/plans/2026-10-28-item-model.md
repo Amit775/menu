@@ -22,7 +22,7 @@
 | 1   | Item history: contract, `item_revision` table with backfill, menus writes revisions         | done   |
 | 2   | Item history on the item page; remove the paid-price history (contract, entries stats, web) | done   |
 | 3   | Variations: contract, `item.variations`, `entry.variation_id`, API rules                    | done   |
-| 4   | Variations in the web: item form, log form picker, item page, search by a variation's tags  | todo   |
+| 4   | Variations in the web: item form, log form picker, item page, search by a variation's tags  | done   |
 | 5   | Item photos: upload by Owner or Admin, shown on feed cards without an entry photo           | todo   |
 
 - Variations live on the item as a `variations` jsonb array (`ItemVariationSchema`: id, name, price, tags, available), at most 20, unique names. The API gives new ones their ids; an id the item never had is refused. Removing a variation keeps the entries that named it.
@@ -30,3 +30,4 @@
 - The item page scores each variation from the diners' latest ratings. The 3-entry floor holds across the variations together: if any variation has one or two non-public ratings, every variation uses public ratings alone, so the item's total minus the other variations cannot reveal them.
 - The tag filter matches an item when the item's tags plus the tags of one variation offered now cover every wanted tag.
 - The history shows variations added, removed, paused and offered again, and a variation's price changes.
+- The web: the item form edits the variations (name, price if different, tags, offered now). The log form asks "which one?" among those offered now, keeping a paused one an entry already names, and its price hint follows the picked variation. Entry cards name the variation while the item still lists it. The item page lists the variations with their price, tags and score. The add-item form for diners leaves variations to Owners and Admins for now.

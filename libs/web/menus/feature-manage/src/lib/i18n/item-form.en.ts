@@ -25,4 +25,13 @@ export const en = {
   retry: 'Try again',
   notFound: 'This item was not found, or you do not manage it.',
   toVenue: 'Back to the venue',
+  variations: 'Variations (optional)',
+  variationsHint:
+    'Versions people pick when they log it: beef, chicken or vegan, a seasonal fruit.',
+  variationNumber: 'Variation {number}',
+  variationNameInvalid: 'Each variation needs its own Hebrew name.',
+  variationPrice: 'Price, if different',
+  variationAvailable: 'Offered now',
+  removeVariation: 'Remove',
+  addVariation: 'Add a variation',
 } satisfies typeof he;

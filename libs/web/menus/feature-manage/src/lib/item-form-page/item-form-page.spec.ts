@@ -77,6 +77,7 @@ describe('ItemFormPage', () => {
       description: { he: 'לימון ונענע', en: null },
       listPrice: { value: 18.5, currency: 'ILS' as const },
       tagIds: [],
+      variations: [],
     });
   });
 
@@ -138,8 +139,70 @@ describe('ItemFormPage', () => {
         description: null,
         listPrice: { value: 62.5, currency: 'ILS' as const },
         tagIds: [],
+        variations: [],
       });
     });
+  });
+
+  it('edits the item’s variations: keeps, pauses, removes and adds', async () => {
+    const chicken = {
+      id: '5b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+      name: { he: 'עוף', en: 'Chicken' },
+      price: { value: 58, currency: 'ILS' as const },
+      tagIds: [],
+      available: true,
+    };
+    const beef = {
+      ...chicken,
+      id: '6b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+      name: { he: 'בקר', en: null },
+    };
+    const varied = { ...classic, variations: [chicken, beef] };
+    const updateItem = vi.fn().mockResolvedValue(varied);
+    const element = await render(
+      menuApi({ items: () => Promise.resolve([varied]), updateItem }),
+      `/manage/venues/${VENUE_ID}/items/${classic.id}`,
+    );
+    expect(field(element, 'variations.0.nameHe').value).toBe('עוף');
+    expect(field(element, 'variations.0.price').value).toBe('58');
+    field(element, 'variations.0.available').click();
+    element.querySelectorAll<HTMLButtonElement>('.variation button.remove')[1]?.click();
+    element.querySelector<HTMLButtonElement>('button.add-variation')?.click();
+    TestBed.tick();
+    type(field(element, 'variations.1.nameHe'), ' טבעוני ');
+    submit(element);
+    await vi.waitFor(() => {
+      expect(updateItem).toHaveBeenCalledWith(
+        classic.id,
+        expect.objectContaining({
+          variations: [
+            { ...chicken, available: false },
+            { name: { he: 'טבעוני', en: null }, price: null, tagIds: [], available: true },
+          ],
+        }),
+      );
+    });
+  });
+
+  it('needs a Hebrew name for every variation, each a different one', async () => {
+    const updateItem = vi.fn();
+    const element = await render(
+      menuApi({ updateItem }),
+      `/manage/venues/${VENUE_ID}/items/${classic.id}`,
+    );
+    element.querySelector<HTMLButtonElement>('button.add-variation')?.click();
+    element.querySelector<HTMLButtonElement>('button.add-variation')?.click();
+    TestBed.tick();
+    type(field(element, 'variations.0.nameHe'), 'עוף');
+    submit(element);
+    TestBed.tick();
+    type(field(element, 'variations.1.nameHe'), 'עוף');
+    submit(element);
+    TestBed.tick();
+    expect(updateItem).not.toHaveBeenCalled();
+    expect(element.querySelector('.variation mat-error')?.textContent).toBe(
+      'לכל גרסה צריך שם משלה בעברית.',
+    );
   });
 
   it('says so when the item is not on this venue', async () => {

@@ -23,4 +23,12 @@ export const he = {
   retry: 'לנסות שוב',
   notFound: 'הפריט לא נמצא, או שאינו בניהולך.',
   toVenue: 'חזרה למקום',
+  variations: 'גרסאות (לא חובה)',
+  variationsHint: 'גרסאות שבוחרים כשרושמים: בקר, עוף או טבעוני, פרי עונתי.',
+  variationNumber: 'גרסה {number}',
+  variationNameInvalid: 'לכל גרסה צריך שם משלה בעברית.',
+  variationPrice: 'מחיר, אם שונה',
+  variationAvailable: 'מוגש כרגע',
+  removeVariation: 'הסרה',
+  addVariation: 'הוספת גרסה',
 };

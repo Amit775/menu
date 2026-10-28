@@ -76,6 +76,64 @@
         </mat-select>
         <mat-hint>{{ t('tagsHint') }}</mat-hint>
       </mat-form-field>
+      <fieldset class="variations">
+        <legend>{{ t('variations') }}</legend>
+        <p class="hint">{{ t('variationsHint') }}</p>
+        @for (variation of form.variations; track variation; let index = $index) {
+          <fieldset class="variation">
+            <legend class="visually-hidden">
+              {{ t('variationNumber', { number: index + 1 }) }}
+            </legend>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ t('nameHe') }}</mat-label>
+              <input matInput dir="rtl" lang="he" [formField]="variation.nameHe" />
+              @if (variation.nameHe().invalid()) {
+                <mat-error>{{ t('variationNameInvalid') }}</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ t('nameEn') }}</mat-label>
+              <input matInput dir="ltr" lang="en" [formField]="variation.nameEn" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ t('variationPrice') }}</mat-label>
+              <input
+                matInput
+                type="number"
+                inputmode="decimal"
+                step="0.01"
+                [formField]="variation.price"
+              />
+              <span matTextPrefix>₪&nbsp;</span>
+              @if (variation.price().invalid()) {
+                <mat-error>{{ t('priceInvalid') }}</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>{{ t('tags') }}</mat-label>
+              <mat-select multiple [formField]="variation.tags">
+                @for (tag of store.tags(); track tag.id) {
+                  <mat-option [value]="tag.id">{{ tag.name | localize }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <div class="variation-actions">
+              <label>
+                <input type="checkbox" [formField]="variation.available" />
+                {{ t('variationAvailable') }}
+              </label>
+              <button mat-button type="button" class="remove" (click)="removeVariation(index)">
+                {{ t('removeVariation') }}
+              </button>
+            </div>
+          </fieldset>
+        }
+        @if (canAddVariation()) {
+          <button mat-stroked-button type="button" class="add-variation" (click)="addVariation()">
+            {{ t('addVariation') }}
+          </button>
+        }
+      </fieldset>
       @if (failed()) {
         <p class="error" role="alert">{{ t('saveFailed') }}</p>
       }

@@ -7,14 +7,19 @@ import {
   linkedSignal,
   signal,
 } from '@angular/core';
-import { form, FormField, maxLength, required, validate } from '@angular/forms/signals';
+import { applyEach, form, FormField, maxLength, required, validate } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
-import { type Item, ShekelsSchema, type Text } from '@menu/shared/contracts';
+import {
+  type Item,
+  type ItemVariationInput,
+  ShekelsSchema,
+  type Text,
+} from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
 import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { itemFormI18n } from '../item-form.i18n';
@@ -27,7 +32,19 @@ interface ItemModel {
   section: string | null;
   price: number | null;
   tags: string[];
+  variations: VariationModel[];
 }
+
+interface VariationModel {
+  id: string | null;
+  nameHe: string;
+  nameEn: string;
+  price: number | null;
+  tags: string[];
+  available: boolean;
+}
+
+const MAX_VARIATIONS = 20;
 
 @Component({
   selector: 'menu-item-form-page',
@@ -81,6 +98,14 @@ export class ItemFormPage {
         sectionId !== undefined && this.store.sectionsById().has(sectionId) ? sectionId : null,
       price: item?.listPrice?.value ?? null,
       tags: item?.tagIds ?? [],
+      variations: (item?.variations ?? []).map((variation) => ({
+        id: variation.id,
+        nameHe: variation.name.he,
+        nameEn: variation.name.en ?? '',
+        price: variation.price?.value ?? null,
+        tags: variation.tagIds,
+        available: variation.available,
+      })),
     };
   });
 
@@ -99,16 +124,53 @@ export class ItemFormPage {
           : null,
       );
       required(path.section);
-      validate(path.price, ({ value }) => {
-        const price = value();
-        return price === null || ShekelsSchema.safeParse(price).success ? null : { kind: 'price' };
+      validate(path.price, validPrice);
+      applyEach(path.variations, (variation) => {
+        maxLength(variation.nameHe, 200);
+        maxLength(variation.nameEn, 200);
+        validate(variation.nameHe, (field) => {
+          const name = field.value().trim();
+          const sameName = field
+            .valueOf(path.variations)
+            .filter((other) => other.nameHe.trim() === name).length;
+          return name === '' || sameName > 1 ? { kind: 'variationName' } : null;
+        });
+        validate(variation.price, validPrice);
       });
     },
     { name: 'item' },
   );
 
+  protected readonly canAddVariation = computed(
+    () => this.model().variations.length < MAX_VARIATIONS,
+  );
+
   constructor() {
     this.store.load(this.id);
+  }
+
+  private firstInvalid() {
+    const fields = [
+      this.form.nameHe,
+      this.form.descriptionHe,
+      this.form.section,
+      this.form.price,
+      ...[...this.form.variations].flatMap((variation) => [variation.nameHe, variation.price]),
+    ];
+    return fields.map((field) => field()).find((state) => state.invalid());
+  }
+
+  protected addVariation(): void {
+    this.form
+      .variations()
+      .value.update((variations) => [
+        ...variations,
+        { id: null, nameHe: '', nameEn: '', price: null, tags: [], available: true },
+      ]);
+  }
+
+  protected removeVariation(index: number): void {
+    this.form.variations().value.update((variations) => variations.filter((_, i) => i !== index));
   }
 
   protected retry(): void {
@@ -120,6 +182,7 @@ export class ItemFormPage {
     const sectionId = model.section;
     if (this.form().invalid() || sectionId === null || this.saving()) {
       this.form().markAsTouched();
+      this.firstInvalid()?.focusBoundControl();
       return;
     }
     this.saving.set(true);
@@ -133,6 +196,7 @@ export class ItemFormPage {
         : null,
       listPrice: model.price === null ? null : { value: model.price, currency: 'ILS' as const },
       tagIds: model.tags,
+      variations: model.variations.map(variationInput),
     };
     try {
       await (editing ? this.store.updateItem(editing.id, input) : this.store.addItem(input));
@@ -143,6 +207,21 @@ export class ItemFormPage {
       this.saving.set(false);
     }
   }
+}
+
+function validPrice({ value }: { value: () => number | null }) {
+  const price = value();
+  return price === null || ShekelsSchema.safeParse(price).success ? null : { kind: 'price' };
+}
+
+function variationInput(model: VariationModel): ItemVariationInput {
+  return {
+    ...(model.id === null ? {} : { id: model.id }),
+    name: textOf(model.nameHe, model.nameEn),
+    price: model.price === null ? null : { value: model.price, currency: 'ILS' },
+    tagIds: model.tags,
+    available: model.available,
+  };
 }
 
 function textOf(he: string, en: string): Text {
