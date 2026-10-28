@@ -9,6 +9,7 @@ describe('AuthGuard', () => {
   const principal: Principal = {
     accountId: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   };

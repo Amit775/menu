@@ -11,7 +11,13 @@ describe('DiaryEntry', () => {
     variations: [],
     venue: { id: 'v1', name: { he: 'מוזס', en: null } },
   };
-  const author: Principal = { accountId: 'a1', isAdmin: false, language: 'he', ownedVenueIds: [] };
+  const author: Principal = {
+    accountId: 'a1',
+    isAdmin: false,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const admin: Principal = { ...author, accountId: 'x', isAdmin: true };
   const record: EntryRecord = {
     id: 'e1',

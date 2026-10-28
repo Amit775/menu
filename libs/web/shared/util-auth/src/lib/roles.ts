@@ -4,10 +4,11 @@ import { Auth } from './auth';
 
 export interface RoleGrants {
   isAdmin: boolean;
+  isContributor: boolean;
   ownedVenueIds: readonly string[];
 }
 
-export const NO_ROLES: RoleGrants = { isAdmin: false, ownedVenueIds: [] };
+export const NO_ROLES: RoleGrants = { isAdmin: false, isContributor: false, ownedVenueIds: [] };
 
 /**
  * The signed-in account's roles, for every web domain (ADR 0010). The users
@@ -24,6 +25,10 @@ export class Roles {
   readonly isAdmin = computed(() => this.grants()?.isAdmin ?? false);
   readonly ownedVenueIds = computed(() => this.grants()?.ownedVenueIds ?? []);
   readonly canManage = computed(() => this.isAdmin() || this.ownedVenueIds().length > 0);
+  /** Contributors add and edit items at every venue, but manage none; an Admin is one too. */
+  readonly canContribute = computed(
+    () => this.isAdmin() || (this.grants()?.isContributor ?? false),
+  );
 
   set(grants: RoleGrants | null): void {
     this.grants.set(grants);
@@ -40,6 +45,10 @@ export class Roles {
     return this.isAdmin() || this.ownedVenueIds().includes(venueId);
   }
 
+  canEditItems(venueId: string): boolean {
+    return this.canContribute() || this.canEditVenue(venueId);
+  }
+
   whenKnown(): Promise<void> {
     return this.known()
       ? Promise.resolve()
@@ -51,7 +60,7 @@ export class Roles {
 
 function roleGuard(
   allowed: (roles: Roles, route: ActivatedRouteSnapshot) => boolean,
-  fallback: string,
+  fallback: string | ((route: ActivatedRouteSnapshot) => string[]),
 ): CanActivateFn {
   return async (route, state) => {
     const auth = inject(Auth);
@@ -62,7 +71,10 @@ function roleGuard(
       return router.createUrlTree(['/sign-in'], { queryParams: { returnUrl: state.url } });
     }
     await roles.whenKnown();
-    return allowed(roles, route) || router.createUrlTree([fallback]);
+    return (
+      allowed(roles, route) ||
+      router.createUrlTree(typeof fallback === 'string' ? [fallback] : fallback(route))
+    );
   };
 }
 
@@ -73,4 +85,9 @@ export const adminGuard: CanActivateFn = roleGuard((roles) => roles.isAdmin(), '
 export const venueManagerGuard: CanActivateFn = roleGuard(
   (roles, route) => roles.canEditVenue(route.paramMap.get('id') ?? ''),
   '/manage',
+);
+
+export const itemEditorGuard: CanActivateFn = roleGuard(
+  (roles, route) => roles.canEditItems(route.paramMap.get('id') ?? ''),
+  (route) => ['/venues', route.paramMap.get('id') ?? ''],
 );

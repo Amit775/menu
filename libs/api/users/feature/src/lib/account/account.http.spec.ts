@@ -1,7 +1,8 @@
 import { type INestApplication, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthModule, type TokenVerifier, type VerifiedIdentity } from '@menu/api/shared/util-auth';
-import { AccountRepository } from '@menu/api/users/data-access';
+import { AccountRepository, ContributorApplicationRepository } from '@menu/api/users/data-access';
+import { ContributorApplicationModule } from '../contributor-application/contributor-application.module';
 import { AccountModule } from './account.module';
 import { AccountService } from './account.service';
 
@@ -19,8 +20,16 @@ describe('accounts over HTTP', () => {
   let app: INestApplication;
   let baseUrl: string;
   const accounts = {
-    'uid-admin': { id: '11111111-1111-4111-8111-111111111111', isAdmin: true },
-    'uid-user': { id: '22222222-2222-4222-8222-222222222222', isAdmin: false },
+    'uid-admin': {
+      id: '11111111-1111-4111-8111-111111111111',
+      isAdmin: true,
+      isContributor: false,
+    },
+    'uid-user': {
+      id: '22222222-2222-4222-8222-222222222222',
+      isAdmin: false,
+      isContributor: false,
+    },
   };
 
   beforeAll(async () => {
@@ -38,6 +47,7 @@ describe('accounts over HTTP', () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         AccountModule,
+        ContributorApplicationModule,
         AuthModule.forRoot({
           resolverModule: AccountModule,
           resolver: AccountService,
@@ -47,6 +57,8 @@ describe('accounts over HTTP', () => {
     })
       .overrideProvider(AccountRepository)
       .useValue(repository)
+      .overrideProvider(ContributorApplicationRepository)
+      .useValue({ latestFor: () => Promise.resolve(null), listPending: () => Promise.resolve([]) })
       .compile();
     app = moduleRef.createNestApplication({ logger: false });
     app.setGlobalPrefix('api');
@@ -58,9 +70,14 @@ describe('accounts over HTTP', () => {
     await app.close();
   });
 
-  async function status(path: string, token?: string): Promise<number> {
+  async function status(path: string, token?: string, method = 'GET'): Promise<number> {
     const response = await fetch(`${baseUrl}/${path}`, {
-      headers: token ? { authorization: `Bearer ${token}` } : {},
+      method,
+      headers: {
+        'content-type': 'application/json',
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
+      ...(method === 'GET' ? {} : { body: JSON.stringify({ isContributor: true }) }),
     });
     return response.status;
   }
@@ -79,5 +96,18 @@ describe('accounts over HTTP', () => {
 
   it('refuses an invalid token', async () => {
     expect(await status('accounts/me', 'garbage')).toBe(401);
+  });
+
+  it('shows a user their own contributor application', async () => {
+    expect(await status('accounts/me/contributor-application')).toBe(401);
+    expect(await status('accounts/me/contributor-application', 'uid-user')).toBe(200);
+  });
+
+  it('keeps applications and the Contributor role to Admins', async () => {
+    expect(await status('contributor-applications', 'uid-user')).toBe(403);
+    expect(await status('contributor-applications', 'uid-admin')).toBe(200);
+    const id = accounts['uid-user'].id;
+    expect(await status(`accounts/${id}/contributor`, 'uid-user', 'PUT')).toBe(403);
+    expect(await status(`contributor-applications/${id}/approve`, 'uid-user', 'POST')).toBe(403);
   });
 });

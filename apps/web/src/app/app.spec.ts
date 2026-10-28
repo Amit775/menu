@@ -29,7 +29,7 @@ describe('App', () => {
 
   it('adds a tab for Owners and Admins', async () => {
     const element = await render();
-    TestBed.inject(Roles).set({ isAdmin: false, ownedVenueIds: ['v1'] });
+    TestBed.inject(Roles).set({ isAdmin: false, isContributor: false, ownedVenueIds: ['v1'] });
     TestBed.tick();
     const manage = element.querySelectorAll('nav a')[2];
     expect(manage?.textContent).toContain('המקומות שלי');

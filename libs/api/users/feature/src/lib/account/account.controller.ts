@@ -14,6 +14,8 @@ import {
   IdSchema,
   type SetAdmin,
   SetAdminSchema,
+  type SetContributor,
+  SetContributorSchema,
   type UpdateAccount,
   UpdateAccountSchema,
 } from '@menu/shared/contracts';
@@ -52,5 +54,14 @@ export class AccountController {
     @Body(new ZodValidationPipe(SetAdminSchema)) input: SetAdmin,
   ): Promise<AccountSummary> {
     return this.service.setAdmin(principal, id, input.isAdmin);
+  }
+
+  @Put(':id/contributor')
+  @AdminOnly()
+  setContributor(
+    @Param('id', new ZodValidationPipe(IdSchema)) id: string,
+    @Body(new ZodValidationPipe(SetContributorSchema)) input: SetContributor,
+  ): Promise<AccountSummary> {
+    return this.service.setContributor(id, input.isContributor);
   }
 }

@@ -6,6 +6,7 @@ describe('Account contract', () => {
     displayName: 'נועה',
     language: 'he',
     isAdmin: false,
+    isContributor: true,
     ownedVenueIds: [],
     createdAt: '2026-01-01T00:00:00.000Z',
   };

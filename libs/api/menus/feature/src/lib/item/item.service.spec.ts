@@ -22,10 +22,17 @@ import { ItemService } from './item.service';
 describe('ItemService', () => {
   const venueId = '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
   const sectionId = '7b1d3c4e-2222-4c1c-9a57-6f7a5d3c2b10';
-  const user: Principal = { accountId: 'u', isAdmin: false, language: 'he', ownedVenueIds: [] };
+  const user: Principal = {
+    accountId: 'u',
+    isAdmin: false,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const other: Principal = { ...user, accountId: 'o' };
   const owner: Principal = { ...user, accountId: 'w', ownedVenueIds: [venueId] };
   const admin: Principal = { ...user, accountId: 'a', isAdmin: true };
+  const contributor: Principal = { ...user, accountId: 'c', isContributor: true };
   const venue = { id: venueId, status: 'active' };
 
   function record(overrides: Partial<ItemRecord> = {}): ItemRecord {
@@ -186,6 +193,13 @@ describe('ItemService', () => {
       expect(create.mock.calls[0]?.[1]).toBe('w');
     });
 
+    it('adds a Contributor’s item to any venue’s menu at once', async () => {
+      const create = vi.fn().mockResolvedValue(record());
+      await (await setup({ create })).create(contributor, venueId, input);
+      expect(create.mock.calls[0]?.[0]).toMatchObject({ state: 'approved', submittedById: null });
+      expect(create.mock.calls[0]?.[1]).toBe('c');
+    });
+
     it('keeps a user’s submission pending and remembers who sent it', async () => {
       const create = vi.fn().mockResolvedValue(record({ state: 'pending', submittedById: 'u' }));
       const item = await (await setup({ create })).create(user, venueId, input);
@@ -207,6 +221,13 @@ describe('ItemService', () => {
   });
 
   describe('editing an item', () => {
+    it('lets a Contributor edit an approved item at any venue', async () => {
+      const update = vi.fn().mockResolvedValue(record());
+      const service = await setup({ findById: vi.fn().mockResolvedValue(record()), update });
+      await service.update(contributor, 'i1', { name: { he: 'צ׳יפס', en: null } });
+      expect(update).toHaveBeenCalledWith('i1', { name: { he: 'צ׳יפס', en: null } }, 'c');
+    });
+
     it('lets the Owner edit', async () => {
       const update = vi
         .fn()

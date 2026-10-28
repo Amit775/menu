@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { AccountStore } from '@menu/web/users/data-access';
+import { AccountStore, ContributorApplicationApiClient } from '@menu/web/users/data-access';
 import { AUTH_BACKEND, FakeAuthBackend } from '@menu/web/shared/util-auth';
 import { ProfilePage } from './profile-page';
 
@@ -11,6 +11,7 @@ describe('ProfilePage', () => {
     displayName: 'נועה',
     language: 'he' as const,
     isAdmin: false,
+    isContributor: false,
     ownedVenueIds: [],
     createdAt: '2026-01-01T00:00:00.000Z',
   };
@@ -18,9 +19,13 @@ describe('ProfilePage', () => {
   const signedIn = (): FakeAuthBackend =>
     new FakeAuthBackend({ uid: 'u1', displayName: 'נועה', phoneNumber: null });
 
-  async function setup(backend: FakeAuthBackend, error: string | null = null) {
+  async function setup(
+    backend: FakeAuthBackend,
+    error: string | null = null,
+    roles: Partial<typeof account> = {},
+  ) {
     const store = {
-      account: signal(account),
+      account: signal({ ...account, ...roles }),
       error: signal(error),
       update: vi.fn().mockResolvedValue(true),
       setLanguage: vi.fn().mockResolvedValue(undefined),
@@ -31,6 +36,12 @@ describe('ProfilePage', () => {
         provideRouter([]),
         { provide: AUTH_BACKEND, useValue: backend },
         { provide: AccountStore, useValue: store },
+        {
+          provide: ContributorApplicationApiClient,
+          useValue: {
+            mine: () => Promise.resolve({ application: null, canApplyFrom: account.createdAt }),
+          },
+        },
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(ProfilePage);
@@ -60,6 +71,27 @@ describe('ProfilePage', () => {
     await fixture.whenStable();
     expect(store.update).toHaveBeenCalledWith({ displayName: 'נועה כ.' });
     expect(element.querySelector('[role=status]')?.textContent).toContain('נשמר');
+  });
+
+  it('invites a user to apply as a Contributor', async () => {
+    const { element } = await setup(signedIn());
+    await vi.waitFor(() => {
+      expect(element.querySelector('menu-contributor-application h2')?.textContent).toBe(
+        'הצטרפות לתורמים',
+      );
+    });
+  });
+
+  it('tells a Contributor what they may do instead', async () => {
+    const { element } = await setup(signedIn(), null, { isContributor: true });
+    expect(element.querySelector('.contributor')?.textContent).toContain('אתם בין התורמים');
+    expect(element.querySelector('menu-contributor-application')).toBeNull();
+  });
+
+  it('shows an Admin neither', async () => {
+    const { element } = await setup(signedIn(), null, { isAdmin: true });
+    expect(element.querySelector('.contributor')).toBeNull();
+    expect(element.querySelector('menu-contributor-application')).toBeNull();
   });
 
   it('switches the language', async () => {

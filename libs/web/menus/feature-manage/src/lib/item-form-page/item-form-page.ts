@@ -23,6 +23,7 @@ import {
   type Text,
 } from '@menu/shared/contracts';
 import { VenueManagerStore } from '@menu/web/menus/data-access';
+import { Roles } from '@menu/web/shared/util-auth';
 import { PhotoShrinker } from '@menu/web/shared/util-device';
 import { injectTranslate, LocalizePipe } from '@menu/web/shared/util-i18n';
 import { itemFormI18n } from '../item-form.i18n';
@@ -81,6 +82,7 @@ export class ItemFormPage {
   protected readonly store = inject(VenueManagerStore);
   private readonly router = inject(Router);
   private readonly shrinker = inject(PhotoShrinker);
+  private readonly roles = inject(Roles);
   protected readonly t = injectTranslate(itemFormI18n);
 
   protected readonly saving = signal(false);
@@ -95,6 +97,13 @@ export class ItemFormPage {
     source: this.itemId,
     computation: () => undefined,
   });
+
+  /** A Contributor who does not manage this venue cannot open its manage page. */
+  protected readonly venueLink = computed(() =>
+    this.roles.canContribute() && !this.roles.canEditVenue(this.id())
+      ? ['/venues', this.id()]
+      : ['/manage/venues', this.id()],
+  );
 
   protected readonly editing = computed<Item | null | undefined>(() => {
     const id = this.itemId() ?? this.created();
@@ -274,7 +283,7 @@ export class ItemFormPage {
     }
     try {
       await this.savePhoto(saved.id);
-      void this.router.navigate(['/manage/venues', this.id()], { replaceUrl: true });
+      void this.router.navigate(this.venueLink(), { replaceUrl: true });
     } catch (error) {
       this.saveError.set(
         error instanceof HttpErrorResponse && (error.status === 413 || error.status === 415)

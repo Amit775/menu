@@ -12,6 +12,45 @@
     </div>
   }
   @case ('loaded') {
+    @if (store.applications().length > 0) {
+      <h2>{{ t('applicationsTitle') }}</h2>
+      <ul class="applications">
+        @for (application of store.applications(); track application.id) {
+          <li [attr.data-application-id]="application.id">
+            <span class="names">
+              <span class="name" [class.muted]="!application.account.displayName">
+                {{ application.account.displayName || t('noName') }}
+              </span>
+              <span class="meta">{{
+                t('applied', { date: application.createdAt | relativeDate })
+              }}</span>
+              <span class="note">{{ application.note }}</span>
+            </span>
+            <button
+              mat-stroked-button
+              type="button"
+              class="reject"
+              [disabled]="busy() === application.id"
+              (click)="decide(application.id, 'reject')"
+            >
+              {{ t('reject') }}
+            </button>
+            <button
+              mat-flat-button
+              type="button"
+              class="approve"
+              [disabled]="busy() === application.id"
+              (click)="decide(application.id, 'approve')"
+            >
+              {{ t('approve') }}
+            </button>
+            @if (failed() === application.id) {
+              <p class="error" role="alert">{{ t('decideFailed') }}</p>
+            }
+          </li>
+        }
+      </ul>
+    }
     <ul>
       @for (row of rows(); track row.account.id) {
         <li [attr.data-id]="row.account.id">
@@ -30,6 +69,15 @@
             (change)="toggle(row.account, $event)"
           >
             {{ t('admin') }}
+          </mat-slide-toggle>
+          <mat-slide-toggle
+            class="contributor"
+            [checked]="row.account.isContributor || row.account.isAdmin"
+            [disabled]="busy() === row.account.id || row.account.isAdmin"
+            [aria-label]="t('makeContributor', { name: row.name })"
+            (change)="toggleContributor(row.account, $event)"
+          >
+            {{ t('contributor') }}
           </mat-slide-toggle>
           @if (row.isMe && row.account.isAdmin) {
             <p class="hint">{{ t('selfHint') }}</p>

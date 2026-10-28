@@ -5,6 +5,7 @@ import { provideRouter, Router, withComponentInputBinding } from '@angular/route
 import { RouterTestingHarness } from '@angular/router/testing';
 import { type Item, type MenuSection, type Venue } from '@menu/shared/contracts';
 import { MenuApiClient } from '@menu/web/menus/data-access';
+import { type RoleGrants, Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { MenusAddItemPage } from './menus-add-item-page';
 
@@ -51,7 +52,11 @@ const created: Item = {
 };
 
 describe('MenusAddItemPage', () => {
-  async function open(api: Partial<MenuApiClient>, language: 'he' | 'en' = 'he') {
+  async function open(
+    api: Partial<MenuApiClient>,
+    language: 'he' | 'en' = 'he',
+    roles?: RoleGrants,
+  ) {
     TestBed.configureTestingModule({
       providers: [
         provideRouter(
@@ -72,6 +77,9 @@ describe('MenusAddItemPage', () => {
       ],
     });
     TestBed.inject(I18n).setLanguage(language);
+    if (roles) {
+      TestBed.inject(Roles).set(roles);
+    }
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(`/venues/${VENUE_ID}/add-item`, MenusAddItemPage);
     await harness.fixture.whenStable();
@@ -102,6 +110,15 @@ describe('MenusAddItemPage', () => {
     input.value = value;
     input.dispatchEvent(new Event('input'));
   }
+
+  it('tells a Contributor the item goes on the menu at once', async () => {
+    const { element } = await open({}, 'en', {
+      isAdmin: false,
+      isContributor: true,
+      ownedVenueIds: [],
+    });
+    expect(element.querySelector('.intro')?.textContent).toContain('It goes on the menu at once.');
+  });
 
   it('adds the item in the chosen section, then opens the log form for it', async () => {
     const addItem = vi.fn().mockResolvedValue(created);

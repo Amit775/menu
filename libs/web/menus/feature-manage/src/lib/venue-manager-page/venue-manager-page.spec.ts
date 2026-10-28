@@ -20,7 +20,11 @@ describe('VenueManagerPage', () => {
       ],
     });
     TestBed.inject(I18n).setLanguage('he');
-    TestBed.inject(Roles).set({ isAdmin, ownedVenueIds: isAdmin ? [] : [VENUE_ID] });
+    TestBed.inject(Roles).set({
+      isAdmin,
+      isContributor: false,
+      ownedVenueIds: isAdmin ? [] : [VENUE_ID],
+    });
     const harness = await RouterTestingHarness.create(`/manage/venues/${VENUE_ID}`);
     await vi.waitFor(() => {
       harness.detectChanges();

@@ -13,8 +13,10 @@ enum Language {
   en
 }
 
+/// An Admin has every Contributor right.
 enum Role {
   user
+  contributor
   admin
 }
 
@@ -33,8 +35,33 @@ model Account {
   createdVenues     Venue[]
   submittedItems    Item[]
   itemRevisions     ItemRevision[]
+  contributorApplications ContributorApplication[] @relation("applicant")
+  decidedApplications     ContributorApplication[] @relation("decider")
 
   @@map("account")
+}
+
+enum ContributorApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+model ContributorApplication {
+  id          String                       @id @default(uuid()) @db.Uuid
+  accountId   String                       @map("account_id") @db.Uuid
+  note        String
+  status      ContributorApplicationStatus @default(pending)
+  decidedById String?                      @map("decided_by_id") @db.Uuid
+  decidedAt   DateTime?                    @map("decided_at")
+  createdAt   DateTime                     @default(now()) @map("created_at")
+
+  account   Account  @relation("applicant", fields: [accountId], references: [id], onDelete: Cascade)
+  decidedBy Account? @relation("decider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([accountId, createdAt])
+  @@index([status, createdAt])
+  @@map("contributor_application")
 }
 
 model Ownership {

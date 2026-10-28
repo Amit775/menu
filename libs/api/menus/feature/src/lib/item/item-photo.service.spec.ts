@@ -1,6 +1,11 @@
 import { ConflictException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { ItemNotEditableError, type ItemRecord, ItemRepository } from '@menu/api/menus/data-access';
+import {
+  ItemNotEditableError,
+  type ItemRecord,
+  ItemRepository,
+  VenueRepository,
+} from '@menu/api/menus/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { MemoryPhotoStorage, PHOTO_STORAGE } from '@menu/api/shared/util-photos';
 import { ItemPhotoService } from './item-photo.service';
@@ -9,6 +14,7 @@ describe('ItemPhotoService', () => {
   const owner: Principal = {
     accountId: 'o1',
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: ['v1'],
   };
@@ -41,6 +47,7 @@ describe('ItemPhotoService', () => {
 
   async function setup(
     repository: Partial<Record<keyof ItemRepository, unknown>>,
+    venue: { id: string; status: string } | null = { id: 'v1', status: 'active' },
   ): Promise<ItemPhotoService> {
     storage = new MemoryPhotoStorage();
     const moduleRef = await Test.createTestingModule({
@@ -48,6 +55,7 @@ describe('ItemPhotoService', () => {
         ItemPhotoService,
         { provide: ItemRepository, useValue: repository },
         { provide: PHOTO_STORAGE, useValue: storage },
+        { provide: VenueRepository, useValue: { findById: vi.fn().mockResolvedValue(venue) } },
       ],
     }).compile();
     return moduleRef.get(ItemPhotoService);
@@ -87,7 +95,39 @@ describe('ItemPhotoService', () => {
     expect(item).not.toHaveProperty('photoId');
   });
 
-  it('forbids anyone but the venue’s Owner or an Admin', async () => {
+  it('lets a Contributor put a photo on any venue’s approved item', async () => {
+    const contributor = { ...diner, isContributor: true };
+    const setPhoto = vi.fn().mockResolvedValue(record({ photoId: 'p', photoType: 'image/jpeg' }));
+    const photos = await setup({ findById: vi.fn().mockResolvedValue(record()), setPhoto });
+    await photos.set(contributor, 'i1', jpeg);
+    expect(setPhoto).toHaveBeenCalled();
+  });
+
+  it('hides someone else’s pending item from a Contributor', async () => {
+    const contributor = { ...diner, isContributor: true };
+    const photos = await setup({
+      findById: vi.fn().mockResolvedValue(record({ state: 'pending', submittedById: 'u' })),
+      setPhoto: vi.fn(),
+    });
+    await expect(photos.set(contributor, 'i1', jpeg)).rejects.toThrow(NotFoundException);
+  });
+
+  it('hides the items of a hidden venue from a Contributor, not from its Owner', async () => {
+    const contributor = { ...diner, isContributor: true };
+    const repository = { findById: vi.fn().mockResolvedValue(record()), setPhoto: vi.fn() };
+    const hidden = { id: 'v1', status: 'hidden' };
+    await expect((await setup(repository, hidden)).set(contributor, 'i1', jpeg)).rejects.toThrow(
+      NotFoundException,
+    );
+    await expect((await setup(repository, hidden)).remove(contributor, 'i1')).rejects.toThrow(
+      NotFoundException,
+    );
+    repository.setPhoto.mockResolvedValue(record());
+    await (await setup(repository, hidden)).remove(owner, 'i1');
+    expect(repository.setPhoto).toHaveBeenCalledTimes(1);
+  });
+
+  it('forbids anyone but the venue’s Owner, a Contributor or an Admin', async () => {
     const photos = await setup({
       findById: vi.fn().mockResolvedValue(record()),
       setPhoto: vi.fn(),

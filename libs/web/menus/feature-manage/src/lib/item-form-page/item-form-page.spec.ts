@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { MenuApiClient } from '@menu/web/menus/data-access';
+import { type RoleGrants, Roles } from '@menu/web/shared/util-auth';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { burgerTag, classic, drinks, mains, menuApi, VENUE_ID } from '../testing/manage-fixtures';
 import { ItemFormPage } from './item-form-page';
@@ -14,7 +15,11 @@ describe('ItemFormPage', () => {
     Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:preview'), revokeObjectURL: vi.fn() });
   });
 
-  async function render(api: Partial<MenuApiClient>, url: string): Promise<HTMLElement> {
+  async function render(
+    api: Partial<MenuApiClient>,
+    url: string,
+    roles?: RoleGrants,
+  ): Promise<HTMLElement> {
     TestBed.configureTestingModule({
       providers: [
         provideRouter(
@@ -29,6 +34,9 @@ describe('ItemFormPage', () => {
       ],
     });
     TestBed.inject(I18n).setLanguage('he');
+    if (roles) {
+      TestBed.inject(Roles).set(roles);
+    }
     const harness = await RouterTestingHarness.create(url);
     await vi.waitFor(() => {
       harness.detectChanges();
@@ -84,6 +92,20 @@ describe('ItemFormPage', () => {
       listPrice: { value: 18.5, currency: 'ILS' as const },
       tagIds: [],
       variations: [],
+    });
+  });
+
+  it('sends a Contributor back to the public venue page, which they can reach', async () => {
+    const updateItem = vi.fn().mockResolvedValue(classic);
+    const element = await render(
+      menuApi({ updateItem }),
+      `/manage/venues/${VENUE_ID}/items/${classic.id}`,
+      { isAdmin: false, isContributor: true, ownedVenueIds: [] },
+    );
+    expect(element.querySelector('header a')?.getAttribute('href')).toBe(`/venues/${VENUE_ID}`);
+    submit(element);
+    await vi.waitFor(() => {
+      expect(TestBed.inject(Router).url).toBe(`/venues/${VENUE_ID}`);
     });
   });
 

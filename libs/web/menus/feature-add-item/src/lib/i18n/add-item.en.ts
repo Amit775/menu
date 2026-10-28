@@ -4,6 +4,7 @@ export const en = {
   title: 'Not on the menu?',
   intro:
     'Add the item to {venue}. Until the venue approves it, only you see it. The entry form opens next.',
+  introDirect: 'Add the item to {venue}. It goes on the menu at once. The entry form opens next.',
   cancel: 'Cancel',
   name: 'Item name',
   nameRequired: 'A name is needed',

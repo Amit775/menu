@@ -1,0 +1,35 @@
+@switch (stage()) {
+  @case ('error') {
+    <p class="error" role="alert">
+      {{ t('contributorLoadFailed') }}
+      <button mat-button type="button" (click)="store.reload()">{{ t('retry') }}</button>
+    </p>
+  }
+  @case ('pending') {
+    <h2>{{ t('contributorTitle') }}</h2>
+    <p class="status" role="status">{{ t('contributorPending') }}</p>
+  }
+  @case ('waiting') {
+    <h2>{{ t('contributorTitle') }}</h2>
+    @if (store.canApplyFrom(); as from) {
+      <p class="status">{{ t('contributorRejected', { date: from | relativeDate }) }}</p>
+    }
+  }
+  @case ('open') {
+    <h2>{{ t('contributorTitle') }}</h2>
+    <p>{{ t('contributorIntro') }}</p>
+    <form novalidate (submit)="$event.preventDefault(); apply()">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('contributorNote') }}</mat-label>
+        <textarea matInput rows="3" [formField]="noteField"></textarea>
+        <mat-hint>{{ t('contributorNoteHint') }}</mat-hint>
+      </mat-form-field>
+      <button mat-stroked-button type="submit" [disabled]="sending()">
+        {{ t('contributorApply') }}
+      </button>
+      @if (failed()) {
+        <p class="error" role="alert">{{ t('contributorApplyFailed') }}</p>
+      }
+    </form>
+  }
+}

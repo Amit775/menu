@@ -12,7 +12,7 @@ interface AccountRow {
   id: string;
   displayName: string;
   language: Language;
-  role: 'user' | 'admin';
+  role: 'user' | 'contributor' | 'admin';
   createdAt: Date;
 }
 
@@ -110,6 +110,16 @@ export class AccountRepository {
     const row = await this.prisma.account.findUniqueOrThrow({ where: { id } });
     return toSummary(row);
   }
+
+  /** An Admin already has every Contributor right, so their role is never changed here. */
+  async setContributor(id: string, isContributor: boolean): Promise<AccountSummary | null> {
+    await this.prisma.account.updateMany({
+      where: { id, role: isContributor ? 'user' : 'contributor' },
+      data: { role: isContributor ? 'contributor' : 'user' },
+    });
+    const row = await this.prisma.account.findUnique({ where: { id } });
+    return row ? toSummary(row) : null;
+  }
 }
 
 function toAccount(row: AccountWithOwnerships): Account {
@@ -118,6 +128,7 @@ function toAccount(row: AccountWithOwnerships): Account {
     displayName: row.displayName,
     language: row.language,
     isAdmin: row.role === 'admin',
+    isContributor: row.role === 'contributor',
     ownedVenueIds: row.ownerships.map((ownership) => ownership.venueId),
     createdAt: row.createdAt.toISOString(),
   };
@@ -128,6 +139,7 @@ function toSummary(row: AccountRow): AccountSummary {
     id: row.id,
     displayName: row.displayName,
     isAdmin: row.role === 'admin',
+    isContributor: row.role === 'contributor',
     createdAt: row.createdAt.toISOString(),
   };
 }

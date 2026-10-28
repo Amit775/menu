@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { ItemPageStore } from '@menu/web/discover/data-access';
+import { Roles } from '@menu/web/shared/util-auth';
 import { DeviceShare } from '@menu/web/shared/util-device';
 import { ItemHistory, ItemRow, ScoreBadge } from '@menu/web/discover/ui';
 import { I18n, injectTranslate, LocalizePipe, PricePipe } from '@menu/web/shared/util-i18n';
@@ -37,6 +38,7 @@ export class DiscoverItemPage {
   private readonly router = inject(Router);
   private readonly shareLink = inject(DeviceShare);
   private readonly i18n = inject(I18n);
+  private readonly roles = inject(Roles);
   protected readonly t = injectTranslate(itemI18n);
 
   readonly id = input.required<string>();
@@ -45,6 +47,11 @@ export class DiscoverItemPage {
   constructor() {
     this.store.load(this.id);
   }
+
+  protected readonly canEdit = computed(() => {
+    const page = this.store.page();
+    return page !== null && !page.archived && this.roles.canEditItems(page.item.venue.id);
+  });
 
   protected readonly backIcon = computed(() =>
     this.i18n.dir() === 'rtl' ? 'arrow_forward' : 'arrow_back',

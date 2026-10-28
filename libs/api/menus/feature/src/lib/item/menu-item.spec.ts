@@ -26,6 +26,7 @@ describe('MenuItem', () => {
   const user = (accountId: string): Principal => ({
     accountId,
     isAdmin: false,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   });
@@ -33,6 +34,7 @@ describe('MenuItem', () => {
   const stranger = user('stranger');
   const owner: Principal = { ...user('owner'), ownedVenueIds: [venueId] };
   const admin: Principal = { ...user('admin'), isAdmin: true };
+  const contributor: Principal = { ...user('contributor'), isContributor: true };
   const pending = new MenuItem(record);
   const approved = new MenuItem({ ...record, state: 'approved' });
 
@@ -42,6 +44,32 @@ describe('MenuItem', () => {
     expect(pending.isVisibleTo(admin)).toBe(true);
     expect(pending.isVisibleTo(stranger)).toBe(false);
     expect(pending.isVisibleTo(null)).toBe(false);
+  });
+
+  it('keeps pending items from a Contributor who did not submit them', () => {
+    expect(pending.isVisibleTo(contributor)).toBe(false);
+  });
+
+  it('lets a Contributor edit an approved item at any venue', () => {
+    expect(() => {
+      approved.assertEditableBy(contributor);
+    }).not.toThrow();
+    expect(() => {
+      approved.assertEditableBy(stranger);
+    }).toThrow(ForbiddenException);
+  });
+
+  it('lets a Contributor edit only approved items, even a pending one they sent', () => {
+    const own = new MenuItem({ ...record, submittedById: 'contributor' });
+    expect(() => {
+      own.assertEditableBy(contributor);
+    }).toThrow(ConflictException);
+  });
+
+  it('never lets a Contributor decide, archive or merge', () => {
+    expect(() => pending.assertDecision(contributor, 'approve')).toThrow(ForbiddenException);
+    expect(() => pending.assertDecision(contributor, 'merge')).toThrow(ForbiddenException);
+    expect(() => approved.assertDecision(contributor, 'archive')).toThrow(ForbiddenException);
   });
 
   it('shows approved items to everyone', () => {

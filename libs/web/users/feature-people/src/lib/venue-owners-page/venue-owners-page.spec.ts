@@ -12,6 +12,7 @@ const dana: AccountSummary = {
   id: '2a1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
   displayName: 'דנה',
   isAdmin: false,
+  isContributor: false,
   createdAt: '2026-10-02T10:00:00.000Z',
 };
 const yossi: AccountSummary = {

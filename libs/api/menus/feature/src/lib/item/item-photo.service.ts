@@ -11,6 +11,7 @@ import {
   ItemNotEditableError,
   type ItemRecord,
   ItemRepository,
+  VenueRepository,
 } from '@menu/api/menus/data-access';
 import { newCapabilityId } from '@menu/api/shared/util';
 import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
@@ -28,11 +29,12 @@ function itemPhotoKey(photoId: string): string {
   return `items/${photoId}`;
 }
 
-/** The photo the venue's Owner or an Admin puts on an item (ADR 0013). */
+/** The photo the venue's Owner, a Contributor or an Admin puts on an item (ADR 0013, 0014). */
 @Injectable()
 export class ItemPhotoService {
   constructor(
     private readonly repository: ItemRepository,
+    private readonly venues: VenueRepository,
     @Inject(PHOTO_STORAGE) private readonly storage: PhotoStorage,
   ) {}
 
@@ -71,13 +73,19 @@ export class ItemPhotoService {
 
   private async findEditable(principal: Principal, itemId: string): Promise<ItemRecord> {
     const record = await this.repository.findById(itemId);
-    if (!record) {
+    const item = record ? new MenuItem(record) : null;
+    const venue = item?.isVisibleTo(principal)
+      ? await this.venues.findById(item.record.venueId)
+      : null;
+    if (!item || !venue || (venue.status === 'hidden' && !canEditVenue(principal, venue.id))) {
       throw new NotFoundException('Item not found.');
     }
-    if (!canEditVenue(principal, record.venueId)) {
-      throw new ForbiddenException('Only the venue’s Owner or an Admin can change its photos.');
+    if (!item.canBeEditedBy(principal)) {
+      throw new ForbiddenException(
+        'Only the venue’s Owner, a Contributor or an Admin can change its photos.',
+      );
     }
-    return record;
+    return item.record;
   }
 
   /** No id reaches these bytes any more, so a failure to delete them is only logged. */

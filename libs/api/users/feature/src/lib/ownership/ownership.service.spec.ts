@@ -5,7 +5,13 @@ import { type Principal } from '@menu/api/shared/util-auth';
 import { OwnershipService } from './ownership.service';
 
 describe('OwnershipService', () => {
-  const admin: Principal = { accountId: 'admin', isAdmin: true, language: 'he', ownedVenueIds: [] };
+  const admin: Principal = {
+    accountId: 'admin',
+    isAdmin: true,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const ids = {
     accountId: '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10',
     venueId: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',

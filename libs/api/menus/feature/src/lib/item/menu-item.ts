@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { type ItemRecord } from '@menu/api/menus/data-access';
-import { canEditVenue, type Principal } from '@menu/api/shared/util-auth';
+import { canContribute, canEditVenue, type Principal } from '@menu/api/shared/util-auth';
 import { type Item, type ItemState } from '@menu/shared/contracts';
 
 export class MenuItem {
@@ -14,8 +14,13 @@ export class MenuItem {
     return this.record.state;
   }
 
-  canBeEditedBy(principal: Principal | null): boolean {
+  /** The venue's Owner or an Admin; Contributors edit items but never decide on them. */
+  canBeDecidedBy(principal: Principal | null): boolean {
     return canEditVenue(principal, this.record.venueId);
+  }
+
+  canBeEditedBy(principal: Principal | null): boolean {
+    return this.canBeDecidedBy(principal) || canContribute(principal);
   }
 
   isSubmittedBy(principal: Principal | null): boolean {
@@ -29,7 +34,7 @@ export class MenuItem {
    */
   isVisibleTo(principal: Principal | null): boolean {
     if (this.state === 'pending' || this.state === 'rejected') {
-      return this.isSubmittedBy(principal) || this.canBeEditedBy(principal);
+      return this.isSubmittedBy(principal) || this.canBeDecidedBy(principal);
     }
     return true;
   }
@@ -43,9 +48,14 @@ export class MenuItem {
 
   assertEditableBy(principal: Principal): void {
     if (!this.canBeEditedBy(principal)) {
-      throw new ForbiddenException('Only the venue’s Owner or an Admin can edit its items.');
+      throw new ForbiddenException(
+        'Only the venue’s Owner, a Contributor or an Admin can edit its items.',
+      );
     }
-    if (this.state !== 'pending' && this.state !== 'approved') {
+    if (
+      this.state !== 'approved' &&
+      !(this.state === 'pending' && this.canBeDecidedBy(principal))
+    ) {
       throw new ConflictException(`A ${this.state} item cannot be edited.`);
     }
   }
@@ -54,7 +64,7 @@ export class MenuItem {
     principal: Principal,
     decision: 'approve' | 'reject' | 'merge' | 'archive',
   ): ItemState {
-    if (!this.canBeEditedBy(principal)) {
+    if (!this.canBeDecidedBy(principal)) {
       throw new ForbiddenException('Only the venue’s Owner or an Admin can decide on its items.');
     }
     const from: ItemState = decision === 'archive' ? 'approved' : 'pending';

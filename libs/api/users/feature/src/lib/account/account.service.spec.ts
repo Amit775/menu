@@ -11,12 +11,14 @@ describe('AccountService', () => {
     displayName: 'נועה',
     language: 'he' as const,
     isAdmin: false,
+    isContributor: false,
     ownedVenueIds: [],
     createdAt: '2026-01-01T00:00:00.000Z',
   };
   const admin: Principal = {
     accountId: '7b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
     isAdmin: true,
+    isContributor: false,
     language: 'he',
     ownedVenueIds: [],
   };
@@ -41,6 +43,7 @@ describe('AccountService', () => {
     await expect(service.resolve({ uid: 'uid-1', name: ' נועה ' })).resolves.toEqual({
       accountId: account.id,
       isAdmin: false,
+      isContributor: false,
       language: 'he',
       ownedVenueIds: [],
     });
@@ -78,6 +81,35 @@ describe('AccountService', () => {
     expect(setAdmin).not.toHaveBeenCalled();
   });
 
+  it('resolves a Contributor', async () => {
+    const service = await setup({
+      findOrCreateByFirebaseUid: vi.fn().mockResolvedValue({ ...account, isContributor: true }),
+    });
+    await expect(service.resolve({ uid: 'uid-1' })).resolves.toMatchObject({
+      isAdmin: false,
+      isContributor: true,
+    });
+  });
+
+  it('lets an Admin grant and take back the Contributor role', async () => {
+    const summary = {
+      id: account.id,
+      displayName: 'נועה',
+      isAdmin: false,
+      isContributor: true,
+      createdAt: account.createdAt,
+    };
+    const setContributor = vi.fn().mockResolvedValue(summary);
+    const service = await setup({ setContributor });
+    await expect(service.setContributor(account.id, true)).resolves.toEqual(summary);
+    expect(setContributor).toHaveBeenCalledWith(account.id, true);
+  });
+
+  it('fails with 404 when setting the Contributor role of an unknown account', async () => {
+    const service = await setup({ setContributor: vi.fn().mockResolvedValue(null) });
+    await expect(service.setContributor(account.id, false)).rejects.toThrow(NotFoundException);
+  });
+
   it('fails with 404 for an unknown account', async () => {
     const service = await setup({ findById: vi.fn().mockResolvedValue(null) });
     await expect(service.get(account.id)).rejects.toThrow(NotFoundException);
@@ -88,6 +120,7 @@ describe('AccountService', () => {
       id: account.id,
       displayName: 'נועה',
       isAdmin: true,
+      isContributor: false,
       createdAt: account.createdAt,
     };
     const service = await setup({ setAdmin: vi.fn().mockResolvedValue(summary) });

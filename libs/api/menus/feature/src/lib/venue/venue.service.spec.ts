@@ -6,7 +6,13 @@ import { VenueService } from './venue.service';
 
 describe('VenueService', () => {
   const venueId = '0e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10';
-  const user: Principal = { accountId: 'u', isAdmin: false, language: 'he', ownedVenueIds: [] };
+  const user: Principal = {
+    accountId: 'u',
+    isAdmin: false,
+    isContributor: false,
+    language: 'he',
+    ownedVenueIds: [],
+  };
   const owner: Principal = { ...user, ownedVenueIds: [venueId] };
   const admin: Principal = { ...user, isAdmin: true };
   const hidden = { id: venueId, status: 'hidden' };

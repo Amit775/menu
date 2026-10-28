@@ -1,6 +1,7 @@
 export const he = {
   back: 'חזרה',
   loading: 'טוען…',
+  edit: 'עריכת הפריט',
   share: 'שיתוף',
   copied: 'הקישור הועתק',
   loadFailed: 'לא הצלחנו לטעון את הפריט.',
