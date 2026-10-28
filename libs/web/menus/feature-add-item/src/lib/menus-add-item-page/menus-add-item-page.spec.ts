@@ -46,6 +46,7 @@ const created: Item = {
   mergedIntoId: null,
   submittedByMe: true,
   position: 0,
+  photoUrl: null,
   createdAt: '2026-10-23T10:00:00.000Z',
 };
 
