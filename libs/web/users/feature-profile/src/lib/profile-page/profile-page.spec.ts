@@ -63,6 +63,7 @@ describe('ProfilePage', () => {
     const input = element.querySelector<HTMLInputElement>('input');
     expect(input?.value).toBe('נועה');
     expect(element.querySelector('a.diary')?.getAttribute('href')).toBe('/diary');
+    expect(element.querySelector('a.want-to-try')?.getAttribute('href')).toBe('/saved');
     if (input) {
       input.value = 'נועה כ.';
       input.dispatchEvent(new Event('input'));

@@ -14,7 +14,7 @@ describe('DiscoverController', () => {
     expect(search).toHaveBeenCalledWith(null, 'בורגר');
   });
 
-  it('opens every view to visitors except insights', () => {
+  it('opens every view to visitors except insights and the Want to try list', () => {
     const requirement = (method: string): unknown =>
       Reflect.getMetadata(
         AUTH_REQUIREMENT,
@@ -28,5 +28,6 @@ describe('DiscoverController', () => {
       undefined,
     ]);
     expect(requirement('insights')).toBe('signed-in');
+    expect(requirement('saved')).toBe('signed-in');
   });
 });

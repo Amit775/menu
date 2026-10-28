@@ -1,7 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import {
+  type DiscoverItem,
+  DiscoverItemSchema,
   discoverPath,
+  discoverSavedPath,
   type Feed,
   type FeedQuery,
   FeedSchema,
@@ -10,6 +13,9 @@ import {
   ItemPageSchema,
   type MapPin,
   MapPinSchema,
+  type SavedItem,
+  savedItemPath,
+  SavedItemSchema,
   type SearchResults,
   SearchResultsSchema,
   type Tag,
@@ -80,6 +86,20 @@ export class DiscoverApiClient {
   async item(id: string, near: GeoPoint | null): Promise<ItemPage> {
     const url = `${this.baseUrl}/items/${encodeURIComponent(id)}`;
     return ItemPageSchema.parse(await this.get(url, params(nearParams(near))));
+  }
+
+  async saved(near: GeoPoint | null): Promise<DiscoverItem[]> {
+    const url = `${this.baseUrl}/${discoverSavedPath}`;
+    return z.array(DiscoverItemSchema).parse(await this.get(url, params(nearParams(near))));
+  }
+
+  async save(itemId: string): Promise<SavedItem> {
+    const url = `/api/${savedItemPath}/${encodeURIComponent(itemId)}`;
+    return SavedItemSchema.parse(await firstValueFrom(this.http.put<unknown>(url, {})));
+  }
+
+  async unsave(itemId: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`/api/${savedItemPath}/${encodeURIComponent(itemId)}`));
   }
 
   async search(text: string): Promise<SearchResults> {

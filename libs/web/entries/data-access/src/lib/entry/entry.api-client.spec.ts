@@ -46,6 +46,14 @@ describe('EntryApiClient', () => {
     await expect(result).rejects.toThrow();
   });
 
+  it('takes an item off the Want to try list', async () => {
+    const done = client.unsave(ITEM_ID);
+    const request = http.expectOne(`/api/saved-items/${ITEM_ID}`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await done;
+  });
+
   it('logs an entry on the item', async () => {
     const result = client.create(ITEM_ID, { rating: 5, visibility: 'private' });
     const request = http.expectOne(`/api/items/${ITEM_ID}/entries`);

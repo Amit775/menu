@@ -18,6 +18,8 @@ export const he = {
   previousAtVenue: 'הפריט הקודם במקום',
   nextAtVenue: 'הפריט הבא במקום',
   swipeUp: 'החליקו למעלה לעמוד המקום',
+  wantToTry: 'רוצה לנסות',
+  saveFailed: 'לא נשמר',
   share: 'שיתוף',
   copied: 'הקישור הועתק',
   entries: '{count, plural, =1 {רשומה אחת} other {# רשומות}}',

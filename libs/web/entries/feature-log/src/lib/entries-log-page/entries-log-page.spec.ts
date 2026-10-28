@@ -34,6 +34,7 @@ const sheet: ItemEntries = {
     venue: { id: entry.venueId, name: { he: 'בורגר 24', en: null } },
   },
   itemIsPublic: true,
+  savedByMe: false,
   mine: [entry],
   others: [],
 };
@@ -135,6 +136,53 @@ describe('EntriesLogPage', () => {
     );
     expect(create.mock.calls[0]?.[1]).toHaveProperty('eatenAt');
     expect(TestBed.inject(Router).url).toBe(`/items/${ITEM_ID}/entries`);
+  });
+
+  describe('on an item the diner saved to try', () => {
+    const saved = { ...sheet, savedByMe: true, mine: [] };
+    const created = { ...entry, id: '1e9a4c8e-6a35-4c1c-9a57-6f7a5d3c2b10' };
+
+    it('takes it off the list once logged, unless the diner says not to', async () => {
+      const unsave = vi.fn().mockResolvedValue(undefined);
+      const { harness, field } = await open(`/log/${ITEM_ID}`, {
+        forItem: vi.fn().mockResolvedValue(saved),
+        create: vi.fn().mockResolvedValue(created),
+        unsave,
+      });
+      expect(field('mat-checkbox.unsave').textContent).toContain('להוריד מרשימת');
+      (field('button.save') as HTMLButtonElement).click();
+      await harness.fixture.whenStable();
+      expect(unsave).toHaveBeenCalledWith(ITEM_ID);
+    });
+
+    it('keeps it on the list when unticked', async () => {
+      const unsave = vi.fn();
+      const { harness, field } = await open(`/log/${ITEM_ID}`, {
+        forItem: vi.fn().mockResolvedValue(saved),
+        create: vi.fn().mockResolvedValue(created),
+        unsave,
+      });
+      (field('mat-checkbox.unsave input') as HTMLInputElement).click();
+      (field('button.save') as HTMLButtonElement).click();
+      await harness.fixture.whenStable();
+      expect(unsave).not.toHaveBeenCalled();
+    });
+
+    it('still opens the entries when taking it off fails', async () => {
+      const { harness, field } = await open(`/log/${ITEM_ID}`, {
+        forItem: vi.fn().mockResolvedValue(saved),
+        create: vi.fn().mockResolvedValue(created),
+        unsave: vi.fn().mockRejectedValue(new Error('offline')),
+      });
+      (field('button.save') as HTMLButtonElement).click();
+      await harness.fixture.whenStable();
+      expect(TestBed.inject(Router).url).toBe(`/items/${ITEM_ID}/entries`);
+    });
+  });
+
+  it('offers nothing about the list for an item not saved', async () => {
+    const { element } = await open(`/log/${ITEM_ID}`, {});
+    expect(element.querySelector('mat-checkbox.unsave')).toBeNull();
   });
 
   describe('with variations', () => {

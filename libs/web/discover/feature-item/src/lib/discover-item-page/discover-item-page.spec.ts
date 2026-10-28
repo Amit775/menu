@@ -24,6 +24,7 @@ describe('DiscoverItemPage', () => {
     latestPrice: { value: 68, currency: 'ILS' as const },
     photoUrl: null,
     writtenByMe: false,
+    savedByMe: false,
   };
   const page: ItemPage = {
     item,
@@ -49,12 +50,18 @@ describe('DiscoverItemPage', () => {
     ],
   };
 
-  async function render(load: DiscoverApiClient['item'], share = vi.fn(), roles?: RoleGrants) {
+  async function render(
+    load: DiscoverApiClient['item'],
+    share = vi.fn(),
+    roles?: RoleGrants,
+    signedIn: { backend: FakeAuthBackend; save?: unknown } = { backend: new FakeAuthBackend() },
+  ) {
     TestBed.configureTestingModule({
       imports: [DiscoverItemPage],
       providers: [
         provideRouter([]),
-        { provide: DiscoverApiClient, useValue: { item: load } },
+        { provide: AUTH_BACKEND, useValue: signedIn.backend },
+        { provide: DiscoverApiClient, useValue: { item: load, save: signedIn.save } },
         { provide: DeviceLocation, useValue: { locate: () => Promise.resolve(null) } },
         { provide: DeviceShare, useValue: { share } },
       ],
@@ -92,6 +99,41 @@ describe('DiscoverItemPage', () => {
       'עוד טעים במוזס',
     );
     expect(element.querySelector('menu-item-row')?.textContent).toContain('צ׳יפס');
+  });
+
+  it('saves the item to try, from the top of the page', async () => {
+    const save = vi.fn().mockResolvedValue({});
+    const backend = new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null });
+    const { fixture, element } = await render(vi.fn().mockResolvedValue(page), vi.fn(), undefined, {
+      backend,
+      save,
+    });
+    const button = element.querySelector<HTMLButtonElement>('button.save');
+    expect(button?.getAttribute('aria-label')).toBe('רוצה לנסות');
+    button?.click();
+    await fixture.whenStable();
+    expect(save).toHaveBeenCalledWith(item.id);
+    expect(button?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('offers no bookmark on an item taken off the menu, unless it is saved', async () => {
+    const backend = new FakeAuthBackend({ uid: 'u1', displayName: null, phoneNumber: null });
+    const archived = { ...page, archived: true };
+    const off = await render(vi.fn().mockResolvedValue(archived), vi.fn(), undefined, { backend });
+    expect(off.element.querySelector('button.save')).toBeNull();
+    TestBed.resetTestingModule();
+    const kept = await render(
+      vi.fn().mockResolvedValue({ ...archived, item: { ...item, savedByMe: true } }),
+      vi.fn(),
+      undefined,
+      { backend },
+    );
+    expect(kept.element.querySelector('button.save')?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('offers no bookmark to a visitor', async () => {
+    const { element } = await render(vi.fn().mockResolvedValue(page));
+    expect(element.querySelector('button.save')).toBeNull();
   });
 
   it('offers a Contributor to edit the item, and a diner nothing', async () => {

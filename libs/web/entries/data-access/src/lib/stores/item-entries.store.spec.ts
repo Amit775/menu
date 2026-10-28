@@ -36,6 +36,33 @@ describe('ItemEntriesStore', () => {
     expect(store.others()).toEqual(sheet.others);
   });
 
+  it('takes the item off the Want to try list', async () => {
+    const unsave = vi.fn().mockResolvedValue(undefined);
+    const { store } = setup({
+      forItem: vi.fn().mockResolvedValue({ ...sheet, savedByMe: true }),
+      unsave,
+    });
+    store.load(() => ITEM_ID);
+    await settle();
+    const told = vi.fn();
+    TestBed.inject(DataChanges).on('saved').subscribe(told);
+    await store.unsave(ITEM_ID);
+    expect(unsave).toHaveBeenCalledWith(ITEM_ID);
+    expect(store.sheet()?.savedByMe).toBe(false);
+    expect(told).toHaveBeenCalledWith({ itemId: ITEM_ID, saved: false });
+  });
+
+  it('keeps it saved when the API refuses', async () => {
+    const { store } = setup({
+      forItem: vi.fn().mockResolvedValue({ ...sheet, savedByMe: true }),
+      unsave: vi.fn().mockRejectedValue(new HttpErrorResponse({ status: 500 })),
+    });
+    store.load(() => ITEM_ID);
+    await settle();
+    await expect(store.unsave(ITEM_ID)).rejects.toBeInstanceOf(HttpErrorResponse);
+    expect(store.sheet()?.savedByMe).toBe(true);
+  });
+
   it('knows what the user paid last time, skipping entries without a price', async () => {
     const latest = { ...entry, pricePaid: null };
     const { store } = setup({

@@ -68,6 +68,11 @@ export const ItemEntriesStore = signalStore(
           changes.notify('entries');
           return created;
         },
+        async unsave(itemId: string): Promise<void> {
+          await api.unsave(itemId);
+          patchSheet((sheet) => ({ ...sheet, savedByMe: false }));
+          changes.notify('saved', { itemId, saved: false });
+        },
         async update(id: string, input: UpdateEntry): Promise<Entry> {
           // Editing an old entry leaves the default for new ones alone.
           const updated = await api.update(id, input);

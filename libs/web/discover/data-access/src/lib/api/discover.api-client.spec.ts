@@ -50,6 +50,33 @@ describe('DiscoverApiClient', () => {
     await expect(feed).rejects.toThrow();
   });
 
+  it('asks for the Want to try list near the user and validates it', async () => {
+    const saved = client.saved({ lat: 32.08, lng: 34.78 });
+    const request = http.expectOne((r) => r.url === '/api/discover/saved');
+    expect(request.request.params.toString()).toBe('lat=32.08&lng=34.78');
+    request.flush([item]);
+    await expect(saved).resolves.toEqual([item]);
+  });
+
+  it('rejects a Want to try list that breaks the contract', async () => {
+    const saved = client.saved(null);
+    http.expectOne((r) => r.url === '/api/discover/saved').flush([{ id: 'x' }]);
+    await expect(saved).rejects.toThrow();
+  });
+
+  it('saves and removes an item to try', async () => {
+    const saved = client.save(ITEM_ID);
+    const put = http.expectOne(`/api/saved-items/${ITEM_ID}`);
+    expect(put.request.method).toBe('PUT');
+    put.flush({ itemId: ITEM_ID, savedAt: '2026-10-28T10:00:00.000Z' });
+    await expect(saved).resolves.toEqual({ itemId: ITEM_ID, savedAt: '2026-10-28T10:00:00.000Z' });
+    const removed = client.unsave(ITEM_ID);
+    const del = http.expectOne(`/api/saved-items/${ITEM_ID}`);
+    expect(del.request.method).toBe('DELETE');
+    del.flush(null, { status: 204, statusText: 'No Content' });
+    await removed;
+  });
+
   it('asks for map pins and validates them', async () => {
     const pins = client.map({ near: null, radiusKm: 10, tagIds: ['a'] });
     const request = http.expectOne((r) => r.url === '/api/discover/map');

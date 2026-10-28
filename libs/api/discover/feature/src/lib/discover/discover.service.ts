@@ -39,6 +39,8 @@ interface Snapshot {
   stats: ReadonlyMap<string, ItemStats>;
   means: Map<string, number>;
   writtenByMe: ReadonlySet<string>;
+  saved: readonly string[];
+  savedByMe: ReadonlySet<string>;
 }
 
 function pointOf(near: Near): GeoPoint | null {
@@ -93,6 +95,19 @@ export class DiscoverService {
       items: ordered.slice(query.offset, end),
       nextOffset: end < ordered.length ? end : null,
     };
+  }
+
+  /** Items no longer on a menu drop out of the list. */
+  async saved(principal: Principal, near: Near): Promise<DiscoverItem[]> {
+    const snapshot = await this.snapshot(principal);
+    const point = pointOf(near);
+    const approved = new Map(
+      snapshot.catalog.filter((item) => item.state === 'approved').map((item) => [item.id, item]),
+    );
+    return snapshot.saved.flatMap((id) => {
+      const item = approved.get(id);
+      return item ? [this.toItem(snapshot, item, point)] : [];
+    });
   }
 
   async map(principal: Principal | null, query: MapQuery): Promise<MapPin[]> {
@@ -238,12 +253,14 @@ export class DiscoverService {
   }
 
   private async snapshot(principal: Principal | null): Promise<Snapshot> {
-    const [catalog, stats, writtenByMe] = await Promise.all([
+    const [catalog, stats, writtenByMe, savedByMe] = await Promise.all([
       this.repository.loadCatalog(),
       this.entries.statsByItem(),
       principal ? this.entries.itemIdsWrittenBy(principal.accountId) : new Set<string>(),
+      principal ? this.entries.itemIdsSavedBy(principal.accountId) : [],
     ]);
-    return { catalog, stats, means: peerMeans(catalog, stats), writtenByMe };
+    const means = peerMeans(catalog, stats);
+    return { catalog, stats, means, writtenByMe, saved: savedByMe, savedByMe: new Set(savedByMe) };
   }
 
   private filter(snapshot: Snapshot, query: MapQuery): DiscoverItem[] {
@@ -286,6 +303,7 @@ export class DiscoverService {
       latestPrice: item.listPrice ?? stats.latestPublicPrice,
       photoUrl: stats.latestPublicPhotoUrl ?? item.photoUrl,
       writtenByMe: snapshot.writtenByMe.has(item.id),
+      savedByMe: snapshot.savedByMe.has(item.id),
     };
   }
 }

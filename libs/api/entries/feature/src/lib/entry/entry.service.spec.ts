@@ -1,6 +1,10 @@
 import { BadRequestException, ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { type EntryRecord, EntryRepository } from '@menu/api/entries/data-access';
+import {
+  type EntryRecord,
+  EntryRepository,
+  SavedItemRepository,
+} from '@menu/api/entries/data-access';
 import { MemoryPhotoStorage, PHOTO_STORAGE } from '@menu/api/shared/util-photos';
 import { type Principal } from '@menu/api/shared/util-auth';
 import { AUTHOR_DIRECTORY, type EntryTarget, ITEM_CATALOG } from '@menu/api/shared/util-ports';
@@ -73,6 +77,7 @@ describe('EntryService', () => {
     repository: Partial<Record<keyof EntryRepository, unknown>>,
     target: EntryTarget | null = item,
     refs = new Map([['i1', itemRef]]),
+    isSaved = vi.fn().mockResolvedValue(false),
   ): Promise<EntryService> {
     photos = new MemoryPhotoStorage();
     const moduleRef = await Test.createTestingModule({
@@ -80,6 +85,7 @@ describe('EntryService', () => {
         EntryService,
         { provide: PHOTO_STORAGE, useValue: photos },
         { provide: EntryRepository, useValue: repository },
+        { provide: SavedItemRepository, useValue: { isSaved } },
         {
           provide: ITEM_CATALOG,
           useValue: {
@@ -161,6 +167,19 @@ describe('EntryService', () => {
       expect(listPublicByItem).toHaveBeenCalledWith('i1', 'a1');
     });
 
+    it('says whether the caller saved the item to try', async () => {
+      const isSaved = vi.fn().mockResolvedValue(true);
+      const empty = vi.fn().mockResolvedValue([]);
+      const service = await setup(
+        { listByAuthor: empty, listPublicByItem: empty },
+        item,
+        new Map([['i1', itemRef]]),
+        isSaved,
+      );
+      await expect(service.listForItem(author, 'i1')).resolves.toMatchObject({ savedByMe: true });
+      expect(isSaved).toHaveBeenCalledWith('a1', 'i1');
+    });
+
     it('shows no one else’s entries on an item that is not public', async () => {
       const listPublicByItem = vi.fn();
       const service = await setup(
@@ -191,6 +210,7 @@ describe('EntryService', () => {
       await expect(service.listForItem(null, 'i1')).resolves.toEqual({
         item: itemRef,
         itemIsPublic: true,
+        savedByMe: false,
         mine: [],
         others: [],
       });

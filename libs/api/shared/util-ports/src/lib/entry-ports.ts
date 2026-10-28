@@ -23,6 +23,8 @@ export interface ItemEntryStats extends RatingTotal {
 export interface EntryStatsSource {
   statsByItem(): Promise<ReadonlyMap<string, ItemEntryStats>>;
   itemIdsWrittenBy(authorId: string): Promise<ReadonlySet<string>>;
+  /** The caller's Want to try list, newest first. */
+  itemIdsSavedBy(accountId: string): Promise<readonly string[]>;
   countEntriesAt(authorId: string, venueId: string): Promise<number>;
 }
 

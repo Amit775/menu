@@ -10,6 +10,8 @@ import { VenueSchema } from '../menus/venue.contract';
 
 export const discoverPath = 'discover';
 
+export const discoverSavedPath = 'saved';
+
 /** Fewer rated entries than this and an item shows no score (and no ratio): noise, and a diner could be identified. */
 export const SCORE_FLOOR = 3;
 
@@ -73,7 +75,7 @@ export type VenueRef = z.infer<typeof VenueRefSchema>;
  * the floor, `wouldOrderAgainPercent` until 3 answers count. Entries that are
  * not public join these numbers only once there are 3 of them. `latestPrice` is the menu price, or the
  * latest price in a public entry. `writtenByMe` is the flag on items the caller
- * has an entry on.
+ * has an entry on, `savedByMe` on items in their Want to try list.
  */
 export const DiscoverItemSchema = z.object({
   id: z.uuid(),
@@ -89,6 +91,7 @@ export const DiscoverItemSchema = z.object({
   /** The newest public entry photo, else the item's own (ADR 0013). */
   photoUrl: PhotoUrlSchema.or(ItemPhotoUrlSchema).nullable(),
   writtenByMe: z.boolean(),
+  savedByMe: z.boolean(),
 });
 
 export type DiscoverItem = z.infer<typeof DiscoverItemSchema>;

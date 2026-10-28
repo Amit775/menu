@@ -4,6 +4,7 @@ export const he = {
   signedOutText: 'אחרי כניסה אפשר לשמור מה אכלת, לדרג ולשתף.',
   signIn: 'כניסה',
   diary: 'היומן שלי',
+  wantToTry: 'רוצה לנסות',
   name: 'השם שיופיע ליד רשומות ציבוריות',
   save: 'שמירה',
   saved: 'נשמר',

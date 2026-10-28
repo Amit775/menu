@@ -164,6 +164,7 @@ model Item {
   mergedInto  Item?    @relation("merge", fields: [mergedIntoId], references: [id], onDelete: SetNull)
   mergedFrom  Item[]   @relation("merge")
   entries     Entry[]
+  savedBy     SavedItem[]
   revisions   ItemRevision[]
 
   @@index([venueId, state])
@@ -238,4 +239,17 @@ model Entry {
   @@index([itemId, visibility])
   @@index([photo(ops: JsonbPathOps)], type: Gin)
   @@map("entry")
+}
+
+/// An item someone wants to try; always private. `accountId` has no foreign key, like `entry.authorId` (ADR 0004).
+model SavedItem {
+  accountId String   @map("account_id") @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  savedAt   DateTime @default(now()) @map("saved_at")
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, itemId])
+  @@index([accountId, savedAt])
+  @@map("saved_item")
 }

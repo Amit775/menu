@@ -60,7 +60,8 @@
       "@menu/web/shared/util-map": ["./libs/web/shared/util-map/src/index.ts"],
       "@menu/web/users/feature-people": ["./libs/web/users/feature-people/src/index.ts"],
       "@menu/web/shared/util-data": ["./libs/web/shared/util-data/src/index.ts"],
-      "@menu/api/shared/util-photos": ["./libs/api/shared/util-photos/src/index.ts"]
+      "@menu/api/shared/util-photos": ["./libs/api/shared/util-photos/src/index.ts"],
+      "@menu/web/discover/feature-saved": ["./libs/web/discover/feature-saved/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

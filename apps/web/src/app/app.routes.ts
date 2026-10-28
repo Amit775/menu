@@ -2,6 +2,11 @@ import { type Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
   {
+    path: 'saved',
+    loadChildren: () =>
+      import('@menu/web/discover/feature-saved').then((m) => m.webDiscoverFeatureSavedRoutes),
+  },
+  {
     path: 'manage/people',
     loadChildren: () =>
       import('@menu/web/users/feature-people').then((m) => m.webUsersFeaturePeopleRoutes),

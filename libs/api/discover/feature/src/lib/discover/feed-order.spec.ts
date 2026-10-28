@@ -21,6 +21,7 @@ describe('orderFeed', () => {
       latestPrice: null,
       photoUrl: null,
       writtenByMe,
+      savedByMe: false,
     };
   }
 

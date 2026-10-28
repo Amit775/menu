@@ -29,6 +29,7 @@ export const en = {
   photoRejected:
     'The entry was saved, but this photo can’t be used. Try a JPEG, PNG or WebP up to 8 MB.',
   photoFailed: 'The entry was saved, but the photo did not upload. Try again.',
+  unsave: 'Take it off my Want to try list',
   visibility: 'Who sees this',
   private: 'Only me',
   shared: 'Anyone with the link',

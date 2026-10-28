@@ -18,6 +18,7 @@ describe('ItemRow', () => {
     latestPrice: { value: 68, currency: 'ILS' as const },
     photoUrl: null,
     writtenByMe: true,
+    savedByMe: false,
   };
 
   async function render(value: DiscoverItem, showVenue = true): Promise<HTMLElement> {
@@ -28,6 +29,20 @@ describe('ItemRow', () => {
     fixture.componentRef.setInput('showVenue', showVenue);
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
+  }
+
+  it('marks an item the caller wants to try', async () => {
+    const element = await render({ ...item, savedByMe: true });
+    expect(element.querySelector('mat-icon.saved')).not.toBeNull();
+    expect(element.textContent).toContain('רוצה לנסות');
+    expect(
+      (await renderAgain({ ...item, savedByMe: false })).querySelector('mat-icon.saved'),
+    ).toBeNull();
+  });
+
+  async function renderAgain(value: DiscoverItem): Promise<HTMLElement> {
+    TestBed.resetTestingModule();
+    return render(value);
   }
 
   it('shows the item, where it is and what it costs, linked to its page', async () => {
@@ -42,7 +57,14 @@ describe('ItemRow', () => {
 
   it('invites the first entry on an item nobody rated, without the venue on its own page', async () => {
     const element = await render(
-      { ...item, score: null, ratingCount: 0, wouldOrderAgainPercent: null, writtenByMe: false },
+      {
+        ...item,
+        score: null,
+        ratingCount: 0,
+        wouldOrderAgainPercent: null,
+        writtenByMe: false,
+        savedByMe: false,
+      },
       false,
     );
     expect(element.querySelector('.ratio')?.textContent).toBe('היו הראשונים');

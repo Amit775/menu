@@ -5,6 +5,7 @@ export const he = {
   scoreLabel: 'ציון {score} מתוך 5',
   beFirst: 'היו הראשונים',
   writtenByMe: 'יש לך רשומה',
+  savedByMe: 'רוצה לנסות',
   historyTitle: 'היסטוריה',
   historyAdded: 'נוסף לתפריט',
   historyAddedAt: 'נוסף לתפריט במחיר {price}',

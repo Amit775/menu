@@ -49,6 +49,7 @@ describe('Discover contract', () => {
       latestPrice: { value: 68, currency: 'ILS' },
       photoUrl: null,
       writtenByMe: true,
+      savedByMe: false,
     };
     expect(DiscoverItemSchema.parse(item)).toEqual(item);
   });

@@ -11,6 +11,7 @@ import {
   EntryWithItemSchema,
   type ItemEntries,
   itemEntriesPath,
+  savedItemPath,
   ItemEntriesSchema,
   sharedEntryPath,
   type SetEntryHidden,
@@ -61,6 +62,10 @@ export class EntryApiClient {
 
   async remove(id: string): Promise<void> {
     await firstValueFrom(this.http.delete(`${this.baseUrl}/${id}`));
+  }
+
+  async unsave(itemId: string): Promise<void> {
+    await firstValueFrom(this.http.delete(`/api/${savedItemPath}/${encodeURIComponent(itemId)}`));
   }
 
   async setPhoto(id: string, photo: Blob): Promise<Entry> {

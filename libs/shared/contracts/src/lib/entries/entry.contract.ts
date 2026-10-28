@@ -96,6 +96,8 @@ export type PublicEntry = z.infer<typeof PublicEntrySchema>;
 export const ItemEntriesSchema = z.object({
   item: ItemRefSchema,
   itemIsPublic: z.boolean(),
+  /** In the caller's Want to try list, so logging it can offer to take it off. */
+  savedByMe: z.boolean(),
   mine: z.array(EntrySchema),
   others: z.array(PublicEntrySchema),
 });

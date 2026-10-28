@@ -20,6 +20,7 @@ export function sampleItem(n: number, changes: Partial<DiscoverItem> = {}): Disc
     latestPrice: { value: 68, currency: 'ILS' as const },
     photoUrl: null,
     writtenByMe: false,
+    savedByMe: false,
     ...changes,
   };
 }
@@ -27,6 +28,7 @@ export function sampleItem(n: number, changes: Partial<DiscoverItem> = {}): Disc
 export function boundaries(
   api: Partial<DiscoverApiClient>,
   share: DeviceShare['share'] = () => Promise.resolve('shared'),
+  backend = new FakeAuthBackend(),
 ): Provider[] {
   return [
     { provide: DiscoverApiClient, useValue: { tags: () => Promise.resolve([]), ...api } },
@@ -35,6 +37,6 @@ export function boundaries(
       useValue: { locate: () => Promise.resolve(null), position: () => null },
     },
     { provide: DeviceShare, useValue: { share } },
-    { provide: AUTH_BACKEND, useValue: new FakeAuthBackend() },
+    { provide: AUTH_BACKEND, useValue: backend },
   ];
 }

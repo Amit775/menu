@@ -15,6 +15,10 @@
         <mat-icon aria-hidden="true">menu_book</mat-icon>
         {{ t('diary') }}
       </a>
+      <a mat-stroked-button class="want-to-try" routerLink="/saved">
+        <mat-icon aria-hidden="true">bookmark</mat-icon>
+        {{ t('wantToTry') }}
+      </a>
       @if (store.error() === 'load-failed') {
         <p class="error" role="alert">{{ t('loadFailed') }}</p>
       }

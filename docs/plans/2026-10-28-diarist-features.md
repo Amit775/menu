@@ -1,0 +1,24 @@
+# Diarist features (phase 4)
+
+Phase 4 of the next-phase plan: four independent features on the item model from phase 2. Each is its own PR, stacked on the contributor role (#29).
+
+## 4a. Want to try (done)
+
+- `saved_item` (account, item, saved at) in `entries`, with the rest of a user's personal data. Always private. `account_id` has no foreign key, like `entry.author_id` (ADR 0004).
+- `PUT` and `DELETE /api/saved-items/:itemId` (entries, ADR 0015). Only an approved item can be saved; saving again keeps the first time.
+- `GET /api/discover/saved` lists the caller's items newest first, through `EntryStatsSource.itemIdsSavedBy`; items no longer on a menu drop out. Every discover item carries `savedByMe`.
+- A merge moves saved items to the target, dropping duplicates (`EntryMergeListener`).
+- Web: a bookmark on the reel card and the item page (signed in only), a marker on item rows, `/saved` linked from the profile, and the log form offers to take a saved item off the list once it is logged (`ItemEntries.savedByMe`).
+- Account deletion (phase 1, skipped for now) must remove the account's saved items.
+
+## 4b. Personal stats
+
+A Stats card in the profile from the user's own entries only: entries this month and all time, venues and items tried, average rating given, spending per month (from price paid), top tags, most ordered item. No new table; `GET /api/entries/me/stats`.
+
+## 4c. "No longer on the menu" reports
+
+Any signed-in user reports an item from its page ("no longer served" or "price changed", with an optional new price). Reports join the venue's pending queue; the Owner or Admin archives the item, updates it or dismisses the report. The reporter is never shown. The item page shows "last confirmed".
+
+## 4d. WhatsApp link previews
+
+A Firebase Hosting rewrite sends `/e/**` to an API route that returns the SPA's `index.html` with Open Graph tags for that entry (Q5). A private or deleted entry gets a generic preview.

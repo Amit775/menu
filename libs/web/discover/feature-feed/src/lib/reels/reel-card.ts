@@ -11,7 +11,8 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { type DiscoverItem } from '@menu/shared/contracts';
-import { FeedStore } from '@menu/web/discover/data-access';
+import { FeedStore, SavedItems } from '@menu/web/discover/data-access';
+import { Auth } from '@menu/web/shared/util-auth';
 import { DeviceShare } from '@menu/web/shared/util-device';
 import { ScoreBadge } from '@menu/web/discover/ui';
 import {
@@ -46,6 +47,8 @@ export class ReelCard {
   private readonly router = inject(Router);
   private readonly shareLink = inject(DeviceShare);
   private readonly i18n = inject(I18n);
+  protected readonly auth = inject(Auth);
+  private readonly savedItems = inject(SavedItems);
   protected readonly t = injectTranslate(feedI18n);
 
   readonly item = input.required<DiscoverItem>();
@@ -58,6 +61,8 @@ export class ReelCard {
     this.siblings().findIndex((sibling) => sibling.id === this.shown().id),
   );
   protected readonly copied = signal(false);
+  protected readonly saved = computed(() => this.savedItems.isSaved(this.shown()));
+  protected readonly saveFailed = signal(false);
 
   private start: { x: number; y: number } | null = null;
   /** Set by a swipe up, so the click that follows it does not also step or open a link. */
@@ -109,6 +114,15 @@ export class ReelCard {
     if (dy < -SWIPE && Math.abs(dx) < SWIPE) {
       this.swiped = true;
       void this.router.navigate(['/venues', this.shown().venue.id]);
+    }
+  }
+
+  protected async toggleSaved(): Promise<void> {
+    this.saveFailed.set(false);
+    try {
+      await this.savedItems.toggle(this.shown());
+    } catch {
+      this.saveFailed.set(true);
     }
   }
 
