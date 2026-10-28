@@ -3,7 +3,7 @@
  * these interfaces only, and `apps/api` binds them to the implementations.
  */
 import { type Principal } from '@menu/api/shared/util-auth';
-import { type ItemRef } from '@menu/shared/contracts';
+import { type ItemRef, type Text } from '@menu/shared/contracts';
 
 export interface ItemMergeListener {
   onItemMerged(sourceItemId: string, targetItemId: string): Promise<void>;
@@ -28,6 +28,13 @@ export interface ItemCatalog {
    * out. Only for entries the caller may already see (their diary, an open share link).
    */
   refsFor(itemIds: readonly string[]): Promise<ReadonlyMap<string, ItemRef>>;
+  /** The tags on these items, with the same caveat as `refsFor`. */
+  tagsFor(itemIds: readonly string[]): Promise<ReadonlyMap<string, readonly ItemTag[]>>;
+}
+
+export interface ItemTag {
+  id: string;
+  name: Text;
 }
 
 export const ITEM_CATALOG = Symbol('ITEM_CATALOG');

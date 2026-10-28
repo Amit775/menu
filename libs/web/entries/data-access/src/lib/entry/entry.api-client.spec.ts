@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { entry, ITEM_ID, itemRef, publicEntry, sheet, VENUE_ID } from '../testing/fixtures';
+import { entry, ITEM_ID, itemRef, publicEntry, sheet, stats, VENUE_ID } from '../testing/fixtures';
 import { EntryApiClient } from './entry.api-client';
 
 describe('EntryApiClient', () => {
@@ -29,6 +29,20 @@ describe('EntryApiClient', () => {
   it('rejects a diary line without its item', async () => {
     const result = client.diary();
     http.expectOne('/api/entries').flush([entry]);
+    await expect(result).rejects.toThrow();
+  });
+
+  it('reads the caller’s stats', async () => {
+    const result = client.stats();
+    http.expectOne('/api/entries/me/stats').flush(stats);
+    await expect(result).resolves.toEqual(stats);
+  });
+
+  it('rejects stats with a month that is not one', async () => {
+    const result = client.stats();
+    http
+      .expectOne('/api/entries/me/stats')
+      .flush({ ...stats, months: [{ month: 'October', entryCount: 1, spent: [] }] });
     await expect(result).rejects.toThrow();
   });
 

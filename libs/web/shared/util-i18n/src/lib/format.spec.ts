@@ -1,6 +1,7 @@
 import {
   formatDistance,
   formatList,
+  formatMonth,
   formatMonthYear,
   formatPrice,
   formatRelativeDate,
@@ -47,6 +48,13 @@ describe('formatMonthYear', () => {
   it('names the month and year in Israel time, in the given language', () => {
     expect(formatMonthYear('2026-09-30T22:30:00.000Z', 'en')).toBe('Oct 2026');
     expect(formatMonthYear('2026-03-10T10:00:00.000Z', 'he')).toBe('מרץ 2026');
+  });
+});
+
+describe('formatMonth', () => {
+  it('names a calendar month in the given language', () => {
+    expect(formatMonth('2026-10', 'en')).toBe('Oct');
+    expect(formatMonth('2026-03', 'he')).toBe('מרץ');
   });
 });
 

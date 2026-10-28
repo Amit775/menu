@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { type EntryWithItem } from '@menu/shared/contracts';
+import { type EntryWithItem, type PersonalStats } from '@menu/shared/contracts';
 import { EntryApiClient } from '@menu/web/entries/data-access';
 import { I18n } from '@menu/web/shared/util-i18n';
 import { EntriesDiaryPage } from './entries-diary-page';
@@ -31,10 +31,27 @@ const line: EntryWithItem = {
   },
 };
 
+const stats: PersonalStats = {
+  entryCount: 1,
+  venueCount: 1,
+  itemCount: 1,
+  averageRating: 5,
+  months: [{ month: '2026-10', entryCount: 1, spent: [{ value: 68, currency: 'ILS' }] }],
+  topTags: [],
+  mostOrdered: null,
+};
+
 describe('EntriesDiaryPage', () => {
-  async function render(diary: EntryApiClient['diary'], venueId?: string): Promise<HTMLElement> {
+  async function render(
+    diary: EntryApiClient['diary'],
+    venueId?: string,
+    readStats: EntryApiClient['stats'] = vi.fn().mockResolvedValue(stats),
+  ): Promise<HTMLElement> {
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: EntryApiClient, useValue: { diary } }],
+      providers: [
+        provideRouter([]),
+        { provide: EntryApiClient, useValue: { diary, stats: readStats } },
+      ],
     });
     TestBed.inject(I18n).setLanguage('he');
     const fixture = TestBed.createComponent(EntriesDiaryPage);
@@ -72,6 +89,30 @@ describe('EntriesDiaryPage', () => {
     expect(diary).toHaveBeenCalledWith({});
     expect(element.querySelector('h1 .at')).toBeNull();
     expect(element.querySelector('a.all')).toBeNull();
+  });
+
+  it('opens the whole diary with the diarist’s stats', async () => {
+    const element = await render(vi.fn().mockResolvedValue([line]));
+    expect(element.querySelector('menu-personal-stats-card h2')?.textContent).toBe(
+      'הסטטיסטיקה שלך',
+    );
+  });
+
+  it('keeps the stats off a venue’s diary', async () => {
+    const readStats = vi.fn().mockResolvedValue(stats);
+    const element = await render(vi.fn().mockResolvedValue([line]), line.venueId, readStats);
+    expect(readStats).not.toHaveBeenCalled();
+    expect(element.querySelector('menu-personal-stats-card')).toBeNull();
+  });
+
+  it('shows the diary without stats when they cannot be read', async () => {
+    const element = await render(
+      vi.fn().mockResolvedValue([line]),
+      undefined,
+      vi.fn().mockRejectedValue(new Error('offline')),
+    );
+    expect(element.querySelector('menu-personal-stats-card')).toBeNull();
+    expect(element.querySelector('a.item')).not.toBeNull();
   });
 
   it('points an empty diary at discover', async () => {

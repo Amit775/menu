@@ -11,9 +11,11 @@ Phase 4 of the next-phase plan: four independent features on the item model from
 - Web: a bookmark on the reel card and the item page (signed in only), a marker on item rows, `/saved` linked from the profile, and the log form offers to take a saved item off the list once it is logged (`ItemEntries.savedByMe`).
 - Account deletion (phase 1, skipped for now) must remove the account's saved items.
 
-## 4b. Personal stats
+## 4b. Personal stats (done)
 
-A Stats card in the profile from the user's own entries only: entries this month and all time, venues and items tried, average rating given, spending per month (from price paid), top tags, most ordered item. No new table; `GET /api/entries/me/stats`.
+- `GET /api/entries/me/stats`, computed from the caller's own entries (private ones included) with no new table: entries this month and all time, venues and items tried, average rating given (one decimal), entries and spending for the last six months in Israel time, the three tags logged most, and the item ordered most (once logged at least twice).
+- Tag names come through a new `ItemCatalog.tagsFor` port method; tags are the item's own, not its variations'.
+- Web: a stats card at the top of the whole diary (`/diary`, linked from the profile as "My diary"), not on the profile itself, because `users` must not import `entries` (ADR 0004). A venue's diary leaves it out, and a failed read hides the card without blocking the diary.
 
 ## 4c. "No longer on the menu" reports
 

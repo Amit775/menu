@@ -71,6 +71,8 @@ describe('EntryService', () => {
     };
   }
 
+  const vegan = { id: 't1', name: { he: 'טבעוני', en: 'Vegan' } };
+
   let photos = new MemoryPhotoStorage();
 
   async function setup(
@@ -91,6 +93,7 @@ describe('EntryService', () => {
           useValue: {
             findForEntries: vi.fn().mockResolvedValue(target),
             refsFor: vi.fn().mockResolvedValue(refs),
+            tagsFor: vi.fn().mockResolvedValue(new Map([['i1', [vegan]]])),
           },
         },
         {
@@ -148,6 +151,27 @@ describe('EntryService', () => {
     it('fails with 404 for an item the caller cannot see', async () => {
       const service = await setup({ create: vi.fn() }, null);
       await expect(service.create(author, 'i1', input)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('personal stats', () => {
+    it('counts only the caller’s entries, private ones included, with their item tags', async () => {
+      const listByAuthor = vi
+        .fn()
+        .mockResolvedValue([record({ id: 'e1' }), record({ id: 'e2', rating: 2 })]);
+      const stats = await (await setup({ listByAuthor })).stats(author);
+      expect(listByAuthor).toHaveBeenCalledWith('a1');
+      expect(stats).toMatchObject({
+        entryCount: 2,
+        averageRating: 3,
+        topTags: [{ name: vegan.name, count: 2 }],
+        mostOrdered: { item: itemRef, count: 2 },
+      });
+    });
+
+    it('fails when the entries cannot be read', async () => {
+      const listByAuthor = vi.fn().mockRejectedValue(new Error('down'));
+      await expect((await setup({ listByAuthor })).stats(author)).rejects.toThrow('down');
     });
   });
 

@@ -1,6 +1,7 @@
 import {
   type ItemRecord,
   type ItemRepository,
+  type TagRepository,
   type VenueRepository,
 } from '@menu/api/menus/data-access';
 import { type Principal } from '@menu/api/shared/util-auth';
@@ -45,9 +46,16 @@ describe('MenusItemCatalog', () => {
       findById: vi.fn().mockResolvedValue(venue),
       list: vi.fn().mockResolvedValue([venue]),
     };
+    const tags = {
+      list: vi.fn().mockResolvedValue([
+        { id: 't1', slug: 'vegan', kind: 'diet', name: { he: 'טבעוני', en: 'Vegan' } },
+        { id: 't2', slug: 'spicy', kind: 'taste', name: { he: 'חריף', en: null } },
+      ]),
+    };
     return new MenusItemCatalog(
       repository as unknown as ItemRepository,
       venues as unknown as VenueRepository,
+      tags as unknown as TagRepository,
     );
   }
 
@@ -144,5 +152,10 @@ describe('MenusItemCatalog', () => {
 
   it('leaves out unknown items', async () => {
     await expect(catalog(null).refsFor(['nope'])).resolves.toEqual(new Map());
+  });
+
+  it('names the tags of items, leaving out tags that are gone', async () => {
+    const tags = await catalog({ ...base, tagIds: ['t2', 'gone'] }).tagsFor(['i1']);
+    expect(tags).toEqual(new Map([['i1', [{ id: 't2', name: { he: 'חריף', en: null } }]]]));
   });
 });

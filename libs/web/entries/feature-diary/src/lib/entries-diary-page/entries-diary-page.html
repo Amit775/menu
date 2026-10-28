@@ -29,6 +29,9 @@
         <a mat-flat-button routerLink="/">{{ t('toFeed') }}</a>
       </div>
     } @else {
+      @if (stats.stats(); as mine) {
+        <menu-personal-stats-card [stats]="mine" />
+      }
       <ul>
         @for (entry of store.entries(); track entry.id) {
           <li>

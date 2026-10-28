@@ -49,6 +49,12 @@ describe('Entry controllers', () => {
     expect(diary).toHaveBeenCalledWith(principal, { venueId: 'v1' });
   });
 
+  it('reads the caller’s own stats', async () => {
+    const stats = vi.fn().mockResolvedValue({});
+    await (await setup({ stats })).entries.stats(principal);
+    expect(stats).toHaveBeenCalledWith(principal);
+  });
+
   it('hides an entry by id', async () => {
     const setHidden = vi.fn().mockResolvedValue(undefined);
     await (await setup({ setHidden })).entries.setHidden('e1', { hidden: true });
@@ -63,6 +69,7 @@ describe('Entry controllers', () => {
 
   it.each([
     ['diary', 'signed-in'],
+    ['stats', 'signed-in'],
     ['get', 'signed-in'],
     ['update', 'signed-in'],
     ['remove', 'signed-in'],

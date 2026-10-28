@@ -14,3 +14,4 @@ export * from './lib/entries/photo.contract';
 export * from './lib/menus/item-history.contract';
 export * from './lib/users/contributor-application.contract';
 export * from './lib/entries/saved-item.contract';
+export * from './lib/entries/personal-stats.contract';

@@ -23,11 +23,13 @@ import {
   type Entry,
   type EntryWithItem,
   type ItemEntries,
+  type PersonalStats,
   type SharedEntryView,
   type UpdateEntry,
 } from '@menu/shared/contracts';
 import { deletePhoto } from '../photo/entry-photo';
 import { DiaryEntry } from './diary-entry';
+import { personalStats } from './personal-stats';
 
 @Injectable()
 export class EntryService {
@@ -93,6 +95,16 @@ export class EntryService {
       }
       return [{ ...new DiaryEntry(record).toContract(), item }];
     });
+  }
+
+  async stats(principal: Principal): Promise<PersonalStats> {
+    const entries = await this.repository.listByAuthor(principal.accountId);
+    const itemIds = entries.map((entry) => entry.itemId);
+    const [refs, tags] = await Promise.all([
+      this.catalog.refsFor(itemIds),
+      this.catalog.tagsFor(itemIds),
+    ]);
+    return personalStats(entries, refs, tags, new Date());
   }
 
   async get(principal: Principal, id: string): Promise<Entry> {

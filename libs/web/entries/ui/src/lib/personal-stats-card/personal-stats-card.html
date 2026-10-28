@@ -1,0 +1,62 @@
+<h2>{{ t('statsTitle') }}</h2>
+<dl class="numbers">
+  <div>
+    <dt>{{ t('statsThisMonth') }}</dt>
+    <dd>{{ thisMonth() }}</dd>
+  </div>
+  <div>
+    <dt>{{ t('statsAllTime') }}</dt>
+    <dd>{{ stats().entryCount }}</dd>
+  </div>
+  <div>
+    <dt>{{ t('statsVenues') }}</dt>
+    <dd>{{ stats().venueCount }}</dd>
+  </div>
+  <div>
+    <dt>{{ t('statsItems') }}</dt>
+    <dd>{{ stats().itemCount }}</dd>
+  </div>
+  @if (stats().averageRating; as average) {
+    <div>
+      <dt>{{ t('statsAverage') }}</dt>
+      <dd>★ {{ average }}</dd>
+    </div>
+  }
+</dl>
+
+@if (spending().length > 0) {
+  <h3>{{ t('statsSpending') }}</h3>
+  <ol class="spending">
+    @for (month of spending(); track month.month) {
+      <li>
+        <span class="amount">{{ month.shekels | shekels }}</span>
+        <span class="track" aria-hidden="true"
+          ><span class="bar" [style.block-size]="month.height"></span
+        ></span>
+        <span class="month">{{ month.month | month }}</span>
+      </li>
+    }
+  </ol>
+}
+
+@if (stats().topTags.length > 0) {
+  <h3>{{ t('statsTags') }}</h3>
+  <ul class="tags">
+    @for (tag of stats().topTags; track $index) {
+      <li>{{ tag.name | localize }} · {{ tag.count }}</li>
+    }
+  </ul>
+}
+
+@if (stats().mostOrdered; as favourite) {
+  <h3>{{ t('statsFavourite') }}</h3>
+  <p class="favourite">
+    <a [routerLink]="['/items', favourite.item.id]">{{ favourite.item.name | localize }}</a>
+    {{
+      t('statsFavouriteAt', {
+        venue: favourite.item.venue.name | localize,
+        count: favourite.count,
+      })
+    }}
+  </p>
+}
