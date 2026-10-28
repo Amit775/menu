@@ -9,6 +9,7 @@ import {
 import {
   type ItemPhotoRef,
   ItemNotEditableError,
+  type ItemRecord,
   ItemRepository,
 } from '@menu/api/menus/data-access';
 import { newCapabilityId } from '@menu/api/shared/util';
@@ -22,8 +23,9 @@ import {
 import { type Item } from '@menu/shared/contracts';
 import { MenuItem } from './menu-item';
 
-function itemPhotoKey(itemId: string): string {
-  return `items/${itemId}`;
+// Keyed by photo id, so an id always serves the bytes it was made for, even from a CDN cache.
+function itemPhotoKey(photoId: string): string {
+  return `items/${photoId}`;
 }
 
 /** The photo the venue's Owner or an Admin puts on an item (ADR 0013). */
@@ -34,50 +36,59 @@ export class ItemPhotoService {
     @Inject(PHOTO_STORAGE) private readonly storage: PhotoStorage,
   ) {}
 
-  /**
-   * The new id is saved before the bytes, so an id handed out for the old
-   * photo never serves the new one; if the upload then fails, trying again
-   * replaces it.
-   */
+  /** The bytes are stored before the item points at them, so a new id never serves nothing. */
   async set(principal: Principal, itemId: string, bytes: Buffer): Promise<Item> {
     const photo = cleanPhoto(bytes);
-    await this.assertEditor(principal, itemId);
-    const item = await this.save(principal, itemId, {
-      photoId: newCapabilityId(),
-      photoType: photo.type,
-    });
-    await this.storage.put(itemPhotoKey(itemId), photo);
+    const previous = await this.findEditable(principal, itemId);
+    const photoId = newCapabilityId();
+    await this.storage.put(itemPhotoKey(photoId), photo);
+    let item: Item;
+    try {
+      item = await this.save(principal, itemId, { photoId, photoType: photo.type });
+    } catch (error) {
+      await this.forget(photoId);
+      throw error;
+    }
+    await this.forget(previous.photoId);
     return item;
   }
 
   async remove(principal: Principal, itemId: string): Promise<Item> {
-    await this.assertEditor(principal, itemId);
+    const previous = await this.findEditable(principal, itemId);
     const item = await this.save(principal, itemId, null);
-    try {
-      await this.storage.delete(itemPhotoKey(itemId));
-    } catch (error) {
-      // Its id is gone, so nothing reaches the bytes; they are left for a later cleanup.
-      Logger.warn(`Could not delete the photo of item ${itemId}: ${String(error)}`, 'Photos');
-    }
+    await this.forget(previous.photoId);
     return item;
   }
 
   async read(photoId: string): Promise<StoredPhoto> {
     const record = await this.repository.findByPhotoId(photoId);
-    const photo = record ? await this.storage.get(itemPhotoKey(record.id)) : null;
+    const photo = record ? await this.storage.get(itemPhotoKey(photoId)) : null;
     if (!photo) {
       throw new NotFoundException('Photo not found.');
     }
     return photo;
   }
 
-  private async assertEditor(principal: Principal, itemId: string): Promise<void> {
+  private async findEditable(principal: Principal, itemId: string): Promise<ItemRecord> {
     const record = await this.repository.findById(itemId);
     if (!record) {
       throw new NotFoundException('Item not found.');
     }
     if (!canEditVenue(principal, record.venueId)) {
       throw new ForbiddenException('Only the venue’s Owner or an Admin can change its photos.');
+    }
+    return record;
+  }
+
+  /** No id reaches these bytes any more, so a failure to delete them is only logged. */
+  private async forget(photoId: string | null): Promise<void> {
+    if (photoId === null) {
+      return;
+    }
+    try {
+      await this.storage.delete(itemPhotoKey(photoId));
+    } catch (error) {
+      Logger.warn(`Could not delete item photo ${photoId}: ${String(error)}`, 'Photos');
     }
   }
 
