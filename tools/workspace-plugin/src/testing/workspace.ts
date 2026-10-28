@@ -10,6 +10,8 @@ import {
 
 export function createMenuTree(domains: string[] = []): Tree {
   const tree = createTreeWithEmptyWorkspace();
+  // Nx seeds an oxfmt config, and formatFiles then downloads oxfmt on every run, which times specs out in CI.
+  tree.delete('.oxfmtrc.json');
   tree.write('.prettierrc', JSON.stringify({ singleQuote: true }));
   updateJson(tree, 'package.json', (json: Record<string, Record<string, string>>) => {
     json['dependencies'] = { '@angular/core': '~22.2.0', '@nestjs/core': '^11.0.0' };
