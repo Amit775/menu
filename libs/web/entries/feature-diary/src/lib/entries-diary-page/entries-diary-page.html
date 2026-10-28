@@ -36,7 +36,7 @@
               <span class="name">{{ entry.item.name | localize }}</span>
               <span class="venue">{{ entry.item.venue.name | localize }}</span>
             </a>
-            <menu-entry-card [entry]="entry">
+            <menu-entry-card [entry]="entry" [variations]="entry.item.variations">
               <a mat-button [routerLink]="['/log', entry.item.id, entry.id]">{{ t('edit') }}</a>
             </menu-entry-card>
           </li>

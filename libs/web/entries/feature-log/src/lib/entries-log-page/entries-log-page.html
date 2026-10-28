@@ -41,6 +41,24 @@
       }
 
       <form novalidate (submit)="$event.preventDefault(); save()">
+        @if (variations().length > 0) {
+          <fieldset class="variations">
+            <legend>{{ t('variation') }}</legend>
+            <div class="picks">
+              @for (variation of variations(); track variation.id) {
+                <button
+                  type="button"
+                  [attr.aria-pressed]="form.variationId().value() === variation.id"
+                  [disabled]="saving()"
+                  (click)="toggleVariation(variation.id)"
+                >
+                  {{ variation.name | localize }}
+                </button>
+              }
+            </div>
+          </fieldset>
+        }
+
         <menu-rating-input [formField]="form.rating" />
 
         <fieldset class="again">
@@ -95,8 +113,8 @@
           @if (store.lastPaid(); as lastPaid) {
             {{ t('lastPaid', { price: lastPaid | price }) }}
           }
-          @if (sheet.item.listPrice !== null) {
-            {{ t('listPrice', { price: sheet.item.listPrice | price }) }}
+          @if (menuPrice(); as listed) {
+            {{ t('listPrice', { price: listed | price }) }}
           }
         </p>
 

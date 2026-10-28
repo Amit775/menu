@@ -76,7 +76,8 @@ legend,
   font: var(--mat-sys-title-small);
 }
 
-.choices {
+.choices,
+.picks {
   display: flex;
   gap: 8px;
 
@@ -100,6 +101,15 @@ legend,
   button:focus-visible {
     outline: 2px solid var(--mat-sys-primary);
     outline-offset: 2px;
+  }
+}
+
+.picks {
+  flex-wrap: wrap;
+
+  button {
+    min-width: 30%;
+    padding: 0 12px;
   }
 }
 

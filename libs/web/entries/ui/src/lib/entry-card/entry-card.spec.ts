@@ -57,6 +57,20 @@ describe('EntryCard', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
+  it('names the variation the diner had when the item still lists it', async () => {
+    const vegan = '6b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10';
+    TestBed.inject(I18n).setLanguage('he');
+    const fixture = TestBed.createComponent(EntryCard);
+    fixture.componentRef.setInput('entry', { ...own, variationId: vegan });
+    fixture.componentRef.setInput('variations', [{ id: vegan, name: { he: 'טבעוני', en: null } }]);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('.facts .variation')?.textContent).toBe('טבעוני');
+    fixture.componentRef.setInput('variations', []);
+    await fixture.whenStable();
+    expect(element.querySelector('.facts .variation')).toBeNull();
+  });
+
   it('marks the user’s own entry with its visibility and shows what they noted', async () => {
     const element = await render(own);
     const card = element.querySelector('menu-entry-card');

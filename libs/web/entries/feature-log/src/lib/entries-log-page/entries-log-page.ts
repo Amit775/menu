@@ -30,6 +30,7 @@ import { logI18n } from '../log.i18n';
 import { fromLocalInput, toLocalInput } from './local-time';
 
 interface LogModel {
+  variationId: string | null;
   rating: number | null;
   wouldOrderAgain: boolean | null;
   price: number | null;
@@ -114,6 +115,7 @@ export class EntriesLogPage {
     this.itemId();
     const editing = this.editing();
     return {
+      variationId: editing?.variationId ?? null,
       rating: editing?.rating ?? null,
       wouldOrderAgain: editing?.wouldOrderAgain ?? null,
       price: this.prefilled()?.value ?? null,
@@ -121,6 +123,18 @@ export class EntriesLogPage {
       text: editing?.text ?? '',
       visibility: editing?.visibility ?? this.lastVisibility.get(),
     };
+  });
+
+  protected readonly variations = computed(() => {
+    const kept = this.editing()?.variationId ?? null;
+    return (this.store.sheet()?.item.variations ?? []).filter(
+      (variation) => variation.available || variation.id === kept,
+    );
+  });
+
+  protected readonly menuPrice = computed(() => {
+    const picked = this.variations().find((v) => v.id === this.model().variationId);
+    return picked?.price ?? this.store.sheet()?.item.listPrice ?? null;
   });
 
   protected readonly form = form(this.model, (path) => {
@@ -177,6 +191,10 @@ export class EntriesLogPage {
     this.store.load(this.itemId);
   }
 
+  protected toggleVariation(id: string): void {
+    this.form.variationId().value.update((current) => (current === id ? null : id));
+  }
+
   protected toggleOrderAgain(value: boolean): void {
     this.form.wouldOrderAgain().value.update((current) => (current === value ? null : value));
   }
@@ -229,6 +247,7 @@ export class EntriesLogPage {
     this.saveError.set(null);
     const model = this.model();
     const input: UpdateEntry = {
+      variationId: model.variationId,
       rating: model.rating,
       wouldOrderAgain: model.wouldOrderAgain,
       pricePaid: model.price === null ? null : { value: model.price, currency: 'ILS' },

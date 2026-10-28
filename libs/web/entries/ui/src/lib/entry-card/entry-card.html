@@ -8,6 +8,9 @@
     <span class="who">{{ author() || t('anonymous') }}</span>
   }
   <span class="facts">
+    @if (variation(); as name) {
+      <span class="variation">{{ name | localize }}</span>
+    }
     @if (current.rating !== null) {
       <span>
         <span aria-hidden="true">★ {{ current.rating }}</span>
