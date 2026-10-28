@@ -111,7 +111,8 @@ enum Currency {
 }
 
 /// One dish or drink at one venue. `section_id` points into `venue.sections` and is checked in code.
-/// `tag_ids` is ordered, the first is the primary tag. `submitted_by_id` never leaves the API.
+/// `tag_ids` is ordered, the first is the primary tag. `variations` is an array of `ItemVariationSchema`
+/// in menu order, with stable ids that entries point at. `submitted_by_id` never leaves the API.
 model Item {
   id                String    @id @default(uuid()) @db.Uuid
   venueId           String    @map("venue_id") @db.Uuid
@@ -121,6 +122,7 @@ model Item {
   listPriceValue    Decimal?  @map("list_price_value") @db.Decimal(10, 2)
   listPriceCurrency Currency? @map("list_price_currency")
   tagIds            String[]  @default([]) @map("tag_ids") @db.Uuid
+  variations        Json      @default("[]")
   state             ItemState @default(approved)
   submittedById     String?   @map("submitted_by_id") @db.Uuid
   mergedIntoId      String?   @map("merged_into_id") @db.Uuid
@@ -184,6 +186,8 @@ model Entry {
   id                String          @id @default(uuid()) @db.Uuid
   authorId          String          @map("author_id") @db.Uuid
   itemId            String          @map("item_id") @db.Uuid
+  /// Points into `item.variations`; checked in code, kept when the variation is removed.
+  variationId       String?         @map("variation_id") @db.Uuid
   eatenAt           DateTime        @map("eaten_at")
   rating            Int?            @db.SmallInt
   wouldOrderAgain   Boolean?        @map("would_order_again")
