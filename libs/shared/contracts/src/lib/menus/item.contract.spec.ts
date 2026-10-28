@@ -22,6 +22,7 @@ describe('Item contract', () => {
     mergedIntoId: null,
     submittedByMe: false,
     position: 0,
+    photoUrl: '/api/item-photos/abcdefghijklmnopqrst_-',
     createdAt: '2026-01-01T00:00:00.000Z',
   };
 
