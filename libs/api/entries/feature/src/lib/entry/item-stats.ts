@@ -1,17 +1,6 @@
 import { type EntryFact } from '@menu/api/entries/data-access';
 import { type ItemEntryStats } from '@menu/api/shared/util-ports';
-import { photoUrl, type Price, type PricePoint, SCORE_FLOOR } from '@menu/shared/contracts';
-
-/** Price-history months follow the diners' calendar, not UTC. */
-const monthFormat = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'Asia/Jerusalem',
-  year: 'numeric',
-  month: '2-digit',
-});
-
-function monthOf(date: Date): string {
-  return monthFormat.format(date).slice(0, 7);
-}
+import { photoUrl, SCORE_FLOOR } from '@menu/shared/contracts';
 
 function newer(a: EntryFact, b: EntryFact): boolean {
   const byEaten = a.eatenAt.getTime() - b.eatenAt.getTime();
@@ -43,34 +32,6 @@ export function countable(facts: readonly EntryFact[]): EntryFact[] {
   return others >= SCORE_FLOOR ? [...facts] : facts.filter((fact) => fact.visibility === 'public');
 }
 
-function priceHistory(facts: readonly EntryFact[]): PricePoint[] {
-  const months = new Map<string, EntryFact[]>();
-  for (const fact of facts) {
-    if (fact.pricePaid !== null) {
-      const month = monthOf(fact.eatenAt);
-      months.set(month, [...(months.get(month) ?? []), fact]);
-    }
-  }
-  return [...months.entries()]
-    .map(([month, monthFacts]) => ({
-      month,
-      prices: countable(monthFacts).flatMap((fact) => (fact.pricePaid ? [fact.pricePaid] : [])),
-    }))
-    .filter(({ prices }) => prices.length >= SCORE_FLOOR)
-    .sort((a, b) => a.month.localeCompare(b.month))
-    .map(({ month, prices }) => ({
-      month,
-      averagePrice: averageOf(prices),
-      count: prices.length,
-    }));
-}
-
-// Every price is in shekels for now (Currency has ILS only), so they average as one currency.
-function averageOf(prices: readonly Price[]): Price {
-  const total = prices.reduce((sum, price) => sum + price.value, 0);
-  return { value: Math.round((total / prices.length) * 100) / 100, currency: 'ILS' };
-}
-
 export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {
   const rated = countable(latestPerAuthor(facts, (fact) => fact.rating !== null));
   const answered = countable(latestPerAuthor(facts, (fact) => fact.wouldOrderAgain !== null));
@@ -92,7 +53,6 @@ export function summarizeEntries(facts: readonly EntryFact[]): ItemEntryStats {
     otherEntryCount: others >= SCORE_FLOOR ? others : null,
     latestPublicPrice: latestPriced?.pricePaid ?? null,
     latestPublicPhotoUrl: latestPhotoId ? photoUrl(latestPhotoId) : null,
-    priceHistory: priceHistory(facts),
   };
 }
 

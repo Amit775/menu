@@ -17,6 +17,7 @@ import {
 } from '@menu/shared/contracts';
 import { orderFeed } from './feed-order';
 import { distanceMeters } from './geo';
+import { itemHistory } from './item-history';
 import {
   EMPTY_STATS,
   type ItemStats,
@@ -141,12 +142,16 @@ export class DiscoverService {
     if (!record) {
       throw new NotFoundException('Item not found.');
     }
+    const [revisions, sections] = await Promise.all([
+      this.repository.listRevisions(itemId),
+      this.repository.listSections(record.venueId),
+    ]);
     const point = pointOf(near);
     return {
       item: this.toItem(snapshot, record, point),
       archived: record.state === 'archived',
       tags: record.tagIds.flatMap((id) => tags.filter((tag) => tag.id === id)),
-      priceHistory: (snapshot.stats.get(itemId) ?? EMPTY_STATS).priceHistory,
+      history: itemHistory(revisions, sections, tags),
       alsoGoodHere: snapshot.catalog
         .filter(
           (item) =>

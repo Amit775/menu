@@ -70,6 +70,7 @@ describe('DiscoverService', () => {
         .mockResolvedValue([
           { id: burger, slug: 'hamburger', name: { he: 'המבורגר', en: null }, kind: 'dish' },
         ]),
+      listRevisions: vi.fn().mockResolvedValue([]),
       ...overrides,
     };
     const moduleRef = await Test.createTestingModule({
@@ -156,6 +157,35 @@ describe('DiscoverService', () => {
       const page = await (await setup()).itemPage(null, 'archived', {});
       expect(page).toMatchObject({ archived: true, tags: [{ slug: 'hamburger' }] });
       expect(page.alsoGoodHere.map((i) => i.id)).toEqual(['ranked']);
+    });
+
+    it('shows the item’s history from its revisions, on its venue’s sections', async () => {
+      const listRevisions = vi.fn().mockResolvedValue([
+        {
+          kind: 'created',
+          snapshot: {
+            name: { he: 'ranked', en: null },
+            description: null,
+            listPrice: { value: 58, currency: 'ILS' },
+            sectionId: 's1',
+            tagIds: [],
+          },
+          changedAt: '2026-10-01T00:00:00.000Z',
+        },
+      ]);
+      const listSections = vi.fn().mockResolvedValue([]);
+      const page = await (
+        await setup({ listRevisions, listSections })
+      ).itemPage(null, 'ranked', {});
+      expect(listRevisions).toHaveBeenCalledWith('ranked');
+      expect(listSections).toHaveBeenCalledWith(venueId);
+      expect(page.history).toEqual([
+        {
+          kind: 'added',
+          at: '2026-10-01T00:00:00.000Z',
+          listPrice: { value: 58, currency: 'ILS' },
+        },
+      ]);
     });
 
     it('fails with 404 for an item that is not in discovery', async () => {

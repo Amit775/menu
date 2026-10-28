@@ -54,4 +54,36 @@ describe('DiscoverRepository', () => {
     ).resolves.toBeNull();
     expect(findFirst).toHaveBeenCalledWith({ where: { id: 'v1', status: 'active' } });
   });
+
+  it('reads an item’s revisions oldest first, without who made them', async () => {
+    const snapshot = {
+      name: { he: 'המבורגר', en: null },
+      description: null,
+      listPrice: { value: 58.5, currency: 'ILS' },
+      sectionId: '1b1d3c4e-1111-4c1c-9a57-6f7a5d3c2b10',
+      tagIds: [],
+    };
+    const findMany = vi
+      .fn()
+      .mockResolvedValue([
+        { kind: 'created', snapshot, changedAt: new Date('2026-10-01T00:00:00.000Z') },
+      ]);
+    await expect(
+      repositoryWith({ itemRevision: { findMany } }).listRevisions('i1'),
+    ).resolves.toEqual([{ kind: 'created', snapshot, changedAt: '2026-10-01T00:00:00.000Z' }]);
+    expect(findMany).toHaveBeenCalledWith({
+      where: { itemId: 'i1' },
+      orderBy: { changedAt: 'asc' },
+      select: { kind: true, snapshot: true, changedAt: true },
+    });
+  });
+
+  it('refuses a revision whose snapshot does not parse', async () => {
+    const findMany = vi
+      .fn()
+      .mockResolvedValue([{ kind: 'created', snapshot: { name: 'x' }, changedAt: new Date() }]);
+    await expect(
+      repositoryWith({ itemRevision: { findMany } }).listRevisions('i1'),
+    ).rejects.toThrow();
+  });
 });
